@@ -1,8 +1,12 @@
-project(n_e_s_core)
+project(n_e_s_application)
 
-add_library(${PROJECT_NAME}
-    src/cpu.h
-    src/cpu.cpp
+add_executable(${PROJECT_NAME}
+    src/main.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+        n_e_s_core
 )
 
 target_compile_options(${PROJECT_NAME}
@@ -17,10 +21,3 @@ target_compile_features(${PROJECT_NAME}
     PRIVATE
         cxx_std_11
 )
-
-target_include_directories(${PROJECT_NAME}
-    PUBLIC
-        ${PROJECT_SOURCE_DIR}/src
-)
-
-add_subdirectory(test)

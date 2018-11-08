@@ -2,26 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(n_e_s)
 
+enable_testing()
+
+add_subdirectory(src/application)
 add_subdirectory(src/core)
-
-add_executable(${PROJECT_NAME}
-    main.cpp
-)
-
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        n_e_s_core
-)
-
-target_compile_options(${PROJECT_NAME}
-    PRIVATE
-        -Wall
-        -Werror
-        -Wextra
-        -pedantic-errors
-)
-
-target_compile_features(${PROJECT_NAME}
-    PRIVATE
-        cxx_std_11
-)
