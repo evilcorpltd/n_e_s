@@ -1,16 +1,8 @@
-cmake_minimum_required(VERSION 3.10)
+project(n_e_s_core)
 
-project(n_e_s)
-
-add_subdirectory(src/core)
-
-add_executable(${PROJECT_NAME}
-    main.cpp
-)
-
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-        n_e_s_core
+add_library(${PROJECT_NAME}
+    cpu.h
+    cpu.cpp
 )
 
 target_compile_options(${PROJECT_NAME}
@@ -24,4 +16,11 @@ target_compile_options(${PROJECT_NAME}
 target_compile_features(${PROJECT_NAME}
     PRIVATE
         cxx_std_11
+)
+
+message(INFO ${CMAKE_SOURCE_DIR})
+
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+    ${PROJECT_SOURCE_DIR}
 )
