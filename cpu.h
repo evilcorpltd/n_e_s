@@ -11,7 +11,7 @@ static const uint8_t D_FLAG = 1 << 3; // decimal mode
 static const uint8_t B_FLAG = 1 << 4; // break
 static const uint8_t FLAG_5 = 1 << 5; // unused, always 1
 static const uint8_t V_FLAG = 1 << 6; // overflow
-static const uint8_t S_FLAG = 1 << 7; // negative
+static const uint8_t N_FLAG = 1 << 7; // negative
 
 struct Registers {
     uint16_t pc; // program counter
@@ -30,14 +30,23 @@ public:
 
     uint8_t clc(); // 18, clear carry
     uint8_t sec(); // 38, set carry
+    uint8_t lsr_a(); // 4a, logical shift right (accumulator)
     uint8_t cli(); // 58, clear interrupt disable
     uint8_t sei(); // 78, set interrupt disable
     uint8_t clv(); // b8, clear overflow
     uint8_t cld(); // d8, clear decimal
     uint8_t nop(); // ea
+    uint8_t inx(); // e8, increment x index
     uint8_t sed(); // f8, set decimal
 
 private:
     void clear_flag(uint8_t flag);
     void set_flag(uint8_t flag);
+
+    // sets the C flag
+    void set_carry(bool carry);
+    // sets the Z flag if the byte is 0
+    void set_zero(uint8_t byte);
+    // sets the N flag if bit 7 of the byte is set
+    void set_negative(uint8_t byte);
 };
