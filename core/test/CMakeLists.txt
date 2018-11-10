@@ -17,7 +17,9 @@ endif()
 
 add_executable(${PROJECT_NAME}
     src/mock_mmu.h
+    src/main.cpp
     src/test_cpu.cpp
+    src/test_mmu.cpp
 )
 
 target_compile_options(${PROJECT_NAME}

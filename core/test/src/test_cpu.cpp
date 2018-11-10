@@ -71,8 +71,3 @@ TEST_F(CpuTest, lsr) {
     cpu.lsr_a();
     assert(cpu.registers.p == Z_FLAG);
 }
-
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
