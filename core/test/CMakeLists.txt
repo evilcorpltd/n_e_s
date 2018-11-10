@@ -16,8 +16,8 @@ if(NOT googletest_POPULATED)
 endif()
 
 add_executable(${PROJECT_NAME}
-    src/mock_mmu.h
     src/main.cpp
+    src/mock_mmu.h
     src/test_cpu.cpp
     src/test_mmu.cpp
 )
@@ -41,5 +41,4 @@ target_link_libraries(${PROJECT_NAME}
         gmock
 )
 
-include(GoogleTest)
 gtest_discover_tests(${PROJECT_NAME})
