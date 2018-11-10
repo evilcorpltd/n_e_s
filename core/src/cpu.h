@@ -2,9 +2,11 @@
 
 #pragma once
 
-#include "immu.h"
+#include "core/immu.h"
 
 #include <cstdint>
+
+namespace n_e_s::core {
 
 static const uint8_t C_FLAG = 1 << 0; // carry
 static const uint8_t Z_FLAG = 1 << 1; // zero
@@ -54,3 +56,5 @@ private:
     // sets the N flag if bit 7 of the byte is set
     void set_negative(uint8_t byte);
 };
+
+}

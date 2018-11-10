@@ -2,6 +2,8 @@
 
 #include "cpu.h"
 
+namespace n_e_s::core {
+
 CPU::CPU(IMmu* const mmu) : registers(), mmu_(mmu) {
 }
 
@@ -90,4 +92,6 @@ void CPU::set_negative(uint8_t byte) {
     } else {
         clear_flag(N_FLAG);
     }
+}
+
 }

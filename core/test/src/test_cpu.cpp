@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+using namespace n_e_s::core;
+
 class CpuTest : public ::testing::Test {
 public:
     CpuTest() : cpu(nullptr), registers(cpu.registers) {

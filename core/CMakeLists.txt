@@ -1,7 +1,7 @@
 project(n_e_s_core)
 
 add_library(${PROJECT_NAME}
-    include/immu.h
+    include/core/immu.h
     src/cpu.h
     src/cpu.cpp
     src/mmu.h
@@ -18,7 +18,7 @@ target_compile_options(${PROJECT_NAME}
 
 target_compile_features(${PROJECT_NAME}
     PRIVATE
-        cxx_std_11
+        cxx_std_17
 )
 
 target_include_directories(${PROJECT_NAME}

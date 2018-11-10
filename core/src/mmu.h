@@ -2,10 +2,14 @@
 
 #pragma once
 
-#include "immu.h"
+#include "core/immu.h"
 
 #include <cstdint>
+
+namespace n_e_s::core {
 
 class Mmu : public IMmu {
     uint8_t read_byte(uint16_t addr) const override;
 };
+
+}
