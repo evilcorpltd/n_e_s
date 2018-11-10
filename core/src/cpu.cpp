@@ -2,7 +2,7 @@
 
 #include "cpu.h"
 
-CPU::CPU() : registers() {
+CPU::CPU(IMmu* const mmu) : registers(), mmu_(mmu) {
 }
 
 uint8_t CPU::clc() {

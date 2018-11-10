@@ -6,7 +6,7 @@
 
 class CpuTest : public ::testing::Test {
 public:
-    CpuTest() : cpu(), registers(cpu.registers) {
+    CpuTest() : cpu(nullptr), registers(cpu.registers) {
     }
 
     CPU cpu;

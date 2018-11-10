@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "immu.h"
+
 #include <cstdint>
 
 static const uint8_t C_FLAG = 1 << 0; // carry
@@ -24,7 +26,7 @@ struct Registers {
 
 class CPU {
 public:
-    CPU();
+    CPU(IMmu* mmu);
 
     Registers registers;
 
@@ -40,6 +42,8 @@ public:
     uint8_t sed(); // f8, set decimal
 
 private:
+    IMmu* const mmu_;
+
     void clear_flag(uint8_t flag);
     void set_flag(uint8_t flag);
 
