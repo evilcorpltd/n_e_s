@@ -16,6 +16,7 @@ if(NOT googletest_POPULATED)
 endif()
 
 add_executable(${PROJECT_NAME}
+    src/mock_mmu.h
     src/test_cpu.cpp
 )
 

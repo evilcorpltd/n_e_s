@@ -2,15 +2,19 @@
 
 #include "cpu.h"
 
+#include "mock_mmu.h"
+
 #include <gtest/gtest.h>
 
 using namespace n_e_s::core;
+using namespace n_e_s::core::test;
 
 class CpuTest : public ::testing::Test {
 public:
-    CpuTest() : cpu(nullptr), registers(cpu.registers) {
+    CpuTest() : cpu(&mmu), registers(cpu.registers) {
     }
 
+    MockMmu mmu;
     CPU cpu;
     Registers registers;
 };
