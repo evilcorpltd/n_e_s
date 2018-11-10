@@ -4,5 +4,5 @@ project(n_e_s)
 
 enable_testing()
 
-add_subdirectory(src/application)
-add_subdirectory(src/core)
+add_subdirectory(application)
+add_subdirectory(core)
