@@ -11,7 +11,7 @@ using namespace n_e_s::core::test;
 
 class CpuTest : public ::testing::Test {
 public:
-    CpuTest() : cpu(&mmu), registers(cpu.registers) {
+    CpuTest() : mmu(), cpu(&mmu), registers(cpu.registers) {
     }
 
     MockMmu mmu;
