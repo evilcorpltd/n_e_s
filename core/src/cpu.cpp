@@ -7,6 +7,10 @@ namespace n_e_s::core {
 Cpu::Cpu(IMmu* const mmu) : registers(), mmu_(mmu) {
 }
 
+void Cpu::execute() {
+    // Run atom from pipeline if available, else fetch from mmu.
+}
+
 uint8_t Cpu::clc() {
     clear_flag(C_FLAG);
     return 2;

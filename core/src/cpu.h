@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "core/icpu.h"
 #include "core/immu.h"
 
 #include <cstdint>
@@ -26,11 +27,14 @@ struct Registers {
     uint8_t p; // status
 };
 
-class Cpu {
+class Cpu : public ICpu {
 public:
     Cpu(IMmu* mmu);
 
     Registers registers;
+
+    // ICpu
+    void execute() override;
 
     uint8_t clc(); // 18, clear carry
     uint8_t sec(); // 38, set carry
