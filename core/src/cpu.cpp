@@ -4,20 +4,20 @@
 
 namespace n_e_s::core {
 
-CPU::CPU(IMmu* const mmu) : registers(), mmu_(mmu) {
+Cpu::Cpu(IMmu* const mmu) : registers(), mmu_(mmu) {
 }
 
-uint8_t CPU::clc() {
+uint8_t Cpu::clc() {
     clear_flag(C_FLAG);
     return 2;
 }
 
-uint8_t CPU::sec() {
+uint8_t Cpu::sec() {
     set_flag(C_FLAG);
     return 2;
 }
 
-uint8_t CPU::lsr_a() {
+uint8_t Cpu::lsr_a() {
     set_carry(registers.a & 1);
     registers.a &= ~1;
     registers.a >>= 1;
@@ -26,51 +26,51 @@ uint8_t CPU::lsr_a() {
     return 2;
 }
 
-uint8_t CPU::cli() {
+uint8_t Cpu::cli() {
     clear_flag(I_FLAG);
     return 2;
 }
 
-uint8_t CPU::sei() {
+uint8_t Cpu::sei() {
     set_flag(I_FLAG);
     return 2;
 }
 
-uint8_t CPU::clv() {
+uint8_t Cpu::clv() {
     clear_flag(V_FLAG);
     return 2;
 }
 
-uint8_t CPU::cld() {
+uint8_t Cpu::cld() {
     clear_flag(D_FLAG);
     return 2;
 }
 
-uint8_t CPU::nop() {
+uint8_t Cpu::nop() {
     return 2;
 }
 
-uint8_t CPU::inx() {
+uint8_t Cpu::inx() {
     ++registers.x;
     set_zero(registers.x);
     set_negative(registers.x);
     return 2;
 }
 
-uint8_t CPU::sed() {
+uint8_t Cpu::sed() {
     set_flag(D_FLAG);
     return 2;
 }
 
-void CPU::clear_flag(uint8_t flag) {
+void Cpu::clear_flag(uint8_t flag) {
     registers.p &= ~flag;
 }
 
-void CPU::set_flag(uint8_t flag) {
+void Cpu::set_flag(uint8_t flag) {
     registers.p |= flag;
 }
 
-void CPU::set_carry(bool carry) {
+void Cpu::set_carry(bool carry) {
     if (carry) {
         set_flag(C_FLAG);
     } else {
@@ -78,7 +78,7 @@ void CPU::set_carry(bool carry) {
     }
 }
 
-void CPU::set_zero(uint8_t byte) {
+void Cpu::set_zero(uint8_t byte) {
     if (byte == 0) {
         set_flag(Z_FLAG);
     } else {
@@ -86,7 +86,7 @@ void CPU::set_zero(uint8_t byte) {
     }
 }
 
-void CPU::set_negative(uint8_t byte) {
+void Cpu::set_negative(uint8_t byte) {
     if (byte & 1 << 7) {
         set_flag(N_FLAG);
     } else {

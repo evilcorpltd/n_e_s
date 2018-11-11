@@ -7,6 +7,6 @@ using namespace n_e_s::core;
 
 int main(int, char **) {
     Mmu mmu;
-    CPU cpu(&mmu);
+    Cpu cpu(&mmu);
     return 0;
 }

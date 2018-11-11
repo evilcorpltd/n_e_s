@@ -26,9 +26,9 @@ struct Registers {
     uint8_t p; // status
 };
 
-class CPU {
+class Cpu {
 public:
-    CPU(IMmu* mmu);
+    Cpu(IMmu* mmu);
 
     Registers registers;
 

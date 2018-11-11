@@ -15,7 +15,7 @@ public:
     }
 
     MockMmu mmu;
-    CPU cpu;
+    Cpu cpu;
     Registers registers;
 };
 
