@@ -4,11 +4,26 @@
 
 namespace n_e_s::core {
 
-Cpu::Cpu(IMmu* const mmu) : registers(), mmu_(mmu) {
+Cpu::Cpu(IMmu *const mmu) : registers(), mmu_(mmu), pipeline_() {
 }
 
 void Cpu::execute() {
-    // Run atom from pipeline if available, else fetch from mmu.
+    if (pipeline_.empty()) {
+        const uint8_t opcode = mmu_->read_byte(registers.pc++);
+
+        switch (opcode) {
+        case 0x38: // SEC
+            pipeline_.push([=](){ set_flag(C_FLAG); });
+            break;
+        default:
+            assert(false);
+        }
+
+        return;
+    }
+
+    pipeline_.front()();
+    pipeline_.pop();
 }
 
 uint8_t Cpu::clc() {

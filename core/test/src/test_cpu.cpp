@@ -9,6 +9,9 @@
 using namespace n_e_s::core;
 using namespace n_e_s::core::test;
 
+using testing::_;
+using testing::Return;
+
 class CpuTest : public ::testing::Test {
 public:
     CpuTest() : mmu(), cpu(&mmu), registers(cpu.registers) {
@@ -21,6 +24,17 @@ public:
 
 TEST_F(CpuTest, flag_register) {
     EXPECT_EQ(0, registers.p);
+}
+
+TEST_F(CpuTest, execute_does_something) {
+    ON_CALL(mmu, read_byte(_)).WillByDefault(Return(0x38));
+
+    cpu.execute();
+    EXPECT_EQ(registers.pc + 1, cpu.registers.pc);
+    EXPECT_EQ(registers.p, cpu.registers.p);
+
+    cpu.execute();
+    EXPECT_EQ(registers.p | C_FLAG, cpu.registers.p);
 }
 
 TEST_F(CpuTest, nop) {
