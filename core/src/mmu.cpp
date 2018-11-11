@@ -6,7 +6,7 @@
 
 namespace n_e_s::core {
 
-Mmu::Mmu() : ram_(), ppu_(), apu_io_(), apu_io_dev_(), cartridge_() {
+Mmu::Mmu() : ram_(), ppu_(), io_(), io_dev_(), cartridge_() {
 }
 
 uint8_t Mmu::read_byte(uint16_t addr) const {
@@ -41,14 +41,14 @@ const uint8_t *Mmu::translate_address(uint16_t addr) const {
         return &ppu_[addr];
     }
 
-    if (addr <= apu_io_end_) {
-        addr %= apu_io_size_;
-        return &apu_io_[addr];
+    if (addr <= io_end_) {
+        addr %= io_size_;
+        return &io_[addr];
     }
 
-    if (addr <= apu_io_dev_end_) {
-        addr %= apu_io_dev_size_;
-        return &apu_io_dev_[addr];
+    if (addr <= io_dev_end_) {
+        addr %= io_dev_size_;
+        return &io_dev_[addr];
     }
 
     addr %= cartridge_size_;
