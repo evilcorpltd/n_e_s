@@ -1,6 +1,6 @@
 // Copyright 2018 Robin Linden <dev@robinlinden.eu>
 
-#include "mmu.h"
+#include "core/mmu_factory.h"
 
 #include <gtest/gtest.h>
 
@@ -8,26 +8,26 @@ using namespace n_e_s::core;
 
 class MmuTest : public ::testing::Test {
 public:
-    MmuTest() : mmu() {
+    MmuTest() : mmu{MmuFactory::create()} {
     }
 
-    Mmu mmu;
+    std::unique_ptr<IMmu> mmu;
 };
 
 TEST_F(MmuTest, read_write_byte) {
     const uint8_t byte = 0xF0;
 
     for (uint32_t i = 0; i < 0xFFFF; i += 0x1000) {
-        mmu.write_byte(i, byte);
-        EXPECT_EQ(byte, mmu.read_byte(i));
+        mmu->write_byte(i, byte);
+        EXPECT_EQ(byte, mmu->read_byte(i));
     }
 }
 
 TEST_F(MmuTest, read_write_word) {
     const uint16_t word = 0xF00D;
     for (uint32_t i = 0; i < 0xFFFF; i += 0x1000) {
-        mmu.write_word(i, word);
-        EXPECT_EQ(word, mmu.read_word(i));
+        mmu->write_word(i, word);
+        EXPECT_EQ(word, mmu->read_word(i));
     }
 }
 
@@ -36,10 +36,10 @@ TEST_F(MmuTest, ram_bank_mirroring) {
     const std::vector<uint8_t> bytes{0x1F, 0xCC, 0x01, 0xAB};
 
     for (uint8_t i = 0; i < addrs.size(); ++i) {
-        mmu.write_byte(addrs[i], bytes[i]);
+        mmu->write_byte(addrs[i], bytes[i]);
 
         for (uint16_t addr : addrs) {
-            EXPECT_EQ(bytes[i], mmu.read_byte(addr));
+            EXPECT_EQ(bytes[i], mmu->read_byte(addr));
         }
     }
 }
