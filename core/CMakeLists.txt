@@ -1,6 +1,7 @@
 project(n_e_s_core)
 
 add_library(${PROJECT_NAME}
+    include/core/icpu.h
     include/core/immu.h
     src/cpu.h
     src/cpu.cpp
