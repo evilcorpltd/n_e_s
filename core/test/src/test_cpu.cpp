@@ -26,8 +26,22 @@ TEST_F(CpuTest, flag_register) {
     EXPECT_EQ(0, registers.p);
 }
 
-TEST_F(CpuTest, execute_does_something) {
-    ON_CALL(mmu, read_byte(_)).WillByDefault(Return(0x38));
+TEST_F(CpuTest, clc) {
+    ON_CALL(mmu, read_byte(_)).WillByDefault(Return(Cpu::CLC));
+
+    cpu.registers.p |= C_FLAG | N_FLAG;
+
+    cpu.execute();
+    EXPECT_EQ(registers.pc + 1, cpu.registers.pc);
+    EXPECT_EQ(registers.p | C_FLAG | N_FLAG, cpu.registers.p);
+
+    cpu.execute();
+    EXPECT_EQ(registers.p | N_FLAG, cpu.registers.p);
+    EXPECT_EQ(registers.pc + 1, cpu.registers.pc);
+}
+
+TEST_F(CpuTest, sec) {
+    ON_CALL(mmu, read_byte(_)).WillByDefault(Return(Cpu::SEC));
 
     cpu.execute();
     EXPECT_EQ(registers.pc + 1, cpu.registers.pc);
@@ -35,6 +49,7 @@ TEST_F(CpuTest, execute_does_something) {
 
     cpu.execute();
     EXPECT_EQ(registers.p | C_FLAG, cpu.registers.p);
+    EXPECT_EQ(registers.pc + 1, cpu.registers.pc);
 }
 
 TEST_F(CpuTest, nop) {

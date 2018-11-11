@@ -50,6 +50,11 @@ public:
     uint8_t nop(); // ea
     uint8_t sed(); // f8, set decimal
 
+    enum Opcode : uint8_t {
+        CLC = 0x18,
+        SEC = 0x38,
+    };
+
 private:
     IMmu *const mmu_;
 
