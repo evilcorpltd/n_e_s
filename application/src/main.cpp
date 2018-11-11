@@ -1,12 +1,15 @@
 // Copyright 2018 Robin Linden <dev@robinlinden.eu>
 
-#include "cpu.h"
-#include "mmu.h"
+#include "core/cpu_factory.h"
+#include "core/mmu_factory.h"
+
+#include <memory>
 
 using namespace n_e_s::core;
 
 int main(int, char **) {
-    Mmu mmu;
-    Cpu cpu(&mmu);
+    std::unique_ptr<IMmu> mmu{MmuFactory::create()};
+    std::unique_ptr<ICpu> cpu{CpuFactory::create(mmu.get())};
+    (void)cpu;
     return 0;
 }
