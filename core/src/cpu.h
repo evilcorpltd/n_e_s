@@ -23,16 +23,6 @@ public:
     uint8_t sei(); // 78, set interrupt disable
     uint8_t clv(); // b8, clear overflow
 
-    enum Opcode : uint8_t {
-        CLC = 0x18,
-        SEC = 0x38,
-        LSR_A = 0x4A,
-        CLD = 0xD8,
-        NOP = 0xEA,
-        INX = 0xE8,
-        SED = 0xF8,
-    };
-
 private:
     Registers *const registers_;
     IMmu *const mmu_;

@@ -6,6 +6,20 @@
 #include <sstream>
 #include <stdexcept>
 
+namespace {
+
+enum Opcode : uint8_t {
+    CLC = 0x18,
+    SEC = 0x38,
+    LSR_A = 0x4A,
+    CLD = 0xD8,
+    NOP = 0xEA,
+    INX = 0xE8,
+    SED = 0xF8,
+};
+
+}
+
 namespace n_e_s::core {
 
 Cpu::Cpu(Registers *const registers, IMmu *const mmu)

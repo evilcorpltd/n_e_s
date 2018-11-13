@@ -29,6 +29,7 @@ target_compile_features(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
     PUBLIC
         include
+    PRIVATE
         src
 )
 
