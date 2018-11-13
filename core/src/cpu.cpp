@@ -20,6 +20,9 @@ void Cpu::execute() {
         case SEC:
             pipeline_.push([=](){ set_flag(C_FLAG); });
             return;
+        case NOP:
+            pipeline_.push([](){ /* Do nothing. */ });
+            return;
         default:
             assert(false);
         }
@@ -65,10 +68,6 @@ uint8_t Cpu::clv() {
 
 uint8_t Cpu::cld() {
     clear_flag(D_FLAG);
-    return 2;
-}
-
-uint8_t Cpu::nop() {
     return 2;
 }
 

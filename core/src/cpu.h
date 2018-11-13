@@ -47,12 +47,12 @@ public:
     uint8_t clv(); // b8, clear overflow
     uint8_t cld(); // d8, clear decimal
     uint8_t inx(); // e8, increment x index
-    uint8_t nop(); // ea
     uint8_t sed(); // f8, set decimal
 
     enum Opcode : uint8_t {
         CLC = 0x18,
         SEC = 0x38,
+        NOP = 0xEA,
     };
 
 private:

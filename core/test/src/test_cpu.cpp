@@ -12,9 +12,29 @@ using namespace n_e_s::core::test;
 using testing::_;
 using testing::Return;
 
+namespace n_e_s::core {
+
+static bool operator==(const Registers &a, const Registers &b) {
+    return a.pc == b.pc
+            && a.sp == b.sp
+            && a.a == b.a
+            && a.x == b.x
+            && a.y == b.y
+            && a.p == b.p;
+}
+
+}
+
+namespace {
+
 class CpuTest : public ::testing::Test {
 public:
     CpuTest() : mmu(), cpu(&mmu), registers(cpu.registers) {
+    }
+
+    void stage_instruction(uint8_t instruction) {
+        ON_CALL(mmu, read_byte(cpu.registers.pc))
+                .WillByDefault(Return(instruction));
     }
 
     MockMmu mmu;
@@ -27,10 +47,9 @@ TEST_F(CpuTest, flag_register) {
 }
 
 TEST_F(CpuTest, clc) {
-    ON_CALL(mmu, read_byte(_)).WillByDefault(Return(Cpu::CLC));
-
     cpu.registers.p |= C_FLAG | N_FLAG;
 
+    stage_instruction(Cpu::CLC);
     cpu.execute();
     EXPECT_EQ(registers.pc + 1, cpu.registers.pc);
     EXPECT_EQ(registers.p | C_FLAG | N_FLAG, cpu.registers.p);
@@ -41,8 +60,7 @@ TEST_F(CpuTest, clc) {
 }
 
 TEST_F(CpuTest, sec) {
-    ON_CALL(mmu, read_byte(_)).WillByDefault(Return(Cpu::SEC));
-
+    stage_instruction(Cpu::SEC);
     cpu.execute();
     EXPECT_EQ(registers.pc + 1, cpu.registers.pc);
     EXPECT_EQ(registers.p, cpu.registers.p);
@@ -53,25 +71,20 @@ TEST_F(CpuTest, sec) {
 }
 
 TEST_F(CpuTest, nop) {
-    const uint8_t cycles = cpu.nop();
+    stage_instruction(Cpu::NOP);
+    cpu.execute();
+    registers.pc += 1;
+    EXPECT_EQ(registers, cpu.registers);
 
-    EXPECT_EQ(registers.sp, cpu.registers.sp);
-    EXPECT_EQ(registers.a, cpu.registers.a);
-    EXPECT_EQ(registers.x, cpu.registers.x);
-    EXPECT_EQ(registers.y, cpu.registers.y);
-    EXPECT_EQ(registers.p, cpu.registers.p);
-    EXPECT_EQ(2, cycles);
+    cpu.execute();
+    EXPECT_EQ(registers, cpu.registers);
 }
 
 TEST_F(CpuTest, register_instructions) {
-    cpu.sec();
     cpu.sed();
-    EXPECT_EQ(cpu.registers.p, C_FLAG | D_FLAG);
+    EXPECT_EQ(cpu.registers.p, D_FLAG);
 
     cpu.cld();
-    EXPECT_EQ(cpu.registers.p, C_FLAG);
-
-    cpu.clc();
     EXPECT_EQ(cpu.registers.p, 0);
 }
 
@@ -99,4 +112,6 @@ TEST_F(CpuTest, inx) {
 TEST_F(CpuTest, lsr) {
     cpu.lsr_a();
     assert(cpu.registers.p == Z_FLAG);
+}
+
 }
