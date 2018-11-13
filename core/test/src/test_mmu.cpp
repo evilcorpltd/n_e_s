@@ -6,6 +6,8 @@
 
 using namespace n_e_s::core;
 
+namespace {
+
 class MmuTest : public ::testing::Test {
 public:
     MmuTest() : mmu{MmuFactory::create()} {
@@ -42,4 +44,6 @@ TEST_F(MmuTest, ram_bank_mirroring) {
             EXPECT_EQ(bytes[i], mmu->read_byte(addr));
         }
     }
+}
+
 }

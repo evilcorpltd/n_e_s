@@ -38,6 +38,12 @@ public:
                 .WillByDefault(Return(instruction));
     }
 
+    void step_execution(uint8_t cycles) {
+        for (uint8_t i = 0; i < cycles; i++) {
+            cpu.execute();
+        }
+    }
+
     Registers registers;
     NiceMock<MockMmu> mmu;
     Cpu cpu;
@@ -50,36 +56,30 @@ TEST_F(CpuTest, flag_register) {
 }
 
 TEST_F(CpuTest, clc) {
-    registers.p |= C_FLAG | N_FLAG;
+    expected.p = registers.p = 0xFF;
 
     stage_instruction(Cpu::CLC);
-    cpu.execute();
-    EXPECT_EQ(expected.pc + 1, registers.pc);
-    EXPECT_EQ(expected.p | C_FLAG | N_FLAG, registers.p);
+    expected.pc += 1;
+    expected.p &= ~C_FLAG;
 
-    cpu.execute();
-    EXPECT_EQ(expected.p | N_FLAG, registers.p);
-    EXPECT_EQ(expected.pc + 1, registers.pc);
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
 }
 
 TEST_F(CpuTest, sec) {
     stage_instruction(Cpu::SEC);
-    cpu.execute();
-    EXPECT_EQ(expected.pc + 1, registers.pc);
-    EXPECT_EQ(expected.p, registers.p);
+    expected.pc += 1;
+    expected.p |= C_FLAG;
 
-    cpu.execute();
-    EXPECT_EQ(expected.p | C_FLAG, registers.p);
-    EXPECT_EQ(expected.pc + 1, registers.pc);
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
 }
 
 TEST_F(CpuTest, nop) {
     stage_instruction(Cpu::NOP);
-    cpu.execute();
     expected.pc += 1;
-    EXPECT_EQ(expected, registers);
 
-    cpu.execute();
+    step_execution(2);
     EXPECT_EQ(expected, registers);
 }
 
