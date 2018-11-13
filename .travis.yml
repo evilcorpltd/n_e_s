@@ -1,0 +1,21 @@
+language: cpp
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-7
+
+install:
+  - mkdir -p cmake-3.12
+  - wget -qO- "https://cmake.org/files/v3.12/cmake-3.12.2-Linux-x86_64.tar.gz" \
+    | tar --strip-components=1 -xz -C cmake-3.12
+  - export PATH=`pwd`/cmake-3.12/bin:$PATH
+  - export CXX=g++-7
+
+script:
+  - mkdir -p _build && cd _build
+  - cmake ..
+  - make
+  - make test
