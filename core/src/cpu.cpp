@@ -32,16 +32,6 @@ void Cpu::execute() {
     pipeline_.pop();
 }
 
-uint8_t Cpu::clc() {
-    clear_flag(C_FLAG);
-    return 2;
-}
-
-uint8_t Cpu::sec() {
-    set_flag(C_FLAG);
-    return 2;
-}
-
 uint8_t Cpu::lsr_a() {
     set_carry(registers.a & 1);
     registers.a &= ~1;

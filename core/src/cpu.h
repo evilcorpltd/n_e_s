@@ -39,8 +39,6 @@ public:
     // ICpu
     void execute() override;
 
-    uint8_t clc(); // 18, clear carry
-    uint8_t sec(); // 38, set carry
     uint8_t lsr_a(); // 4a, logical shift right (accumulator)
     uint8_t cli(); // 58, clear interrupt disable
     uint8_t sei(); // 78, set interrupt disable
