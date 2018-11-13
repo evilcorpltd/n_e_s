@@ -8,12 +8,13 @@
 
 namespace n_e_s::core {
 
-Cpu::Cpu(IMmu *const mmu) : registers(), mmu_(mmu), pipeline_() {
+Cpu::Cpu(Registers *const registers, IMmu *const mmu)
+        : registers_(registers), mmu_(mmu), pipeline_() {
 }
 
 void Cpu::execute() {
     if (pipeline_.empty()) {
-        const uint8_t opcode = mmu_->read_byte(registers.pc++);
+        const uint8_t opcode = mmu_->read_byte(registers_->pc++);
 
         switch (opcode) {
         case CLC:
@@ -37,10 +38,10 @@ void Cpu::execute() {
 }
 
 uint8_t Cpu::lsr_a() {
-    set_carry(registers.a & 1);
-    registers.a &= ~1;
-    registers.a >>= 1;
-    set_zero(registers.a);
+    set_carry(registers_->a & 1);
+    registers_->a &= ~1;
+    registers_->a >>= 1;
+    set_zero(registers_->a);
 
     return 2;
 }
@@ -66,9 +67,9 @@ uint8_t Cpu::cld() {
 }
 
 uint8_t Cpu::inx() {
-    ++registers.x;
-    set_zero(registers.x);
-    set_negative(registers.x);
+    ++registers_->x;
+    set_zero(registers_->x);
+    set_negative(registers_->x);
     return 2;
 }
 
@@ -78,11 +79,11 @@ uint8_t Cpu::sed() {
 }
 
 void Cpu::clear_flag(uint8_t flag) {
-    registers.p &= ~flag;
+    registers_->p &= ~flag;
 }
 
 void Cpu::set_flag(uint8_t flag) {
-    registers.p |= flag;
+    registers_->p |= flag;
 }
 
 void Cpu::set_carry(bool carry) {

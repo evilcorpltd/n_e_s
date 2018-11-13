@@ -8,8 +8,9 @@
 using namespace n_e_s::core;
 
 int main(int, char **) {
+    Registers registers;
     std::unique_ptr<IMmu> mmu{MmuFactory::create()};
-    std::unique_ptr<ICpu> cpu{CpuFactory::create(mmu.get())};
+    std::unique_ptr<ICpu> cpu{CpuFactory::create(&registers, mmu.get())};
     (void)cpu;
     return 0;
 }

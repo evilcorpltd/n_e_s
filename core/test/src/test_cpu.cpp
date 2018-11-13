@@ -29,17 +29,19 @@ namespace {
 
 class CpuTest : public ::testing::Test {
 public:
-    CpuTest() : mmu(), cpu(&mmu), registers(cpu.registers) {
+    CpuTest() : registers(), mmu(), cpu(&registers, &mmu), expected() {
     }
 
     void stage_instruction(uint8_t instruction) {
-        ON_CALL(mmu, read_byte(cpu.registers.pc))
+        ON_CALL(mmu, read_byte(registers.pc))
                 .WillByDefault(Return(instruction));
     }
 
+    Registers registers;
     MockMmu mmu;
     Cpu cpu;
-    Registers registers;
+
+    Registers expected;
 };
 
 TEST_F(CpuTest, flag_register) {
@@ -47,71 +49,71 @@ TEST_F(CpuTest, flag_register) {
 }
 
 TEST_F(CpuTest, clc) {
-    cpu.registers.p |= C_FLAG | N_FLAG;
+    registers.p |= C_FLAG | N_FLAG;
 
     stage_instruction(Cpu::CLC);
     cpu.execute();
-    EXPECT_EQ(registers.pc + 1, cpu.registers.pc);
-    EXPECT_EQ(registers.p | C_FLAG | N_FLAG, cpu.registers.p);
+    EXPECT_EQ(expected.pc + 1, registers.pc);
+    EXPECT_EQ(expected.p | C_FLAG | N_FLAG, registers.p);
 
     cpu.execute();
-    EXPECT_EQ(registers.p | N_FLAG, cpu.registers.p);
-    EXPECT_EQ(registers.pc + 1, cpu.registers.pc);
+    EXPECT_EQ(expected.p | N_FLAG, registers.p);
+    EXPECT_EQ(expected.pc + 1, registers.pc);
 }
 
 TEST_F(CpuTest, sec) {
     stage_instruction(Cpu::SEC);
     cpu.execute();
-    EXPECT_EQ(registers.pc + 1, cpu.registers.pc);
-    EXPECT_EQ(registers.p, cpu.registers.p);
+    EXPECT_EQ(expected.pc + 1, registers.pc);
+    EXPECT_EQ(expected.p, registers.p);
 
     cpu.execute();
-    EXPECT_EQ(registers.p | C_FLAG, cpu.registers.p);
-    EXPECT_EQ(registers.pc + 1, cpu.registers.pc);
+    EXPECT_EQ(expected.p | C_FLAG, registers.p);
+    EXPECT_EQ(expected.pc + 1, registers.pc);
 }
 
 TEST_F(CpuTest, nop) {
     stage_instruction(Cpu::NOP);
     cpu.execute();
-    registers.pc += 1;
-    EXPECT_EQ(registers, cpu.registers);
+    expected.pc += 1;
+    EXPECT_EQ(expected, registers);
 
     cpu.execute();
-    EXPECT_EQ(registers, cpu.registers);
+    EXPECT_EQ(expected, registers);
 }
 
 TEST_F(CpuTest, register_instructions) {
     cpu.sed();
-    EXPECT_EQ(cpu.registers.p, D_FLAG);
+    EXPECT_EQ(registers.p, D_FLAG);
 
     cpu.cld();
-    EXPECT_EQ(cpu.registers.p, 0);
+    EXPECT_EQ(registers.p, 0);
 }
 
 TEST_F(CpuTest, inx) {
-    EXPECT_EQ(cpu.registers.x, 0);
+    EXPECT_EQ(registers.x, 0);
     cpu.inx();
-    EXPECT_EQ(cpu.registers.x, 1);
-    EXPECT_EQ(cpu.registers.p, 0);
+    EXPECT_EQ(registers.x, 1);
+    EXPECT_EQ(registers.p, 0);
     cpu.inx();
     cpu.inx();
-    EXPECT_EQ(cpu.registers.x, 3);
-    EXPECT_EQ(cpu.registers.p, 0);
-    cpu.registers.x = 126;
+    EXPECT_EQ(registers.x, 3);
+    EXPECT_EQ(registers.p, 0);
+    registers.x = 126;
     cpu.inx();
-    EXPECT_EQ(cpu.registers.x, 127);
-    EXPECT_EQ(cpu.registers.p, 0);
+    EXPECT_EQ(registers.x, 127);
+    EXPECT_EQ(registers.p, 0);
     cpu.inx();
-    EXPECT_EQ(cpu.registers.p, N_FLAG);
-    cpu.registers.x = 255;
+    EXPECT_EQ(registers.p, N_FLAG);
+    registers.x = 255;
     cpu.inx();
-    EXPECT_EQ(cpu.registers.x, 0);
-    EXPECT_EQ(cpu.registers.p, Z_FLAG);
+    EXPECT_EQ(registers.x, 0);
+    EXPECT_EQ(registers.p, Z_FLAG);
 }
 
 TEST_F(CpuTest, lsr) {
     cpu.lsr_a();
-    assert(cpu.registers.p == Z_FLAG);
+    assert(registers.p == Z_FLAG);
 }
 
 }

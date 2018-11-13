@@ -6,8 +6,8 @@
 
 namespace n_e_s::core {
 
-ICpu *CpuFactory::create(IMmu *mmu) {
-    return new Cpu(mmu);
+ICpu *CpuFactory::create(Registers *const registers, IMmu *const mmu) {
+    return new Cpu(registers, mmu);
 }
 
 }

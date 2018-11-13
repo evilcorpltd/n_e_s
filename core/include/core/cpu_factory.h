@@ -9,7 +9,7 @@ namespace n_e_s::core {
 
 class CpuFactory {
 public:
-    static ICpu *create(IMmu *mmu);
+    static ICpu *create(Registers *registers, IMmu *mmu);
 };
 
 }
