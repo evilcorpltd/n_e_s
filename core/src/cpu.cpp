@@ -3,6 +3,8 @@
 #include "cpu.h"
 
 #include <cassert>
+#include <sstream>
+#include <stdexcept>
 
 namespace n_e_s::core {
 
@@ -24,7 +26,9 @@ void Cpu::execute() {
             pipeline_.push([](){ /* Do nothing. */ });
             return;
         default:
-            assert(false);
+            std::stringstream err;
+            err << "Bad instruction: " << std::showbase << std::hex << +opcode;
+            throw std::logic_error(err.str());
         }
     }
 
