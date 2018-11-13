@@ -37,6 +37,13 @@ void Cpu::execute() {
         case NOP:
             pipeline_.push([](){ /* Do nothing. */ });
             return;
+        case INX:
+            pipeline_.push([=](){
+                ++registers_->x;
+                set_zero(registers_->x);
+                set_negative(registers_->x);
+            });
+            return;
         case SED:
             pipeline_.push([=](){ set_flag(D_FLAG); });
             return;
@@ -63,13 +70,6 @@ uint8_t Cpu::sei() {
 
 uint8_t Cpu::clv() {
     clear_flag(V_FLAG);
-    return 2;
-}
-
-uint8_t Cpu::inx() {
-    ++registers_->x;
-    set_zero(registers_->x);
-    set_negative(registers_->x);
     return 2;
 }
 

@@ -87,6 +87,55 @@ TEST_F(CpuTest, nop) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(CpuTest, inx_increments) {
+    stage_instruction(Cpu::INX);
+    expected.x += 1;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, inx_sets_n_flag) {
+    stage_instruction(Cpu::INX);
+    registers.x = 127;
+    expected.x = 128;
+    expected.p |= N_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, inx_clears_n_flag) {
+    stage_instruction(Cpu::INX);
+    registers.x = 255;
+    registers.p |= N_FLAG;
+    expected.x = 0;
+    expected.p |= Z_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, inx_sets_z_flag) {
+    stage_instruction(Cpu::INX);
+    registers.x = 255;
+    expected.x = 0;
+    expected.p |= Z_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, inx_clears_z_flag) {
+    stage_instruction(Cpu::INX);
+    registers.x = 0;
+    registers.p |= Z_FLAG;
+    expected.x = 1;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
 TEST_F(CpuTest, sed) {
     stage_instruction(Cpu::SED);
     expected.p |= D_FLAG;
@@ -95,28 +144,7 @@ TEST_F(CpuTest, sed) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, inx) {
-    EXPECT_EQ(registers.x, 0);
-    cpu.inx();
-    EXPECT_EQ(registers.x, 1);
-    EXPECT_EQ(registers.p, 0);
-    cpu.inx();
-    cpu.inx();
-    EXPECT_EQ(registers.x, 3);
-    EXPECT_EQ(registers.p, 0);
-    registers.x = 126;
-    cpu.inx();
-    EXPECT_EQ(registers.x, 127);
-    EXPECT_EQ(registers.p, 0);
-    cpu.inx();
-    EXPECT_EQ(registers.p, N_FLAG);
-    registers.x = 255;
-    cpu.inx();
-    EXPECT_EQ(registers.x, 0);
-    EXPECT_EQ(registers.p, Z_FLAG);
-}
-
-TEST_F(CpuTest, lsr_a_shifts_correctly) {
+TEST_F(CpuTest, lsr_a_shifts) {
     stage_instruction(Cpu::LSR_A);
     registers.a = 0b01001000;
     expected.a = 0b00100100;
