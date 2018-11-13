@@ -23,8 +23,22 @@ void Cpu::execute() {
         case SEC:
             pipeline_.push([=](){ set_flag(C_FLAG); });
             return;
+        case LSR_A:
+            pipeline_.push([=](){
+                set_carry(registers_->a & 1);
+                registers_->a &= ~1;
+                registers_->a >>= 1;
+                set_zero(registers_->a);
+            });
+            return;
+        case CLD:
+            pipeline_.push([=](){ clear_flag(D_FLAG); });
+            return;
         case NOP:
             pipeline_.push([](){ /* Do nothing. */ });
+            return;
+        case SED:
+            pipeline_.push([=](){ set_flag(D_FLAG); });
             return;
         default:
             std::stringstream err;
@@ -35,15 +49,6 @@ void Cpu::execute() {
 
     pipeline_.front()();
     pipeline_.pop();
-}
-
-uint8_t Cpu::lsr_a() {
-    set_carry(registers_->a & 1);
-    registers_->a &= ~1;
-    registers_->a >>= 1;
-    set_zero(registers_->a);
-
-    return 2;
 }
 
 uint8_t Cpu::cli() {
@@ -61,20 +66,10 @@ uint8_t Cpu::clv() {
     return 2;
 }
 
-uint8_t Cpu::cld() {
-    clear_flag(D_FLAG);
-    return 2;
-}
-
 uint8_t Cpu::inx() {
     ++registers_->x;
     set_zero(registers_->x);
     set_negative(registers_->x);
-    return 2;
-}
-
-uint8_t Cpu::sed() {
-    set_flag(D_FLAG);
     return 2;
 }
 

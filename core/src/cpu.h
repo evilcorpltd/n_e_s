@@ -19,18 +19,18 @@ public:
     // ICpu
     void execute() override;
 
-    uint8_t lsr_a(); // 4a, logical shift right (accumulator)
     uint8_t cli(); // 58, clear interrupt disable
     uint8_t sei(); // 78, set interrupt disable
     uint8_t clv(); // b8, clear overflow
-    uint8_t cld(); // d8, clear decimal
     uint8_t inx(); // e8, increment x index
-    uint8_t sed(); // f8, set decimal
 
     enum Opcode : uint8_t {
         CLC = 0x18,
         SEC = 0x38,
+        LSR_A = 0x4A,
+        CLD = 0xD8,
         NOP = 0xEA,
+        SED = 0xF8,
     };
 
 private:

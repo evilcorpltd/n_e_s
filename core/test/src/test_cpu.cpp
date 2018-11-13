@@ -51,10 +51,6 @@ public:
     Registers expected;
 };
 
-TEST_F(CpuTest, flag_register) {
-    EXPECT_EQ(0, registers.p);
-}
-
 TEST_F(CpuTest, clc) {
     expected.p = registers.p = 0xFF;
 
@@ -75,6 +71,17 @@ TEST_F(CpuTest, sec) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(CpuTest, cld) {
+    expected.p = registers.p = 0xFF;
+
+    stage_instruction(Cpu::CLD);
+    expected.pc += 1;
+    expected.p &= ~D_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
 TEST_F(CpuTest, nop) {
     stage_instruction(Cpu::NOP);
     expected.pc += 1;
@@ -83,12 +90,13 @@ TEST_F(CpuTest, nop) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, register_instructions) {
-    cpu.sed();
-    EXPECT_EQ(registers.p, D_FLAG);
+TEST_F(CpuTest, sed) {
+    stage_instruction(Cpu::SED);
+    expected.pc += 1;
+    expected.p |= D_FLAG;
 
-    cpu.cld();
-    EXPECT_EQ(registers.p, 0);
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
 }
 
 TEST_F(CpuTest, inx) {
@@ -112,9 +120,57 @@ TEST_F(CpuTest, inx) {
     EXPECT_EQ(registers.p, Z_FLAG);
 }
 
-TEST_F(CpuTest, lsr) {
-    cpu.lsr_a();
-    assert(registers.p == Z_FLAG);
+TEST_F(CpuTest, lsr_a_shifts_correctly) {
+    stage_instruction(Cpu::LSR_A);
+    registers.a = 0b01001000;
+    expected.a = 0b00100100;
+    expected.pc += 1;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, lsr_a_sets_z_flag) {
+    stage_instruction(Cpu::LSR_A);
+    expected.pc += 1;
+    expected.p |= Z_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, lsr_a_sets_c_flag) {
+    stage_instruction(Cpu::LSR_A);
+    registers.a = 0b00000011;
+    expected.a = 0b00000001;
+    expected.pc += 1;
+    expected.p = C_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, lsr_a_sets_c_and_z_flags) {
+    stage_instruction(Cpu::LSR_A);
+    registers.a = 0b00000001;
+    expected.a = 0b00000000;
+    expected.pc += 1;
+    expected.p = C_FLAG | Z_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, lsr_a_clears_c_and_z_flags) {
+    stage_instruction(Cpu::LSR_A);
+    registers.a = 0b00000010;
+    registers.p = Z_FLAG | C_FLAG | N_FLAG;
+    expected.a = 0b00000001;
+    expected.pc += 1;
+    expected.p = N_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
 }
 
 }
