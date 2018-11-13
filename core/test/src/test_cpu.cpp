@@ -10,6 +10,7 @@ using namespace n_e_s::core;
 using namespace n_e_s::core::test;
 
 using testing::_;
+using testing::NiceMock;
 using testing::Return;
 
 namespace n_e_s::core {
@@ -38,7 +39,7 @@ public:
     }
 
     Registers registers;
-    MockMmu mmu;
+    NiceMock<MockMmu> mmu;
     Cpu cpu;
 
     Registers expected;
