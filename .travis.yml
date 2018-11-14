@@ -18,4 +18,4 @@ script:
   - mkdir -p _build && cd _build
   - cmake ..
   - make
-  - make test
+  - ctest --output-on-failure
