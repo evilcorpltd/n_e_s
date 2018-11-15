@@ -6,6 +6,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-7
+      - gcovr
 
 install:
   - mkdir -p cmake-3.12
@@ -13,9 +14,11 @@ install:
     | tar --strip-components=1 -xz -C cmake-3.12
   - export PATH=`pwd`/cmake-3.12/bin:$PATH
   - export CXX=g++-7
+  - export CXXFLAGS="-fprofile-arcs -ftest-coverage"
 
 script:
   - mkdir -p _build && cd _build
   - cmake ..
   - make
   - ctest --output-on-failure
+  - gcovr core/CMakeFiles/n_e_s_core.dir/src/ -p --root ..
