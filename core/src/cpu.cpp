@@ -12,6 +12,9 @@ enum Opcode : uint8_t {
     CLC = 0x18,
     SEC = 0x38,
     LSR_A = 0x4A,
+    CLI = 0x58,
+    SEI = 0x78,
+    CLV = 0xB8,
     CLD = 0xD8,
     NOP = 0xEA,
     INX = 0xE8,
@@ -45,6 +48,15 @@ void Cpu::execute() {
                 set_zero(registers_->a);
             });
             return;
+        case CLI:
+            pipeline_.push([=](){ clear_flag(I_FLAG); });
+            return;
+        case SEI:
+            pipeline_.push([=](){ set_flag(I_FLAG); });
+            return;
+        case CLV:
+            pipeline_.push([=](){ clear_flag(V_FLAG); });
+            return;
         case CLD:
             pipeline_.push([=](){ clear_flag(D_FLAG); });
             return;
@@ -70,21 +82,6 @@ void Cpu::execute() {
 
     pipeline_.front()();
     pipeline_.pop();
-}
-
-uint8_t Cpu::cli() {
-    clear_flag(I_FLAG);
-    return 2;
-}
-
-uint8_t Cpu::sei() {
-    set_flag(I_FLAG);
-    return 2;
-}
-
-uint8_t Cpu::clv() {
-    clear_flag(V_FLAG);
-    return 2;
 }
 
 void Cpu::clear_flag(uint8_t flag) {

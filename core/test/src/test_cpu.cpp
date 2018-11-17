@@ -34,6 +34,9 @@ enum Opcode : uint8_t {
     CLC = 0x18,
     SEC = 0x38,
     LSR_A = 0x4A,
+    CLI = 0x58,
+    SEI = 0x78,
+    CLV = 0xB8,
     CLD = 0xD8,
     NOP = 0xEA,
     INX = 0xE8,
@@ -81,6 +84,30 @@ TEST_F(CpuTest, clc) {
 TEST_F(CpuTest, sec) {
     stage_instruction(SEC);
     expected.p |= C_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, cli) {
+    stage_instruction(CLI);
+    registers.p |= I_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sei) {
+    stage_instruction(SEI);
+    expected.p |= I_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, clv) {
+    stage_instruction(CLV);
+    registers.p |= V_FLAG;
 
     step_execution(2);
     EXPECT_EQ(expected, registers);

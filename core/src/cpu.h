@@ -19,10 +19,6 @@ public:
     // ICpu
     void execute() override;
 
-    uint8_t cli(); // 58, clear interrupt disable
-    uint8_t sei(); // 78, set interrupt disable
-    uint8_t clv(); // b8, clear overflow
-
 private:
     Registers *const registers_;
     IMmu *const mmu_;
