@@ -31,7 +31,8 @@ Cpu::Cpu(Registers *const registers, IMmu *const mmu)
 
 void Cpu::execute() {
     if (pipeline_.empty()) {
-        const uint8_t opcode = mmu_->read_byte(registers_->pc++);
+        const Opcode opcode = static_cast<Opcode>(
+                mmu_->read_byte(registers_->pc++));
 
         switch (opcode) {
         case CLC:
@@ -73,11 +74,11 @@ void Cpu::execute() {
         case SED:
             pipeline_.push([=](){ set_flag(D_FLAG); });
             return;
-        default:
-            std::stringstream err;
-            err << "Bad instruction: " << std::showbase << std::hex << +opcode;
-            throw std::logic_error(err.str());
         }
+
+        std::stringstream err;
+        err << "Bad instruction: " << std::showbase << std::hex << +opcode;
+        throw std::logic_error(err.str());
     }
 
     pipeline_.front()();
