@@ -12,6 +12,7 @@ enum Opcode : uint8_t {
     CLC = 0x18,
     SEC = 0x38,
     LSR_A = 0x4A,
+    JMP = 0x4C,
     CLI = 0x58,
     SEI = 0x78,
     CLV = 0xB8,
@@ -47,6 +48,14 @@ void Cpu::execute() {
                 registers_->a &= ~1;
                 registers_->a >>= 1;
                 set_zero(registers_->a);
+            });
+            return;
+        case JMP:
+            pipeline_.push([=](){
+                ++registers_->pc;
+            });
+            pipeline_.push([=](){
+                registers_->pc = mmu_->read_word(registers_->pc - 1);
             });
             return;
         case CLI:

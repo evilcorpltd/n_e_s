@@ -34,6 +34,7 @@ enum Opcode : uint8_t {
     CLC = 0x18,
     SEC = 0x38,
     LSR_A = 0x4A,
+    JMP = 0x4C,
     CLI = 0x58,
     SEI = 0x78,
     CLV = 0xB8,
@@ -134,6 +135,18 @@ TEST_F(CpuTest, lsr_a_clears_c_and_z_flags) {
     expected.p = N_FLAG;
 
     step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, jmp) {
+    stage_instruction(JMP);
+    expected.pc = 0x1234;
+
+    ON_CALL(mmu, read_word(registers.pc + 1))
+            .WillByDefault(Return(0x1234));
+
+    step_execution(3);
+
     EXPECT_EQ(expected, registers);
 }
 
