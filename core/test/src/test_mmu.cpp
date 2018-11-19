@@ -33,6 +33,19 @@ TEST_F(MmuTest, read_write_word) {
     }
 }
 
+TEST_F(MmuTest, byte_order) {
+    const uint8_t byte0d = 0x0D;
+    const uint8_t bytef0 = 0xF0;
+
+    mmu->write_word(0, 0xF00D);
+    EXPECT_EQ(byte0d, mmu->read_byte(0));
+    EXPECT_EQ(bytef0, mmu->read_byte(1));
+
+    mmu->write_byte(0, bytef0);
+    mmu->write_byte(1, byte0d);
+    EXPECT_EQ(0x0DF0, mmu->read_word(0));
+}
+
 TEST_F(MmuTest, ram_bank_mirroring) {
     const std::vector<uint16_t> addrs{0x100, 0x900, 0x1100, 0x1900};
     const std::vector<uint8_t> bytes{0x1F, 0xCC, 0x01, 0xAB};
