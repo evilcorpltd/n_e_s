@@ -33,6 +33,11 @@ TEST_F(MmuTest, read_write_word) {
     }
 }
 
+TEST_F(MmuTest, read_write_byte_io_dev_bank) {
+    mmu->write_byte(0x4018, 0x33);
+    EXPECT_EQ(0x33, mmu->read_byte(0x4018));
+}
+
 TEST_F(MmuTest, byte_order) {
     const uint8_t byte0d = 0x0D;
     const uint8_t bytef0 = 0xF0;
