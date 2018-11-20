@@ -33,6 +33,11 @@ TEST_F(MmuTest, read_write_word) {
     }
 }
 
+TEST_F(MmuTest, read_write_byte_io_dev_bank) {
+    mmu->write_byte(0x4018, 0x33);
+    EXPECT_EQ(0x33, mmu->read_byte(0x4018));
+}
+
 TEST_F(MmuTest, byte_order) {
     const uint8_t byte0d = 0x0D;
     const uint8_t bytef0 = 0xF0;
@@ -49,6 +54,26 @@ TEST_F(MmuTest, byte_order) {
 TEST_F(MmuTest, ram_bank_mirroring) {
     const std::vector<uint16_t> addrs{0x100, 0x900, 0x1100, 0x1900};
     const std::vector<uint8_t> bytes{0x1F, 0xCC, 0x01, 0xAB};
+
+    for (uint8_t i = 0; i < addrs.size(); ++i) {
+        mmu->write_byte(addrs[i], bytes[i]);
+
+        for (uint16_t addr : addrs) {
+            EXPECT_EQ(bytes[i], mmu->read_byte(addr));
+        }
+    }
+}
+
+TEST_F(MmuTest, ppu_bank_mirroring) {
+    std::vector<uint16_t> addrs;
+    std::vector<uint8_t> bytes;
+
+    uint16_t addr = 0x2004;
+    for (uint8_t i = 1; i <= 0x80; ++i) {
+        bytes.push_back(i % 0xF);
+        addrs.push_back(addr);
+        addr += 0x40;
+    }
 
     for (uint8_t i = 0; i < addrs.size(); ++i) {
         mmu->write_byte(addrs[i], bytes[i]);
