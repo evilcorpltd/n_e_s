@@ -10,8 +10,13 @@ matrix:
           packages:
             - g++-7
             - gcovr
-      env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+      script:
+        - mkdir -p _build && cd _build
+        - CXX=g++-7 CXXFLAGS="-fprofile-arcs -ftest-coverage" cmake ..
+        - make
+        - ctest --output-on-failure
+        - gcovr core/CMakeFiles/n_e_s_core.dir/src/ -p --root ..
+
     - compiler: clang
       addons:
         apt:
@@ -20,24 +25,15 @@ matrix:
             - llvm-toolchain-trusty-7
           packages:
             - clang-7
-            - gcovr
             - libstdc++-7-dev
-      env:
-        - MATRIX_EVAL="CC=clang-7 && CXX=clang++-7"
-
-before_install:
-    - eval "${MATRIX_EVAL}"
+      script:
+        - mkdir -p _build && cd _build
+        - CXX=clang++-7 cmake ..
+        - make
+        - ctest --output-on-failure
 
 install:
   - mkdir -p cmake-3.12
   - wget -qO- "https://cmake.org/files/v3.12/cmake-3.12.2-Linux-x86_64.tar.gz" \
     | tar --strip-components=1 -xz -C cmake-3.12
   - export PATH=`pwd`/cmake-3.12/bin:$PATH
-  - export CXXFLAGS="-fprofile-arcs -ftest-coverage"
-
-script:
-  - mkdir -p _build && cd _build
-  - cmake ..
-  - make
-  - ctest --output-on-failure
-  - gcovr core/CMakeFiles/n_e_s_core.dir/src/ -p --root ..
