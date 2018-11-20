@@ -26,7 +26,7 @@ struct Registers {
 
 class ICpu {
 public:
-    virtual ~ICpu() {}
+    virtual ~ICpu() = default;
 
     // Steps CPU execution forward 1 cycle.
     virtual void execute() = 0;

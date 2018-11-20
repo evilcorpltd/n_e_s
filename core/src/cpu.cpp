@@ -32,7 +32,7 @@ Cpu::Cpu(Registers *const registers, IMmu *const mmu)
 
 void Cpu::execute() {
     if (pipeline_.empty()) {
-        const Opcode opcode = static_cast<Opcode>(
+        const auto opcode = static_cast<Opcode>(
                 mmu_->read_byte(registers_->pc++));
 
         switch (opcode) {

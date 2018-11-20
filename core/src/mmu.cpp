@@ -6,9 +6,6 @@
 
 namespace n_e_s::core {
 
-Mmu::Mmu() : ram_(), ppu_(), io_(), io_dev_(), cartridge_() {
-}
-
 uint8_t Mmu::read_byte(uint16_t addr) const {
     return *translate_address(addr);
 }

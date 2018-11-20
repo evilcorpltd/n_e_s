@@ -8,7 +8,7 @@ namespace n_e_s::core {
 
 class IMmu {
 public:
-    virtual ~IMmu() {}
+    virtual ~IMmu() = default;
 
     virtual uint8_t read_byte(uint16_t addr) const = 0;
     virtual uint16_t read_word(uint16_t addr) const = 0;
