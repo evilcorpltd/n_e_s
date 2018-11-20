@@ -72,6 +72,12 @@ public:
     Registers expected;
 };
 
+TEST_F(CpuTest, unsupported_instruction) {
+    stage_instruction(0);
+
+    EXPECT_THROW(step_execution(1), std::logic_error);
+}
+
 TEST_F(CpuTest, clc) {
     expected.p = registers.p = 0xFF;
 
