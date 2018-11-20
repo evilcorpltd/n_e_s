@@ -2,7 +2,7 @@ language: cpp
 
 matrix:
   include:
-    - compiler: gcc
+    - name: "gcc 7"
       addons:
         apt:
           sources:
@@ -17,7 +17,7 @@ matrix:
         - ctest --output-on-failure
         - gcovr core/CMakeFiles/n_e_s_core.dir/src/ -p --root ..
 
-    - compiler: clang
+    - name: "clang 7"
       addons:
         apt:
           sources:
@@ -31,6 +31,21 @@ matrix:
         - CXX=clang++-7 cmake ..
         - make
         - ctest --output-on-failure
+
+    - name: "clang-tidy"
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-7
+          packages:
+            - clang-7
+            - clang-tidy-7
+            - libstdc++-7-dev
+      script:
+        - mkdir -p _build && cd _build
+        - CXX=clang++-7 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+        - run-clang-tidy-7.py -p . "core|application"
 
 install:
   - mkdir -p cmake-3.12
