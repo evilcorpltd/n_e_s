@@ -5,12 +5,12 @@ add_library(${PROJECT_NAME}
     include/core/mmu_factory.h
     include/core/icpu.h
     include/core/immu.h
-    src/cpu.h
-    src/cpu.cpp
     src/cpu_factory.cpp
     src/mmu.h
     src/mmu.cpp
     src/mmu_factory.cpp
+    src/mos6502.h
+    src/mos6502.cpp
 )
 
 target_compile_options(${PROJECT_NAME}

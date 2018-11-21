@@ -11,10 +11,10 @@
 
 namespace n_e_s::core {
 
-class Cpu : public ICpu {
+class Mos6502 : public ICpu {
 public:
     // Assumes ownership of nothing. Really irresponsible.
-    Cpu(Registers *registers, IMmu *mmu);
+    Mos6502(Registers *registers, IMmu *mmu);
 
     // ICpu
     void execute() override;

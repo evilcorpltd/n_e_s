@@ -1,6 +1,6 @@
 // Copyright 2018 Robin Linden <dev@robinlinden.eu>
 
-#include "cpu.h"
+#include "mos6502.h"
 
 #include <cassert>
 #include <sstream>
@@ -29,12 +29,12 @@ const uint16_t kBrkAddress = 0xFFFE; // This is where the break routine is.
 
 namespace n_e_s::core {
 
-Cpu::Cpu(Registers *const registers, IMmu *const mmu)
+Mos6502::Mos6502(Registers *const registers, IMmu *const mmu)
         : registers_(registers), mmu_(mmu), pipeline_() {
 }
 
 // Most instruction timings are from https://robinli.eu/f/6502_cpu.txt
-void Cpu::execute() {
+void Mos6502::execute() {
     if (pipeline_.empty()) {
         const auto opcode = static_cast<Opcode>(
                 mmu_->read_byte(registers_->pc++));
@@ -123,15 +123,15 @@ void Cpu::execute() {
     pipeline_.pop();
 }
 
-void Cpu::clear_flag(uint8_t flag) {
+void Mos6502::clear_flag(uint8_t flag) {
     registers_->p &= ~flag;
 }
 
-void Cpu::set_flag(uint8_t flag) {
+void Mos6502::set_flag(uint8_t flag) {
     registers_->p |= flag;
 }
 
-void Cpu::set_carry(bool carry) {
+void Mos6502::set_carry(bool carry) {
     if (carry) {
         set_flag(C_FLAG);
     } else {
@@ -139,7 +139,7 @@ void Cpu::set_carry(bool carry) {
     }
 }
 
-void Cpu::set_zero(uint8_t byte) {
+void Mos6502::set_zero(uint8_t byte) {
     if (byte == 0) {
         set_flag(Z_FLAG);
     } else {
@@ -147,7 +147,7 @@ void Cpu::set_zero(uint8_t byte) {
     }
 }
 
-void Cpu::set_negative(uint8_t byte) {
+void Mos6502::set_negative(uint8_t byte) {
     if (byte & 1 << 7) {
         set_flag(N_FLAG);
     } else {
