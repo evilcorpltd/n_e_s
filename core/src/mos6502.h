@@ -39,4 +39,4 @@ private:
     void set_negative(uint8_t byte);
 };
 
-}
+} // namespace n_e_s::core

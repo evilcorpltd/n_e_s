@@ -10,4 +10,4 @@ IMmu *MmuFactory::create() {
     return new Mmu();
 }
 
-}
+} // namespace n_e_s::core

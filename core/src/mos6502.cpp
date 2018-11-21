@@ -25,54 +25,44 @@ enum Opcode : uint8_t {
 
 const uint16_t kBrkAddress = 0xFFFE; // This is where the break routine is.
 
-}
+} // namespace
 
 namespace n_e_s::core {
 
 Mos6502::Mos6502(Registers *const registers, IMmu *const mmu)
-        : registers_(registers), mmu_(mmu), pipeline_() {
-}
+        : registers_(registers), mmu_(mmu), pipeline_() {}
 
 // Most instruction timings are from https://robinli.eu/f/6502_cpu.txt
 void Mos6502::execute() {
     if (pipeline_.empty()) {
-        const auto opcode = static_cast<Opcode>(
-                mmu_->read_byte(registers_->pc++));
+        const auto opcode =
+                static_cast<Opcode>(mmu_->read_byte(registers_->pc++));
 
         switch (opcode) {
         case BRK:
-            pipeline_.push([=](){
-                ++registers_->pc;
-            });
-            pipeline_.push([=](){
+            pipeline_.push([=]() { ++registers_->pc; });
+            pipeline_.push([=]() {
                 /* Do nothing. */
             });
-            pipeline_.push([=](){
+            pipeline_.push([=]() {
                 registers_->sp -= 2;
-                mmu_->write_word(
-                        registers_->sp,
-                        registers_->pc);
+                mmu_->write_word(registers_->sp, registers_->pc);
             });
-            pipeline_.push([=](){
-                mmu_->write_byte(
-                        --registers_->sp,
-                        registers_->p | B_FLAG);
+            pipeline_.push([=]() {
+                mmu_->write_byte(--registers_->sp, registers_->p | B_FLAG);
             });
-            pipeline_.push([=](){
-                ++registers_->pc;
-            });
-            pipeline_.push([=](){
-                registers_->pc = mmu_->read_word(kBrkAddress);
-            });
+            pipeline_.push([=]() { ++registers_->pc; });
+            pipeline_.push(
+                    [=]() { registers_->pc = mmu_->read_word(kBrkAddress); });
             return;
         case CLC:
-            pipeline_.push([=](){ clear_flag(C_FLAG); });
+            pipeline_.push([=]() { clear_flag(C_FLAG); });
             return;
         case SEC:
-            pipeline_.push([=](){ set_flag(C_FLAG); });
+            pipeline_.push([=]() { set_flag(C_FLAG); });
             return;
         case LSR_A:
-            pipeline_.push([=](){
+            pipeline_.push([=]() {
                 set_carry(registers_->a & 1);
                 registers_->a &= ~1;
                 registers_->a >>= 1;
@@ -80,37 +70,35 @@ void Mos6502::execute() {
             });
             return;
         case JMP:
-            pipeline_.push([=](){
-                ++registers_->pc;
-            });
-            pipeline_.push([=](){
+            pipeline_.push([=]() { ++registers_->pc; });
+            pipeline_.push([=]() {
                 registers_->pc = mmu_->read_word(registers_->pc - 1);
             });
             return;
         case CLI:
-            pipeline_.push([=](){ clear_flag(I_FLAG); });
+            pipeline_.push([=]() { clear_flag(I_FLAG); });
             return;
         case SEI:
-            pipeline_.push([=](){ set_flag(I_FLAG); });
+            pipeline_.push([=]() { set_flag(I_FLAG); });
             return;
         case CLV:
-            pipeline_.push([=](){ clear_flag(V_FLAG); });
+            pipeline_.push([=]() { clear_flag(V_FLAG); });
             return;
         case CLD:
-            pipeline_.push([=](){ clear_flag(D_FLAG); });
+            pipeline_.push([=]() { clear_flag(D_FLAG); });
             return;
         case NOP:
-            pipeline_.push([](){ /* Do nothing. */ });
+            pipeline_.push([]() { /* Do nothing. */ });
             return;
         case INX:
-            pipeline_.push([=](){
+            pipeline_.push([=]() {
                 ++registers_->x;
                 set_zero(registers_->x);
                 set_negative(registers_->x);
             });
             return;
         case SED:
-            pipeline_.push([=](){ set_flag(D_FLAG); });
+            pipeline_.push([=]() { set_flag(D_FLAG); });
             return;
         }
 
@@ -155,4 +143,4 @@ void Mos6502::set_negative(uint8_t byte) {
     }
 }
 
-}
+} // namespace n_e_s::core

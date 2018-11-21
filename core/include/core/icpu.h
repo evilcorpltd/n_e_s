@@ -32,4 +32,4 @@ public:
     virtual void execute() = 0;
 };
 
-}
+} // namespace n_e_s::core

@@ -10,8 +10,7 @@ namespace {
 
 class MmuTest : public ::testing::Test {
 public:
-    MmuTest() : mmu{MmuFactory::create()} {
-    }
+    MmuTest() : mmu{MmuFactory::create()} {}
 
     std::unique_ptr<IMmu> mmu;
 };
@@ -84,4 +83,4 @@ TEST_F(MmuTest, ppu_bank_mirroring) {
     }
 }
 
-}
+} // namespace

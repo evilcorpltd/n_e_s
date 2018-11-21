@@ -12,4 +12,4 @@ public:
     static ICpu *create(Registers *registers, IMmu *mmu);
 };
 
-}
+} // namespace n_e_s::core
