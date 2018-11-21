@@ -17,4 +17,4 @@ public:
     virtual void write_word(uint16_t addr, uint16_t word) = 0;
 };
 
-}
+} // namespace n_e_s::core

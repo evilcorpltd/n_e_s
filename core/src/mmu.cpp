@@ -52,4 +52,4 @@ const uint8_t *Mmu::translate_address(uint16_t addr) const {
     return &cartridge_[addr];
 }
 
-}
+} // namespace n_e_s::core

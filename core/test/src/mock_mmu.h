@@ -17,4 +17,4 @@ public:
     MOCK_METHOD2(write_word, void(uint16_t addr, uint16_t word));
 };
 
-}
+} // namespace n_e_s::core::test

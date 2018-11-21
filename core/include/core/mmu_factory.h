@@ -11,4 +11,4 @@ public:
     static IMmu *create();
 };
 
-}
+} // namespace n_e_s::core

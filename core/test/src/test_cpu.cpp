@@ -16,15 +16,11 @@ using testing::Return;
 namespace n_e_s::core {
 
 static bool operator==(const Registers &a, const Registers &b) {
-    return a.pc == b.pc
-            && a.sp == b.sp
-            && a.a == b.a
-            && a.x == b.x
-            && a.y == b.y
-            && a.p == b.p;
+    return a.pc == b.pc && a.sp == b.sp && a.a == b.a && a.x == b.x &&
+           a.y == b.y && a.p == b.p;
 }
 
-}
+} // namespace n_e_s::core
 
 namespace {
 
@@ -53,8 +49,7 @@ public:
             : registers(),
               mmu(),
               cpu{CpuFactory::create(&registers, &mmu)},
-              expected() {
-    }
+              expected() {}
 
     void stage_instruction(uint8_t instruction) {
         expected.pc += 1;
@@ -92,8 +87,7 @@ TEST_F(CpuTest, brk) {
 
     expected.sp -= pc_size + p_size;
 
-    ON_CALL(mmu, read_word(kBrkAddress))
-            .WillByDefault(Return(0xDEAD));
+    ON_CALL(mmu, read_word(kBrkAddress)).WillByDefault(Return(0xDEAD));
 
     // First the return address is pushed and then the registers.
     EXPECT_CALL(mmu, write_word(expected_pc_stack_addr, registers.pc + 2));
@@ -174,8 +168,7 @@ TEST_F(CpuTest, jmp) {
     stage_instruction(JMP);
     expected.pc = 0x1234;
 
-    ON_CALL(mmu, read_word(registers.pc + 1))
-            .WillByDefault(Return(0x1234));
+    ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x1234));
 
     step_execution(3);
 
@@ -280,4 +273,4 @@ TEST_F(CpuTest, sed) {
     EXPECT_EQ(expected, registers);
 }
 
-}
+} // namespace
