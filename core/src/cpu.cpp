@@ -9,6 +9,7 @@
 namespace {
 
 enum Opcode : uint8_t {
+    BRK = 0x00,
     CLC = 0x18,
     SEC = 0x38,
     LSR_A = 0x4A,
@@ -22,6 +23,8 @@ enum Opcode : uint8_t {
     SED = 0xF8,
 };
 
+const uint16_t kBrkAddress = 0xFFFE; // This is where the break routine is.
+
 }
 
 namespace n_e_s::core {
@@ -30,12 +33,38 @@ Cpu::Cpu(Registers *const registers, IMmu *const mmu)
         : registers_(registers), mmu_(mmu), pipeline_() {
 }
 
+// Most instruction timings are from https://robinli.eu/f/6502_cpu.txt
 void Cpu::execute() {
     if (pipeline_.empty()) {
         const auto opcode = static_cast<Opcode>(
                 mmu_->read_byte(registers_->pc++));
 
         switch (opcode) {
+        case BRK:
+            pipeline_.push([=](){
+                ++registers_->pc;
+            });
+            pipeline_.push([=](){
+                /* Do nothing. */
+            });
+            pipeline_.push([=](){
+                registers_->sp -= 2;
+                mmu_->write_word(
+                        registers_->sp,
+                        registers_->pc);
+            });
+            pipeline_.push([=](){
+                mmu_->write_byte(
+                        --registers_->sp,
+                        registers_->p | B_FLAG);
+            });
+            pipeline_.push([=](){
+                ++registers_->pc;
+            });
+            pipeline_.push([=](){
+                registers_->pc = mmu_->read_word(kBrkAddress);
+            });
+            return;
         case CLC:
             pipeline_.push([=](){ clear_flag(C_FLAG); });
             return;

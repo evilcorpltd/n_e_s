@@ -28,9 +28,12 @@ static bool operator==(const Registers &a, const Registers &b) {
 
 namespace {
 
+const uint16_t kBrkAddress = 0xFFFE;
+
 // Tests and opcodes should be written without looking at the cpu
 // implementation. Look at a data sheet and don't cheat!
 enum Opcode : uint8_t {
+    BRK = 0x00,
     CLC = 0x18,
     SEC = 0x38,
     LSR_A = 0x4A,
@@ -73,9 +76,32 @@ public:
 };
 
 TEST_F(CpuTest, unsupported_instruction) {
-    stage_instruction(0);
+    stage_instruction(0xFF);
 
     EXPECT_THROW(step_execution(1), std::logic_error);
+}
+
+TEST_F(CpuTest, brk) {
+    stage_instruction(BRK);
+    expected.pc = 0xDEAD;
+
+    const uint8_t pc_size = 2;
+    const uint8_t expected_pc_stack_addr = expected.sp - pc_size;
+    const uint8_t p_size = 1;
+    const uint8_t expected_p_stack_addr = expected_pc_stack_addr - p_size;
+
+    expected.sp -= pc_size + p_size;
+
+    ON_CALL(mmu, read_word(kBrkAddress))
+            .WillByDefault(Return(0xDEAD));
+
+    // First the return address is pushed and then the registers.
+    EXPECT_CALL(mmu, write_word(expected_pc_stack_addr, registers.pc + 2));
+    EXPECT_CALL(mmu, write_byte(expected_p_stack_addr, registers.p | B_FLAG));
+
+    step_execution(7);
+
+    EXPECT_EQ(expected, registers);
 }
 
 TEST_F(CpuTest, clc) {
