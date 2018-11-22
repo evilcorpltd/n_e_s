@@ -30,8 +30,26 @@ const uint16_t kBrkAddress = 0xFFFE; // This is where the break routine is.
 
 namespace n_e_s::core {
 
+Mos6502::Ram::Ram(IMmu *mmu) : mmu_(mmu) {}
+
+uint8_t Mos6502::Ram::read_byte(uint8_t addr) const {
+    return mmu_->read_byte(ram_offset_ + addr);
+}
+
+uint16_t Mos6502::Ram::read_word(uint8_t addr) const {
+    return mmu_->read_word(ram_offset_ + addr);
+}
+
+void Mos6502::Ram::write_byte(uint8_t addr, uint8_t byte) {
+    mmu_->write_byte(ram_offset_ + addr, byte);
+}
+
+void Mos6502::Ram::write_word(uint8_t addr, uint16_t word) {
+    mmu_->write_word(ram_offset_ + addr, word);
+}
+
 Mos6502::Mos6502(Registers *const registers, IMmu *const mmu)
-        : registers_(registers), mmu_(mmu), pipeline_() {}
+        : registers_(registers), mmu_(mmu), ram_(mmu_), pipeline_() {}
 
 // Most instruction timings are from https://robinli.eu/f/6502_cpu.txt
 void Mos6502::execute() {
@@ -47,10 +65,10 @@ void Mos6502::execute() {
             });
             pipeline_.push([=]() {
                 registers_->sp -= 2;
-                mmu_->write_word(registers_->sp, registers_->pc);
+                ram_.write_word(registers_->sp, registers_->pc);
             });
             pipeline_.push([=]() {
-                mmu_->write_byte(--registers_->sp, registers_->p | B_FLAG);
+                ram_.write_byte(--registers_->sp, registers_->p | B_FLAG);
             });
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push(
