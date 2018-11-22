@@ -9,13 +9,26 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-7
-            - gcovr
+      script:
+        - mkdir -p _build && cd _build
+        - CXX=g++-7 cmake ..
+        - make
+        - ctest --output-on-failure
+
+    - name: "gcc 7 coverage"
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      before_install: pip install gcovr --user
       script:
         - mkdir -p _build && cd _build
         - CXX=g++-7 CXXFLAGS="-fprofile-arcs -ftest-coverage" cmake ..
         - make
         - ctest --output-on-failure
-        - gcovr core/CMakeFiles/n_e_s_core.dir/src/ -p --root ..
+        - gcovr core/CMakeFiles/n_e_s_core.dir/src/ -p --root .. --fail-under-line=95
 
     - name: "clang 7"
       addons:
