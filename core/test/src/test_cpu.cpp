@@ -33,6 +33,7 @@ enum Opcode : uint8_t {
     CLC = 0x18,
     SEC = 0x38,
     LSR_A = 0x4A,
+    PHA = 0x48,
     JMP = 0x4C,
     CLI = 0x58,
     SEI = 0x78,
@@ -161,6 +162,25 @@ TEST_F(CpuTest, lsr_a_clears_c_and_z_flags) {
     expected.p = N_FLAG;
 
     step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, pha) {
+    stage_instruction(PHA);
+    registers.sp = 0x05;
+    registers.a = 0x84;
+
+    const uint8_t a_size = 1;
+    const uint8_t expected_stack_addr = registers.sp - a_size;
+
+    EXPECT_CALL(mmu, write_byte(expected_stack_addr, registers.a));
+
+    step_execution(3);
+
+    ++expected.pc;
+    expected.sp = 0x04;
+    expected.a = registers.a;
+
     EXPECT_EQ(expected, registers);
 }
 

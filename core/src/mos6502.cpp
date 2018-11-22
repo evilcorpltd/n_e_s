@@ -13,6 +13,7 @@ enum Opcode : uint8_t {
     CLC = 0x18,
     SEC = 0x38,
     LSR_A = 0x4A,
+    PHA = 0x48,
     JMP = 0x4C,
     CLI = 0x58,
     SEI = 0x78,
@@ -69,6 +70,11 @@ void Mos6502::execute() {
                 set_zero(registers_->a);
             });
             return;
+        case PHA:
+            pipeline_.push([=]() { ++registers_->pc; });
+            pipeline_.push([=]() {
+                mmu_->write_byte(--registers_->sp, registers_->a);
+            });
         case JMP:
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() {
