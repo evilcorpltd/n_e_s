@@ -91,7 +91,7 @@ void Mos6502::execute() {
         case PHA:
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() {
-                mmu_->write_byte(--registers_->sp, registers_->a);
+                ram_.write_byte(--registers_->sp, registers_->a);
             });
         case JMP:
             pipeline_.push([=]() { ++registers_->pc; });

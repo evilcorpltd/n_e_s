@@ -176,7 +176,8 @@ TEST_F(CpuTest, pha) {
     const uint8_t a_size = 1;
     const uint8_t expected_stack_addr = registers.sp - a_size;
 
-    EXPECT_CALL(mmu, write_byte(expected_stack_addr, registers.a));
+    EXPECT_CALL(mmu,
+                write_byte(kStackOffset + expected_stack_addr, registers.a));
 
     step_execution(3);
 
