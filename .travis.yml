@@ -9,6 +9,19 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-7
+      script:
+        - mkdir -p _build && cd _build
+        - CXX=g++-7 cmake ..
+        - make
+        - ctest --output-on-failure
+
+    - name: "gcc 7 coverage"
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
             - gcovr
       script:
         - mkdir -p _build && cd _build
