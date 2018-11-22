@@ -23,6 +23,25 @@ private:
     Registers *const registers_;
     IMmu *const mmu_;
 
+    // Exactly like the mmu except that the address is offset to be inside
+    // the ram bank.
+    class Ram {
+    public:
+        Ram(IMmu *mmu);
+
+        uint8_t read_byte(uint8_t addr) const;
+        uint16_t read_word(uint8_t addr) const;
+
+        void write_byte(uint8_t addr, uint8_t byte);
+        void write_word(uint8_t addr, uint16_t word);
+
+    private:
+        IMmu *const mmu_;
+        const uint16_t ram_offset_{0x0100};
+    };
+
+    Ram ram_;
+
     // Holds the atoms staged to be executed.
     std::queue<std::function<void()>> pipeline_;
 
