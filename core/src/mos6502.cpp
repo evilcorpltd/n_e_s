@@ -93,6 +93,7 @@ void Mos6502::execute() {
             pipeline_.push([=]() {
                 ram_.write_byte(--registers_->sp, registers_->a);
             });
+            return;
         case JMP:
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() {
