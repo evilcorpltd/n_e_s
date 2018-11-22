@@ -24,6 +24,7 @@ static bool operator==(const Registers &a, const Registers &b) {
 
 namespace {
 
+const uint16_t kStackOffset = 0x0100;
 const uint16_t kBrkAddress = 0xFFFE;
 
 // Tests and opcodes should be written without looking at the cpu
@@ -90,8 +91,10 @@ TEST_F(CpuTest, brk) {
     ON_CALL(mmu, read_word(kBrkAddress)).WillByDefault(Return(0xDEAD));
 
     // First the return address is pushed and then the registers.
-    EXPECT_CALL(mmu, write_word(expected_pc_stack_addr, registers.pc + 2));
-    EXPECT_CALL(mmu, write_byte(expected_p_stack_addr, registers.p | B_FLAG));
+    EXPECT_CALL(mmu, write_word(kStackOffset + expected_pc_stack_addr,
+                                registers.pc + 2));
+    EXPECT_CALL(mmu, write_byte(kStackOffset + expected_p_stack_addr,
+                                registers.p | B_FLAG));
 
     step_execution(7);
 
