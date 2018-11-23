@@ -1,4 +1,5 @@
 language: cpp
+dist: xenial
 
 matrix:
   include:
@@ -59,9 +60,3 @@ matrix:
         - mkdir -p _build && cd _build
         - CXX=clang++-7 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
         - run-clang-tidy-7.py -q -p . "core|application"
-
-install:
-  - mkdir -p cmake-3.12
-  - wget -qO- "https://cmake.org/files/v3.12/cmake-3.12.2-Linux-x86_64.tar.gz" \
-    | tar --strip-components=1 -xz -C cmake-3.12
-  - export PATH=`pwd`/cmake-3.12/bin:$PATH
