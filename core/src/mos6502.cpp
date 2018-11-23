@@ -11,6 +11,7 @@ namespace {
 enum Opcode : uint8_t {
     BRK = 0x00,
     CLC = 0x18,
+    BMI = 0x30,
     SEC = 0x38,
     LSR_A = 0x4A,
     PHA = 0x48,
@@ -76,6 +77,19 @@ void Mos6502::execute() {
             return;
         case CLC:
             pipeline_.push([=]() { clear_flag(C_FLAG); });
+            return;
+        case BMI:
+            pipeline_.push([=]() { /* Do nothing. */ });
+            pipeline_.push([=]() {
+                if (registers_->p & N_FLAG) {
+                    const uint8_t operand = mmu_->read_byte(registers_->pc++);
+                    const uint8_t low = registers_->pc & 0xFF;
+                    const uint16_t high = registers_->pc & 0xFF00;
+                    registers_->pc = high | (low + operand);
+                } else {
+                    registers_->pc += 2;
+                }
+            });
             return;
         case SEC:
             pipeline_.push([=]() { set_flag(C_FLAG); });

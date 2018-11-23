@@ -10,7 +10,6 @@ using namespace n_e_s::core;
 using namespace n_e_s::core::test;
 
 using testing::_;
-using testing::NiceMock;
 using testing::Return;
 
 namespace n_e_s::core {
@@ -32,6 +31,7 @@ const uint16_t kBrkAddress = 0xFFFE;
 enum Opcode : uint8_t {
     BRK = 0x00,
     CLC = 0x18,
+    BMI = 0x30,
     SEC = 0x38,
     LSR_A = 0x4A,
     PHA = 0x48,
@@ -66,7 +66,7 @@ public:
     }
 
     Registers registers;
-    NiceMock<MockMmu> mmu;
+    MockMmu mmu;
     std::unique_ptr<ICpu> cpu;
 
     Registers expected;
@@ -109,6 +109,26 @@ TEST_F(CpuTest, clc) {
     expected.p &= ~C_FLAG;
 
     step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, bmi_branch_not_taken) {
+    stage_instruction(BMI);
+    expected.pc += 2;
+    step_execution(3);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, bmi_branch_taken) {
+    registers.pc = 0xD321;
+    stage_instruction(BMI);
+
+    expected.p = registers.p = N_FLAG;
+    expected.pc = registers.pc + 2 + 0x99; // Run 2 cycles, then jump 0x99.
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x99));
+
+    step_execution(3);
     EXPECT_EQ(expected, registers);
 }
 
