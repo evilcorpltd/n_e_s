@@ -38,6 +38,7 @@ enum Opcode : uint8_t {
     JMP = 0x4C,
     CLI = 0x58,
     SEI = 0x78,
+    LDY_I = 0xA0,
     CLV = 0xB8,
     CLD = 0xD8,
     NOP = 0xEA,
@@ -210,6 +211,65 @@ TEST_F(CpuTest, cli) {
 TEST_F(CpuTest, sei) {
     stage_instruction(SEI);
     expected.p |= I_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, ldy_i_sets_y) {
+    stage_instruction(LDY_I);
+    expected.y = 42;
+    ++expected.pc;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(expected.y));
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, ldy_i_sets_n_flag) {
+    stage_instruction(LDY_I);
+    expected.y = 128;
+    expected.p |= N_FLAG;
+    ++expected.pc;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(expected.y));
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, ldy_i_clears_n_flag) {
+    stage_instruction(LDY_I);
+    registers.p |= N_FLAG;
+    expected.y = 127;
+    ++expected.pc;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(expected.y));
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, ldy_i_sets_z_flag) {
+    stage_instruction(LDY_I);
+    expected.y = 0;
+    expected.p |= Z_FLAG;
+    ++expected.pc;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(expected.y));
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, ldy_i_clears_z_flag) {
+    stage_instruction(LDY_I);
+    registers.p |= Z_FLAG;
+    expected.y = 1;
+    ++expected.pc;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(expected.y));
 
     step_execution(2);
     EXPECT_EQ(expected, registers);
