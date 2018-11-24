@@ -10,6 +10,7 @@ namespace {
 
 enum Opcode : uint8_t {
     BRK = 0x00,
+    PHP = 0x08,
     CLC = 0x18,
     SEC = 0x38,
     LSR_A = 0x4A,
@@ -74,6 +75,12 @@ void Mos6502::execute() {
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push(
                     [=]() { registers_->pc = mmu_->read_word(kBrkAddress); });
+            return;
+        case PHP:
+            pipeline_.push([=]() { ++registers_->pc; });
+            pipeline_.push([=]() {
+                ram_.write_byte(--registers_->sp, registers_->p);
+            });
             return;
         case CLC:
             pipeline_.push([=]() { clear_flag(C_FLAG); });

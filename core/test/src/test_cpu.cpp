@@ -31,6 +31,7 @@ const uint16_t kBrkAddress = 0xFFFE;
 // implementation. Look at a data sheet and don't cheat!
 enum Opcode : uint8_t {
     BRK = 0x00,
+    PHP = 0x08,
     CLC = 0x18,
     SEC = 0x38,
     LSR_A = 0x4A,
@@ -100,6 +101,25 @@ TEST_F(CpuTest, brk) {
 
     step_execution(7);
 
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, php) {
+    stage_instruction(PHP);
+    registers.sp = 0x0A;
+    registers.p = 0xBB;
+
+    expected.sp = 0x09;
+    expected.p = registers.p;
+    ++expected.pc;
+
+    const uint8_t p_size = 1;
+    const uint8_t expected_stack_addr = registers.sp - p_size;
+
+    EXPECT_CALL(mmu,
+                write_byte(kStackOffset + expected_stack_addr, registers.p));
+
+    step_execution(3);
     EXPECT_EQ(expected, registers);
 }
 
