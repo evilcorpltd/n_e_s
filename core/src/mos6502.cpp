@@ -11,6 +11,7 @@ namespace {
 enum Opcode : uint8_t {
     BRK = 0x00,
     PHP = 0x08,
+    BPL = 0x10,
     CLC = 0x18,
     BMI = 0x30,
     SEC = 0x38,
@@ -103,6 +104,10 @@ void Mos6502::execute() {
             pipeline_.push([=]() {
                 ram_.write_byte(--registers_->sp, registers_->p);
             });
+            return;
+        case BPL:
+            pipeline_.push(
+                    branch_on([=]() { return !(registers_->p & N_FLAG); }));
             return;
         case CLC:
             pipeline_.push([=]() { clear_flag(C_FLAG); });

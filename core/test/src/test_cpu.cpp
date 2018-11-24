@@ -33,6 +33,7 @@ const uint16_t kBrkAddress = 0xFFFE;
 enum Opcode : uint8_t {
     BRK = 0x00,
     PHP = 0x08,
+    BPL = 0x10,
     CLC = 0x18,
     BMI = 0x30,
     SEC = 0x38,
@@ -67,6 +68,19 @@ public:
         for (uint8_t i = 0; i < cycles; i++) {
             cpu->execute();
         }
+    }
+
+    void branch_test(
+            uint8_t branch_flag,
+            int8_t offset,
+            uint8_t expected_cycles) {
+        expected.p = registers.p = branch_flag;
+        expected.pc = registers.pc + 2 + offset;
+
+        ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(offset));
+
+        step_execution(expected_cycles);
+        EXPECT_EQ(expected, registers);
     }
 
     Registers registers;
@@ -146,6 +160,35 @@ TEST_F(CpuTest, php) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(CpuTest, bpl_branch_not_taken) {
+    stage_instruction(BPL);
+    expected.p = registers.p = N_FLAG;
+    expected.pc += 1;
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, bpl_branch_taken) {
+    registers.pc = 0xD321;
+    stage_instruction(BPL);
+
+    branch_test(0, 0x79, 3);
+}
+
+TEST_F(CpuTest, bpl_crossing_page_boundary) {
+    registers.pc = 0xD390;
+    stage_instruction(BPL);
+
+    branch_test(0, 0x79, 4);
+}
+
+TEST_F(CpuTest, bpl_negative_operand) {
+    registers.pc = 0xD321;
+    stage_instruction(BPL);
+
+    branch_test(0, -128 + 5, 3);
+}
+
 TEST_F(CpuTest, clc) {
     expected.p = registers.p = 0xFF;
 
@@ -167,40 +210,21 @@ TEST_F(CpuTest, bmi_branch_taken) {
     registers.pc = 0xD321;
     stage_instruction(BMI);
 
-    expected.p = registers.p = N_FLAG;
-    expected.pc = registers.pc + 2 + 0x79;
-
-    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x79));
-
-    step_execution(3);
-    EXPECT_EQ(expected, registers);
+    branch_test(N_FLAG, 0x79, 3);
 }
 
-TEST_F(CpuTest, bmi_branch_crossing_page_boundary) {
+TEST_F(CpuTest, bmi_crossing_page_boundary) {
     registers.pc = 0xD390;
     stage_instruction(BMI);
 
-    expected.p = registers.p = N_FLAG;
-    expected.pc = registers.pc + 2 + 0x79;
-
-    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x79));
-
-    step_execution(4);
-    EXPECT_EQ(expected, registers);
+    branch_test(N_FLAG, 0x79, 4);
 }
 
-TEST_F(CpuTest, bmi_branch_taken_negative_operand) {
+TEST_F(CpuTest, bmi_negative_operand) {
     registers.pc = 0xD321;
     stage_instruction(BMI);
 
-    expected.p = registers.p = N_FLAG;
-    expected.pc = registers.pc + 2 - 128 + 5;
-
-    ON_CALL(mmu, read_byte(registers.pc + 1))
-            .WillByDefault(Return(-128 + 5)); // Two's complement.
-
-    step_execution(3);
-    EXPECT_EQ(expected, registers);
+    branch_test(N_FLAG, -128 + 5, 3);
 }
 
 TEST_F(CpuTest, sec) {
