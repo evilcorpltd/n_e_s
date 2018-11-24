@@ -10,6 +10,7 @@ using namespace n_e_s::core;
 using namespace n_e_s::core::test;
 
 using testing::_;
+using testing::NiceMock;
 using testing::Return;
 
 namespace n_e_s::core {
@@ -68,7 +69,7 @@ public:
     }
 
     Registers registers;
-    MockMmu mmu;
+    NiceMock<MockMmu> mmu;
     std::unique_ptr<ICpu> cpu;
 
     Registers expected;
@@ -135,8 +136,8 @@ TEST_F(CpuTest, clc) {
 
 TEST_F(CpuTest, bmi_branch_not_taken) {
     stage_instruction(BMI);
-    expected.pc += 2;
-    step_execution(3);
+    expected.pc += 1;
+    step_execution(2);
     EXPECT_EQ(expected, registers);
 }
 
@@ -145,11 +146,24 @@ TEST_F(CpuTest, bmi_branch_taken) {
     stage_instruction(BMI);
 
     expected.p = registers.p = N_FLAG;
-    expected.pc = registers.pc + 2 + 0x79; // Run 2 cycles, then jump 0x99.
+    expected.pc = registers.pc + 2 + 0x79;
 
     ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x79));
 
     step_execution(3);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, bmi_branch_crossing_page_boundary) {
+    registers.pc = 0xD390;
+    stage_instruction(BMI);
+
+    expected.p = registers.p = N_FLAG;
+    expected.pc = registers.pc + 2 + 0x79;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x79));
+
+    step_execution(4);
     EXPECT_EQ(expected, registers);
 }
 

@@ -29,6 +29,26 @@ enum Opcode : uint8_t {
 
 const uint16_t kBrkAddress = 0xFFFE; // This is where the break routine is.
 
+bool is_negative(uint8_t byte) {
+    return byte & (1 << 7);
+}
+
+uint8_t low_bits(uint8_t byte) {
+    return byte & ~(1 << 7);
+}
+
+int8_t to_signed(uint8_t byte) {
+    if (is_negative(byte)) {
+        return low_bits(byte) - 128;
+    }
+
+    return low_bits(byte);
+}
+
+uint8_t low_byte(uint16_t word) {
+    return word & 0xFF;
+}
+
 } // namespace
 
 namespace n_e_s::core {
@@ -87,18 +107,21 @@ void Mos6502::execute() {
             pipeline_.push([=]() { clear_flag(C_FLAG); });
             return;
         case BMI:
-            pipeline_.push([=]() { /* Do nothing. */ });
             pipeline_.push([=]() {
-                if (registers_->p & N_FLAG) {
-                    const uint8_t offset = mmu_->read_byte(registers_->pc++);
-                    if (offset & (1 << 7)) {
-                        registers_->pc -= 128 - (offset & ~(1 << 7));
-                    } else {
-                        registers_->pc += offset;
-                    }
-                } else {
-                    registers_->pc += 2;
+                if (!(registers_->p & N_FLAG)) {
+                    ++registers_->pc;
+                    return;
                 }
+
+                pipeline_.push([=]() {
+                    const uint8_t offset = mmu_->read_byte(registers_->pc++);
+                    registers_->pc += to_signed(offset);
+
+                    if (offset > low_byte(registers_->pc)) {
+                        // We crossed a page boundary so we spend 1 more cycle.
+                        pipeline_.push([=]() { /* Do nothing. */ });
+                    }
+                });
             });
             return;
         case SEC:
@@ -192,7 +215,7 @@ void Mos6502::set_zero(uint8_t byte) {
 }
 
 void Mos6502::set_negative(uint8_t byte) {
-    if (byte & 1 << 7) {
+    if (is_negative(byte)) {
         set_flag(N_FLAG);
     } else {
         clear_flag(N_FLAG);
