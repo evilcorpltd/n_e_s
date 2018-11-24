@@ -95,6 +95,7 @@ void Mos6502::execute() {
                 registers_->a &= ~1;
                 registers_->a >>= 1;
                 set_zero(registers_->a);
+                clear_flag(N_FLAG);
             });
             return;
         case PHA:

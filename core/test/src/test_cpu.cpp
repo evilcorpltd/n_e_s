@@ -188,12 +188,12 @@ TEST_F(CpuTest, lsr_a_sets_c_and_z_flags) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, lsr_a_clears_c_and_z_flags) {
+TEST_F(CpuTest, lsr_a_clears_c_z_n_flags) {
     stage_instruction(LSR_A);
     registers.a = 0b00000010;
     registers.p = Z_FLAG | C_FLAG | N_FLAG;
     expected.a = 0b00000001;
-    expected.p = N_FLAG;
+    expected.p = 0;
 
     step_execution(2);
     EXPECT_EQ(expected, registers);
