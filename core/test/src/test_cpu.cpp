@@ -84,6 +84,18 @@ TEST_F(CpuTest, reset) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(CpuTest, reset_clears_pipeline) {
+    stage_instruction(SEC);
+    ON_CALL(mmu, read_word(kResetAddress)).WillByDefault(Return(0xDEAD));
+    expected.pc = 0xDEAD + 1;
+
+    cpu->execute(); // Stage things for execution.
+    cpu->reset();
+    cpu->execute(); // Should read an opcode and not execute what's been staged.
+
+    EXPECT_EQ(expected, registers);
+}
+
 TEST_F(CpuTest, unsupported_instruction) {
     stage_instruction(0xFF);
 
