@@ -90,10 +90,12 @@ void Mos6502::execute() {
             pipeline_.push([=]() { /* Do nothing. */ });
             pipeline_.push([=]() {
                 if (registers_->p & N_FLAG) {
-                    const uint8_t operand = mmu_->read_byte(registers_->pc++);
-                    const uint8_t low = registers_->pc & 0xFF;
-                    const uint16_t high = registers_->pc & 0xFF00;
-                    registers_->pc = high | (low + operand);
+                    const uint8_t offset = mmu_->read_byte(registers_->pc++);
+                    if (offset & (1 << 7)) {
+                        registers_->pc -= 128 - (offset & ~(1 << 7));
+                    } else {
+                        registers_->pc += offset;
+                    }
                 } else {
                     registers_->pc += 2;
                 }

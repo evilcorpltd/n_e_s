@@ -145,9 +145,23 @@ TEST_F(CpuTest, bmi_branch_taken) {
     stage_instruction(BMI);
 
     expected.p = registers.p = N_FLAG;
-    expected.pc = registers.pc + 2 + 0x99; // Run 2 cycles, then jump 0x99.
+    expected.pc = registers.pc + 2 + 0x79; // Run 2 cycles, then jump 0x99.
 
-    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x99));
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x79));
+
+    step_execution(3);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, bmi_branch_taken_negative_operand) {
+    registers.pc = 0xD321;
+    stage_instruction(BMI);
+
+    expected.p = registers.p = N_FLAG;
+    expected.pc = registers.pc + 2 - 128 + 5;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1))
+            .WillByDefault(Return(-128 + 5)); // Two's complement.
 
     step_execution(3);
     EXPECT_EQ(expected, registers);
