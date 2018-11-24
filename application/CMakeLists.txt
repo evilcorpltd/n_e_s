@@ -15,6 +15,8 @@ target_compile_options(${PROJECT_NAME}
         -Werror
         -Wextra
         -Wswitch-enum
+        -Wshadow
+        -Wnon-virtual-dtor
         -pedantic-errors
 )
 
