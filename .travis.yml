@@ -10,11 +10,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-7
-      script:
-        - mkdir -p _build && cd _build
-        - CXX=g++-7 cmake ..
-        - make
-        - ctest --output-on-failure
+      env: MATRIX_EVAL="CXX=g++-7 BUILD_TYPE=Debug"
 
     - name: "gcc 7 coverage"
       addons:
@@ -25,7 +21,6 @@ matrix:
             - g++-7
       before_install: pip install gcovr --user
       script:
-        - mkdir -p _build && cd _build
         - CXX=g++-7 CXXFLAGS="-fprofile-arcs -ftest-coverage" cmake ..
         - make
         - ctest --output-on-failure
@@ -40,13 +35,9 @@ matrix:
           packages:
             - clang-7
             - libstdc++-7-dev
-      script:
-        - mkdir -p _build && cd _build
-        - CXX=clang++-7 cmake ..
-        - make
-        - ctest --output-on-failure
+      env: MATRIX_EVAL="CXX=clang++-7 BUILD_TYPE=Debug"
 
-    - name: "clang-tidy"
+    - name: "clang-tidy 7"
       addons:
         apt:
           sources:
@@ -57,6 +48,14 @@ matrix:
             - clang-tidy-7
             - libstdc++-7-dev
       script:
-        - mkdir -p _build && cd _build
         - CXX=clang++-7 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
         - run-clang-tidy-7.py -q -p . "core|application"
+
+before_script:
+  - mkdir _build && cd _build
+  - eval "${MATRIX_EVAL}"
+
+script:
+  - cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ..
+  - cmake --build .
+  - ctest --output-on-failure
