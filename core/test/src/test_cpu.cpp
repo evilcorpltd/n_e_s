@@ -33,17 +33,25 @@ const uint16_t kBrkAddress = 0xFFFE;
 enum Opcode : uint8_t {
     BRK = 0x00,
     PHP = 0x08,
+    BPL = 0x10,
     CLC = 0x18,
+    BMI = 0x30,
     SEC = 0x38,
     LSR_A = 0x4A,
     PHA = 0x48,
     JMP = 0x4C,
+    BVC = 0x50,
     CLI = 0x58,
+    BVS = 0x70,
     SEI = 0x78,
+    BCC = 0x90,
     LDY_I = 0xA0,
+    BCS = 0xB0,
     CLV = 0xB8,
+    BNE = 0xD0,
     CLD = 0xD8,
     NOP = 0xEA,
+    BEQ = 0xF0,
     INX = 0xE8,
     SED = 0xF8,
 };
@@ -66,6 +74,19 @@ public:
         for (uint8_t i = 0; i < cycles; i++) {
             cpu->execute();
         }
+    }
+
+    void branch_test(
+            uint8_t branch_flag,
+            int8_t offset,
+            uint8_t expected_cycles) {
+        expected.p = registers.p = branch_flag;
+        expected.pc = registers.pc + 2 + offset;
+
+        ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(offset));
+
+        step_execution(expected_cycles);
+        EXPECT_EQ(expected, registers);
     }
 
     Registers registers;
@@ -145,6 +166,35 @@ TEST_F(CpuTest, php) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(CpuTest, bpl_branch_not_taken) {
+    stage_instruction(BPL);
+    expected.p = registers.p = N_FLAG;
+    expected.pc += 1;
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, bpl_branch_taken) {
+    registers.pc = 0xD321;
+    stage_instruction(BPL);
+
+    branch_test(0, 0x79, 3);
+}
+
+TEST_F(CpuTest, bpl_crossing_page_boundary) {
+    registers.pc = 0xD390;
+    stage_instruction(BPL);
+
+    branch_test(0, 0x79, 4);
+}
+
+TEST_F(CpuTest, bpl_negative_operand) {
+    registers.pc = 0xD321;
+    stage_instruction(BPL);
+
+    branch_test(0, -128 + 5, 3);
+}
+
 TEST_F(CpuTest, clc) {
     expected.p = registers.p = 0xFF;
 
@@ -153,6 +203,34 @@ TEST_F(CpuTest, clc) {
 
     step_execution(2);
     EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, bmi_branch_not_taken) {
+    stage_instruction(BMI);
+    expected.pc += 1;
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, bmi_branch_taken) {
+    registers.pc = 0xD321;
+    stage_instruction(BMI);
+
+    branch_test(N_FLAG, 0x79, 3);
+}
+
+TEST_F(CpuTest, bmi_crossing_page_boundary) {
+    registers.pc = 0xD390;
+    stage_instruction(BMI);
+
+    branch_test(N_FLAG, 0x79, 4);
+}
+
+TEST_F(CpuTest, bmi_negative_operand) {
+    registers.pc = 0xD321;
+    stage_instruction(BMI);
+
+    branch_test(N_FLAG, -128 + 5, 3);
 }
 
 TEST_F(CpuTest, sec) {
@@ -242,6 +320,35 @@ TEST_F(CpuTest, jmp) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(CpuTest, bvc_branch_not_taken) {
+    stage_instruction(BVC);
+    expected.p = registers.p = V_FLAG;
+    expected.pc += 1;
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, bvc_branch_taken) {
+    registers.pc = 0xA350;
+    stage_instruction(BVC);
+
+    branch_test(0, 0x10, 3);
+}
+
+TEST_F(CpuTest, bvc_crossing_page_boundary) {
+    registers.pc = 0xD390;
+    stage_instruction(BVC);
+
+    branch_test(0, 0x70, 4);
+}
+
+TEST_F(CpuTest, bvc_negative_operand) {
+    registers.pc = 0xA350;
+    stage_instruction(BVC);
+
+    branch_test(0, -128 + 10, 3);
+}
+
 TEST_F(CpuTest, cli) {
     stage_instruction(CLI);
     registers.p |= I_FLAG;
@@ -250,12 +357,62 @@ TEST_F(CpuTest, cli) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(CpuTest, bvs_branch_not_taken) {
+    stage_instruction(BVS);
+    expected.pc += 1;
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, bvs_branch_taken) {
+    registers.pc = 0xC300;
+    stage_instruction(BVS);
+
+    branch_test(V_FLAG, 127, 3);
+}
+
+TEST_F(CpuTest, bvs_crossing_page_boundary) {
+    registers.pc = 0xC3FD;
+    stage_instruction(BVS);
+
+    branch_test(V_FLAG, 3, 4);
+}
+
+TEST_F(CpuTest, bvs_negative_operand) {
+    registers.pc = 0xD321;
+    stage_instruction(BVS);
+
+    branch_test(V_FLAG, -128 + 70, 3);
+}
+
 TEST_F(CpuTest, sei) {
     stage_instruction(SEI);
     expected.p |= I_FLAG;
 
     step_execution(2);
     EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, bcc_branch_not_taken) {
+    stage_instruction(BCC);
+    expected.p = registers.p = C_FLAG;
+    expected.pc += 1;
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, bcc_branch_taken) {
+    registers.pc = 0x0010;
+    stage_instruction(BCC);
+
+    branch_test(0, 0x10, 3);
+}
+
+TEST_F(CpuTest, bcc_crossing_page_negative) {
+    registers.pc = 0x0010;
+    stage_instruction(BCC);
+
+    branch_test(0, -70, 4);
 }
 
 TEST_F(CpuTest, ldy_i_sets_y) {
@@ -317,12 +474,62 @@ TEST_F(CpuTest, ldy_i_clears_z_flag) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(CpuTest, bcs_branch_not_taken) {
+    stage_instruction(BCS);
+    expected.pc += 1;
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, bcs_branch_taken) {
+    registers.pc = 0xC3F0;
+    stage_instruction(BCS);
+
+    branch_test(C_FLAG, 5, 3);
+}
+
+TEST_F(CpuTest, bcs_crossing_page_boundary) {
+    registers.pc = 0xC3FD;
+    stage_instruction(BCS);
+
+    branch_test(C_FLAG, 3, 4);
+}
+
+TEST_F(CpuTest, bcs_negative_operand) {
+    registers.pc = 0xD321;
+    stage_instruction(BCS);
+
+    branch_test(C_FLAG, -128 + 127, 3);
+}
+
 TEST_F(CpuTest, clv) {
     stage_instruction(CLV);
     registers.p |= V_FLAG;
 
     step_execution(2);
     EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, bne_branch_not_taken) {
+    stage_instruction(BNE);
+    expected.p = registers.p = Z_FLAG;
+    expected.pc += 1;
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, bne_branch_taken) {
+    registers.pc = 0xFF7A;
+    stage_instruction(BNE);
+
+    branch_test(0, 5, 3);
+}
+
+TEST_F(CpuTest, bne_crossing_page_negative) {
+    registers.pc = 0xFF7A;
+    stage_instruction(BNE);
+
+    branch_test(0, -127, 4);
 }
 
 TEST_F(CpuTest, cld) {
@@ -340,6 +547,34 @@ TEST_F(CpuTest, nop) {
 
     step_execution(2);
     EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, beq_branch_not_taken) {
+    stage_instruction(BEQ);
+    expected.pc += 1;
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, beq_branch_taken) {
+    registers.pc = 0xFFFB;
+    stage_instruction(BEQ);
+
+    branch_test(Z_FLAG, 5, 3);
+}
+
+TEST_F(CpuTest, beq_crossing_page_boundary) {
+    registers.pc = 0xFFFB;
+    stage_instruction(BEQ);
+
+    branch_test(Z_FLAG, 125, 4);
+}
+
+TEST_F(CpuTest, beq_negative_operand) {
+    registers.pc = 0xD321;
+    stage_instruction(BEQ);
+
+    branch_test(Z_FLAG, -128, 3);
 }
 
 TEST_F(CpuTest, inx_increments) {
