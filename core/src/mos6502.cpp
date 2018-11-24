@@ -18,13 +18,19 @@ enum Opcode : uint8_t {
     LSR_A = 0x4A,
     PHA = 0x48,
     JMP = 0x4C,
+    BVC = 0x50,
     CLI = 0x58,
+    BVS = 0x70,
     SEI = 0x78,
+    BCC = 0x90,
     LDY_I = 0xA0,
+    BCS = 0xB0,
     CLV = 0xB8,
+    BNE = 0xD0,
     CLD = 0xD8,
     NOP = 0xEA,
     INX = 0xE8,
+    BEQ = 0xF0,
     SED = 0xF8,
 };
 
@@ -140,11 +146,23 @@ void Mos6502::execute() {
                 registers_->pc = mmu_->read_word(registers_->pc - 1);
             });
             return;
+        case BVC:
+            pipeline_.push(
+                    branch_on([=]() { return !(registers_->p & V_FLAG); }));
+            return;
         case CLI:
             pipeline_.push([=]() { clear_flag(I_FLAG); });
             return;
+        case BVS:
+            pipeline_.push(
+                    branch_on([=]() { return registers_->p & V_FLAG; }));
+            return;
         case SEI:
             pipeline_.push([=]() { set_flag(I_FLAG); });
+            return;
+        case BCC:
+            pipeline_.push(
+                    branch_on([=]() { return !(registers_->p & C_FLAG); }));
             return;
         case LDY_I:
             pipeline_.push([=]() {
@@ -153,8 +171,16 @@ void Mos6502::execute() {
                 set_negative(registers_->y);
             });
             return;
+        case BCS:
+            pipeline_.push(
+                    branch_on([=]() { return registers_->p & C_FLAG; }));
+            return;
         case CLV:
             pipeline_.push([=]() { clear_flag(V_FLAG); });
+            return;
+        case BNE:
+            pipeline_.push(
+                    branch_on([=]() { return !(registers_->p & Z_FLAG); }));
             return;
         case CLD:
             pipeline_.push([=]() { clear_flag(D_FLAG); });
@@ -168,6 +194,10 @@ void Mos6502::execute() {
                 set_zero(registers_->x);
                 set_negative(registers_->x);
             });
+            return;
+        case BEQ:
+            pipeline_.push(
+                    branch_on([=]() { return registers_->p & Z_FLAG; }));
             return;
         case SED:
             pipeline_.push([=]() { set_flag(D_FLAG); });
