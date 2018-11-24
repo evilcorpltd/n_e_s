@@ -56,6 +56,9 @@ private:
 
     // sets the N flag if bit 7 of the byte is set
     void set_negative(uint8_t byte);
+
+    // Returns an atom for the cpu pipeline for branching on a condition.
+    std::function<void()> branch_on(std::function<bool()> condition);
 };
 
 } // namespace n_e_s::core

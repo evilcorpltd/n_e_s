@@ -107,22 +107,8 @@ void Mos6502::execute() {
             pipeline_.push([=]() { clear_flag(C_FLAG); });
             return;
         case BMI:
-            pipeline_.push([=]() {
-                if (!(registers_->p & N_FLAG)) {
-                    ++registers_->pc;
-                    return;
-                }
-
-                pipeline_.push([=]() {
-                    const uint8_t offset = mmu_->read_byte(registers_->pc++);
-                    registers_->pc += to_signed(offset);
-
-                    if (offset > low_byte(registers_->pc)) {
-                        // We crossed a page boundary so we spend 1 more cycle.
-                        pipeline_.push([=]() { /* Do nothing. */ });
-                    }
-                });
-            });
+            pipeline_.push(
+                    branch_on([=]() { return registers_->p & N_FLAG; }));
             return;
         case SEC:
             pipeline_.push([=]() { set_flag(C_FLAG); });
@@ -220,6 +206,25 @@ void Mos6502::set_negative(uint8_t byte) {
     } else {
         clear_flag(N_FLAG);
     }
+}
+
+std::function<void()> Mos6502::branch_on(std::function<bool()> condition) {
+    return [=]() {
+        if (!condition()) {
+            ++registers_->pc;
+            return;
+        }
+
+        pipeline_.push([=]() {
+            const uint8_t offset = mmu_->read_byte(registers_->pc++);
+            registers_->pc += to_signed(offset);
+
+            if (offset > low_byte(registers_->pc)) {
+                // We crossed a page boundary so we spend 1 more cycle.
+                pipeline_.push([=]() { /* Do nothing. */ });
+            }
+        });
+    };
 }
 
 } // namespace n_e_s::core
