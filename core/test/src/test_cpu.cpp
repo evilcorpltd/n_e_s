@@ -25,6 +25,7 @@ static bool operator==(const Registers &a, const Registers &b) {
 namespace {
 
 const uint16_t kStackOffset = 0x0100;
+const uint16_t kResetAddress = 0xFFFC;
 const uint16_t kBrkAddress = 0xFFFE;
 
 // Tests and opcodes should be written without looking at the cpu
@@ -74,6 +75,27 @@ public:
 
     Registers expected;
 };
+
+TEST_F(CpuTest, reset) {
+    expected.pc = 0xDEAD;
+    ON_CALL(mmu, read_word(kResetAddress)).WillByDefault(Return(0xDEAD));
+
+    cpu->reset();
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, reset_clears_pipeline) {
+    stage_instruction(SEC);
+    ON_CALL(mmu, read_word(kResetAddress)).WillByDefault(Return(0xDEAD));
+    expected.pc = 0xDEAD + 1;
+
+    cpu->execute(); // Stage things for execution.
+    cpu->reset();
+    cpu->execute(); // Should read an opcode and not execute what's been staged.
+
+    EXPECT_EQ(expected, registers);
+}
 
 TEST_F(CpuTest, unsupported_instruction) {
     stage_instruction(0xFF);
@@ -226,12 +248,12 @@ TEST_F(CpuTest, lsr_a_sets_c_and_z_flags) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, lsr_a_clears_c_and_z_flags) {
+TEST_F(CpuTest, lsr_a_clears_c_z_n_flags) {
     stage_instruction(LSR_A);
     registers.a = 0b00000010;
     registers.p = Z_FLAG | C_FLAG | N_FLAG;
     expected.a = 0b00000001;
-    expected.p = N_FLAG;
+    expected.p = 0;
 
     step_execution(2);
     EXPECT_EQ(expected, registers);

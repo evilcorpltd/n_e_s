@@ -18,6 +18,7 @@ public:
 
     // ICpu
     void execute() override;
+    void reset() override;
 
 private:
     Registers *const registers_;
