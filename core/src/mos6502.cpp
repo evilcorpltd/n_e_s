@@ -17,6 +17,7 @@ enum Opcode : uint8_t {
     JMP = 0x4C,
     CLI = 0x58,
     SEI = 0x78,
+    LDY_I = 0xA0,
     CLV = 0xB8,
     CLD = 0xD8,
     NOP = 0xEA,
@@ -105,6 +106,13 @@ void Mos6502::execute() {
             return;
         case SEI:
             pipeline_.push([=]() { set_flag(I_FLAG); });
+            return;
+        case LDY_I:
+            pipeline_.push([=]() {
+                registers_->y = mmu_->read_byte(registers_->pc++);
+                set_zero(registers_->y);
+                set_negative(registers_->y);
+            });
             return;
         case CLV:
             pipeline_.push([=]() { clear_flag(V_FLAG); });
