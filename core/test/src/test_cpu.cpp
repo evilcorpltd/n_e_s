@@ -30,6 +30,7 @@ const uint16_t kBrkAddress = 0xFFFE;
 // implementation. Look at a data sheet and don't cheat!
 enum Opcode : uint8_t {
     BRK = 0x00,
+    PHP = 0x08,
     CLC = 0x18,
     BMI = 0x30,
     SEC = 0x38,
@@ -38,6 +39,7 @@ enum Opcode : uint8_t {
     JMP = 0x4C,
     CLI = 0x58,
     SEI = 0x78,
+    LDY_I = 0xA0,
     CLV = 0xB8,
     CLD = 0xD8,
     NOP = 0xEA,
@@ -99,6 +101,25 @@ TEST_F(CpuTest, brk) {
 
     step_execution(7);
 
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, php) {
+    stage_instruction(PHP);
+    registers.sp = 0x0A;
+    registers.p = 0xBB;
+
+    expected.sp = 0x09;
+    expected.p = registers.p;
+    ++expected.pc;
+
+    const uint8_t p_size = 1;
+    const uint8_t expected_stack_addr = registers.sp - p_size;
+
+    EXPECT_CALL(mmu,
+                write_byte(kStackOffset + expected_stack_addr, registers.p));
+
+    step_execution(3);
     EXPECT_EQ(expected, registers);
 }
 
@@ -230,6 +251,65 @@ TEST_F(CpuTest, cli) {
 TEST_F(CpuTest, sei) {
     stage_instruction(SEI);
     expected.p |= I_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, ldy_i_sets_y) {
+    stage_instruction(LDY_I);
+    expected.y = 42;
+    ++expected.pc;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(expected.y));
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, ldy_i_sets_n_flag) {
+    stage_instruction(LDY_I);
+    expected.y = 128;
+    expected.p |= N_FLAG;
+    ++expected.pc;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(expected.y));
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, ldy_i_clears_n_flag) {
+    stage_instruction(LDY_I);
+    registers.p |= N_FLAG;
+    expected.y = 127;
+    ++expected.pc;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(expected.y));
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, ldy_i_sets_z_flag) {
+    stage_instruction(LDY_I);
+    expected.y = 0;
+    expected.p |= Z_FLAG;
+    ++expected.pc;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(expected.y));
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, ldy_i_clears_z_flag) {
+    stage_instruction(LDY_I);
+    registers.p |= Z_FLAG;
+    expected.y = 1;
+    ++expected.pc;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(expected.y));
 
     step_execution(2);
     EXPECT_EQ(expected, registers);

@@ -10,6 +10,7 @@ namespace {
 
 enum Opcode : uint8_t {
     BRK = 0x00,
+    PHP = 0x08,
     CLC = 0x18,
     BMI = 0x30,
     SEC = 0x38,
@@ -18,6 +19,7 @@ enum Opcode : uint8_t {
     JMP = 0x4C,
     CLI = 0x58,
     SEI = 0x78,
+    LDY_I = 0xA0,
     CLV = 0xB8,
     CLD = 0xD8,
     NOP = 0xEA,
@@ -75,6 +77,12 @@ void Mos6502::execute() {
             pipeline_.push(
                     [=]() { registers_->pc = mmu_->read_word(kBrkAddress); });
             return;
+        case PHP:
+            pipeline_.push([=]() { ++registers_->pc; });
+            pipeline_.push([=]() {
+                ram_.write_byte(--registers_->sp, registers_->p);
+            });
+            return;
         case CLC:
             pipeline_.push([=]() { clear_flag(C_FLAG); });
             return;
@@ -119,6 +127,13 @@ void Mos6502::execute() {
             return;
         case SEI:
             pipeline_.push([=]() { set_flag(I_FLAG); });
+            return;
+        case LDY_I:
+            pipeline_.push([=]() {
+                registers_->y = mmu_->read_byte(registers_->pc++);
+                set_zero(registers_->y);
+                set_negative(registers_->y);
+            });
             return;
         case CLV:
             pipeline_.push([=]() { clear_flag(V_FLAG); });
