@@ -12,6 +12,10 @@ matrix:
             - g++-7
       env: MATRIX_EVAL="CXX=g++-7 BUILD_TYPE=Debug"
 
+    - name: "gcc 7 release"
+      addons: *gcc7
+      env: MATRIX_EVAL="CXX=g++-7 BUILD_TYPE=Release"
+
     - name: "gcc 7 coverage"
       addons: *gcc7
       before_install: pip install gcovr --user
@@ -31,6 +35,10 @@ matrix:
             - clang-7
             - libstdc++-7-dev
       env: MATRIX_EVAL="CXX=clang++-7 BUILD_TYPE=Debug"
+
+    - name: "clang 7 release"
+      addons: *clang7
+      env: MATRIX_EVAL="CXX=clang++-7 BUILD_TYPE=Release"
 
     - name: "clang-tidy 7"
       addons:
