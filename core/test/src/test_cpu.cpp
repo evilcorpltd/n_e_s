@@ -25,6 +25,7 @@ static bool operator==(const Registers &a, const Registers &b) {
 namespace {
 
 const uint16_t kStackOffset = 0x0100;
+const uint16_t kResetAddress = 0xFFFC;
 const uint16_t kBrkAddress = 0xFFFE;
 
 // Tests and opcodes should be written without looking at the cpu
@@ -73,6 +74,15 @@ public:
 
     Registers expected;
 };
+
+TEST_F(CpuTest, reset) {
+    expected.pc = 0xDEAD;
+    ON_CALL(mmu, read_word(kResetAddress)).WillByDefault(Return(0xDEAD));
+
+    cpu->reset();
+
+    EXPECT_EQ(expected, registers);
+}
 
 TEST_F(CpuTest, unsupported_instruction) {
     stage_instruction(0xFF);
