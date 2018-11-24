@@ -53,8 +53,8 @@ constexpr int8_t to_signed(uint8_t byte) {
     return low_bits(byte);
 }
 
-constexpr uint8_t low_byte(uint16_t word) {
-    return word & 0xFF;
+constexpr uint16_t high_byte(uint16_t word) {
+    return word & 0xFF00;
 }
 
 } // namespace
@@ -262,9 +262,11 @@ std::function<void()> Mos6502::branch_on(std::function<bool()> condition) {
 
         pipeline_.push([=]() {
             const uint8_t offset = mmu_->read_byte(registers_->pc++);
+            const uint16_t page = high_byte(registers_->pc);
+
             registers_->pc += to_signed(offset);
 
-            if (offset > low_byte(registers_->pc)) {
+            if (page != high_byte(registers_->pc)) {
                 // We crossed a page boundary so we spend 1 more cycle.
                 pipeline_.push([=]() { /* Do nothing. */ });
             }
