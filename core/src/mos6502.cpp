@@ -29,15 +29,15 @@ enum Opcode : uint8_t {
 
 const uint16_t kBrkAddress = 0xFFFE; // This is where the break routine is.
 
-bool is_negative(uint8_t byte) {
+constexpr bool is_negative(uint8_t byte) {
     return byte & (1 << 7);
 }
 
-uint8_t low_bits(uint8_t byte) {
+constexpr uint8_t low_bits(uint8_t byte) {
     return byte & ~(1 << 7);
 }
 
-int8_t to_signed(uint8_t byte) {
+constexpr int8_t to_signed(uint8_t byte) {
     if (is_negative(byte)) {
         return low_bits(byte) - 128;
     }
@@ -45,7 +45,7 @@ int8_t to_signed(uint8_t byte) {
     return low_bits(byte);
 }
 
-uint8_t low_byte(uint16_t word) {
+constexpr uint8_t low_byte(uint16_t word) {
     return word & 0xFF;
 }
 
