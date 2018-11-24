@@ -4,7 +4,7 @@ dist: xenial
 matrix:
   include:
     - name: "gcc 7"
-      addons:
+      addons: &gcc7
         apt:
           sources:
             - ubuntu-toolchain-r-test
@@ -13,12 +13,7 @@ matrix:
       env: MATRIX_EVAL="CXX=g++-7 BUILD_TYPE=Debug"
 
     - name: "gcc 7 coverage"
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-7
+      addons: *gcc7
       before_install: pip install gcovr --user
       script:
         - CXX=g++-7 CXXFLAGS="-fprofile-arcs -ftest-coverage" cmake ..
@@ -27,7 +22,7 @@ matrix:
         - gcovr core/CMakeFiles/n_e_s_core.dir/src/ -p --root .. --fail-under-line=95
 
     - name: "clang 7"
-      addons:
+      addons: &clang7
         apt:
           sources:
             - ubuntu-toolchain-r-test
