@@ -26,6 +26,7 @@ enum Opcode : uint8_t {
     SED = 0xF8,
 };
 
+const uint16_t kResetAddress = 0xFFFC; // This is where the reset routine is.
 const uint16_t kBrkAddress = 0xFFFE; // This is where the break routine is.
 
 } // namespace
@@ -149,6 +150,14 @@ void Mos6502::execute() {
 
     pipeline_.front()();
     pipeline_.pop();
+}
+
+void Mos6502::reset() {
+    while (!pipeline_.empty()) {
+        pipeline_.pop();
+    }
+
+    registers_->pc = mmu_->read_word(kResetAddress);
 }
 
 void Mos6502::clear_flag(uint8_t flag) {
