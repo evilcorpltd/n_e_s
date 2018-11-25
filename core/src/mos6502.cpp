@@ -101,21 +101,15 @@ void Mos6502::execute() {
             pipeline_.push([=]() {
                 /* Do nothing. */
             });
-            pipeline_.push([=]() {
-                stack_.push_word(registers_->pc);
-            });
-            pipeline_.push([=]() {
-                stack_.push_byte(registers_->p | B_FLAG);
-            });
+            pipeline_.push([=]() { stack_.push_word(registers_->pc); });
+            pipeline_.push([=]() { stack_.push_byte(registers_->p | B_FLAG); });
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push(
                     [=]() { registers_->pc = mmu_->read_word(kBrkAddress); });
             return;
         case PHP:
             pipeline_.push([=]() { ++registers_->pc; });
-            pipeline_.push([=]() {
-                stack_.push_byte(registers_->p);
-            });
+            pipeline_.push([=]() { stack_.push_byte(registers_->p); });
             return;
         case BPL:
             pipeline_.push(
@@ -141,9 +135,7 @@ void Mos6502::execute() {
             return;
         case PHA:
             pipeline_.push([=]() { ++registers_->pc; });
-            pipeline_.push([=]() {
-                stack_.push_byte(registers_->a);
-            });
+            pipeline_.push([=]() { stack_.push_byte(registers_->a); });
             return;
         case JMP:
             pipeline_.push([=]() { ++registers_->pc; });
