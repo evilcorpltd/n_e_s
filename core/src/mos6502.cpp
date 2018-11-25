@@ -61,26 +61,33 @@ constexpr uint16_t high_byte(uint16_t word) {
 
 namespace n_e_s::core {
 
-Mos6502::Ram::Ram(IMmu *mmu) : mmu_(mmu) {}
+Mos6502::Stack::Stack(Registers *registers, IMmu *mmu)
+        : registers_(registers), mmu_(mmu) {}
 
-uint8_t Mos6502::Ram::read_byte(uint8_t addr) const {
-    return mmu_->read_byte(ram_offset_ + addr);
+uint8_t Mos6502::Stack::read_byte() {
+    return mmu_->read_byte(ram_offset_ + ++registers_->sp);
 }
 
-uint16_t Mos6502::Ram::read_word(uint8_t addr) const {
-    return mmu_->read_word(ram_offset_ + addr);
+uint16_t Mos6502::Stack::read_word() {
+    const uint16_t ret = mmu_->read_word(ram_offset_ + ++registers_->sp);
+    ++registers_->sp;
+    return ret;
 }
 
-void Mos6502::Ram::write_byte(uint8_t addr, uint8_t byte) {
-    mmu_->write_byte(ram_offset_ + addr, byte);
+void Mos6502::Stack::write_byte(uint8_t byte) {
+    mmu_->write_byte(ram_offset_ + registers_->sp--, byte);
 }
 
-void Mos6502::Ram::write_word(uint8_t addr, uint16_t word) {
-    mmu_->write_word(ram_offset_ + addr, word);
+void Mos6502::Stack::write_word(uint16_t word) {
+    mmu_->write_word(ram_offset_ + --registers_->sp, word);
+    --registers_->sp;
 }
 
 Mos6502::Mos6502(Registers *const registers, IMmu *const mmu)
-        : registers_(registers), mmu_(mmu), ram_(mmu_), pipeline_() {}
+        : registers_(registers),
+          mmu_(mmu),
+          stack_(registers_, mmu_),
+          pipeline_() {}
 
 // Most instruction timings are from https://robinli.eu/f/6502_cpu.txt
 void Mos6502::execute() {
@@ -95,11 +102,10 @@ void Mos6502::execute() {
                 /* Do nothing. */
             });
             pipeline_.push([=]() {
-                ram_.write_word(--registers_->sp, registers_->pc);
-                --registers_->sp;
+                stack_.write_word(registers_->pc);
             });
             pipeline_.push([=]() {
-                ram_.write_byte(registers_->sp--, registers_->p | B_FLAG);
+                stack_.write_byte(registers_->p | B_FLAG);
             });
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push(
@@ -108,7 +114,7 @@ void Mos6502::execute() {
         case PHP:
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() {
-                ram_.write_byte(registers_->sp--, registers_->p);
+                stack_.write_byte(registers_->p);
             });
             return;
         case BPL:
@@ -137,7 +143,7 @@ void Mos6502::execute() {
         case PHA:
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() {
-                ram_.write_byte(registers_->sp--, registers_->a);
+                stack_.write_byte(registers_->a);
             });
             return;
         case JMP:

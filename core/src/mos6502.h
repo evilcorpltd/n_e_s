@@ -24,24 +24,26 @@ private:
     Registers *const registers_;
     IMmu *const mmu_;
 
-    // Exactly like the mmu except that the address is offset to be inside
-    // the ram bank.
-    class Ram {
+    // Wraps the mmu to provide more convenient access to the stack.
+    // All functions have side effects on the stack pointer, so it'll always
+    // point to the next available address in the mmu's stack area.
+    class Stack {
     public:
-        Ram(IMmu *mmu);
+        Stack(Registers *registers, IMmu *mmu);
 
-        uint8_t read_byte(uint8_t addr) const;
-        uint16_t read_word(uint8_t addr) const;
+        uint8_t read_byte();
+        uint16_t read_word();
 
-        void write_byte(uint8_t addr, uint8_t byte);
-        void write_word(uint8_t addr, uint16_t word);
+        void write_byte(uint8_t byte);
+        void write_word(uint16_t word);
 
     private:
+        Registers *const registers_;
         IMmu *const mmu_;
         const uint16_t ram_offset_{0x0100};
     };
 
-    Ram ram_;
+    Stack stack_;
 
     // Holds the atoms staged to be executed.
     std::queue<std::function<void()>> pipeline_;
