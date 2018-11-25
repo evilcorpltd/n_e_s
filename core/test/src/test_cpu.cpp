@@ -76,8 +76,7 @@ public:
         }
     }
 
-    void branch_test(
-            uint8_t branch_flag,
+    void branch_test(uint8_t branch_flag,
             int8_t offset,
             uint8_t expected_cycles) {
         expected.p = registers.p = branch_flag;
@@ -137,10 +136,12 @@ TEST_F(CpuTest, brk) {
     ON_CALL(mmu, read_word(kBrkAddress)).WillByDefault(Return(0xDEAD));
 
     // First the return address is pushed and then the registers.
-    EXPECT_CALL(mmu, write_word(kStackOffset + expected_pc_stack_addr,
-                                registers.pc + 2));
-    EXPECT_CALL(mmu, write_byte(kStackOffset + expected_p_stack_addr,
-                                registers.p | B_FLAG));
+    EXPECT_CALL(mmu,
+            write_word(
+                    kStackOffset + expected_pc_stack_addr, registers.pc + 2));
+    EXPECT_CALL(mmu,
+            write_byte(kStackOffset + expected_p_stack_addr,
+                    registers.p | B_FLAG));
 
     step_execution(7);
 
@@ -159,8 +160,8 @@ TEST_F(CpuTest, php) {
     const uint8_t p_size = 1;
     const uint8_t expected_stack_addr = registers.sp - p_size;
 
-    EXPECT_CALL(mmu,
-                write_byte(kStackOffset + expected_stack_addr, registers.p));
+    EXPECT_CALL(
+            mmu, write_byte(kStackOffset + expected_stack_addr, registers.p));
 
     step_execution(3);
     EXPECT_EQ(expected, registers);
@@ -297,8 +298,8 @@ TEST_F(CpuTest, pha) {
     const uint8_t a_size = 1;
     const uint8_t expected_stack_addr = registers.sp - a_size;
 
-    EXPECT_CALL(mmu,
-                write_byte(kStackOffset + expected_stack_addr, registers.a));
+    EXPECT_CALL(
+            mmu, write_byte(kStackOffset + expected_stack_addr, registers.a));
 
     step_execution(3);
 

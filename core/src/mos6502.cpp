@@ -119,8 +119,7 @@ void Mos6502::execute() {
             pipeline_.push([=]() { clear_flag(C_FLAG); });
             return;
         case BMI:
-            pipeline_.push(
-                    branch_on([=]() { return registers_->p & N_FLAG; }));
+            pipeline_.push(branch_on([=]() { return registers_->p & N_FLAG; }));
             return;
         case SEC:
             pipeline_.push([=]() { set_flag(C_FLAG); });
@@ -154,8 +153,7 @@ void Mos6502::execute() {
             pipeline_.push([=]() { clear_flag(I_FLAG); });
             return;
         case BVS:
-            pipeline_.push(
-                    branch_on([=]() { return registers_->p & V_FLAG; }));
+            pipeline_.push(branch_on([=]() { return registers_->p & V_FLAG; }));
             return;
         case SEI:
             pipeline_.push([=]() { set_flag(I_FLAG); });
@@ -172,8 +170,7 @@ void Mos6502::execute() {
             });
             return;
         case BCS:
-            pipeline_.push(
-                    branch_on([=]() { return registers_->p & C_FLAG; }));
+            pipeline_.push(branch_on([=]() { return registers_->p & C_FLAG; }));
             return;
         case CLV:
             pipeline_.push([=]() { clear_flag(V_FLAG); });
@@ -196,8 +193,7 @@ void Mos6502::execute() {
             });
             return;
         case BEQ:
-            pipeline_.push(
-                    branch_on([=]() { return registers_->p & Z_FLAG; }));
+            pipeline_.push(branch_on([=]() { return registers_->p & Z_FLAG; }));
             return;
         case SED:
             pipeline_.push([=]() { set_flag(D_FLAG); });
