@@ -76,8 +76,7 @@ public:
         }
     }
 
-    void branch_test(
-            uint8_t branch_flag,
+    void branch_test(uint8_t branch_flag,
             int8_t offset,
             uint8_t expected_cycles) {
         expected.p = registers.p = branch_flag;
@@ -135,10 +134,12 @@ TEST_F(CpuTest, brk) {
     ON_CALL(mmu, read_word(kBrkAddress)).WillByDefault(Return(0xDEAD));
 
     // First the return address is pushed and then the registers.
-    EXPECT_CALL(mmu, write_word(kStackOffset + expected_pc_stack_addr,
-                                registers.pc + 2));
-    EXPECT_CALL(mmu, write_byte(kStackOffset + expected_p_stack_addr,
-                                registers.p | B_FLAG));
+    EXPECT_CALL(mmu,
+            write_word(
+                    kStackOffset + expected_pc_stack_addr, registers.pc + 2));
+    EXPECT_CALL(mmu,
+            write_byte(kStackOffset + expected_p_stack_addr,
+                    registers.p | B_FLAG));
 
     step_execution(7);
 
