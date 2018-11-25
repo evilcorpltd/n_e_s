@@ -54,6 +54,16 @@ matrix:
         - CXX=clang++-7 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
         - run-clang-tidy-7.py -q -p . "core|application"
 
+    - name: "clang-format"
+      addons:
+        apt:
+          packages:
+            - clang-format
+      before_script: []
+      script:
+        - find application core -name *.h -o -name *.cpp | xargs clang-format -style=file -i
+        - git diff --exit-code
+
 before_script:
   - mkdir _build && cd _build
   - eval "${MATRIX_EVAL}"
