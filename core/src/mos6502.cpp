@@ -64,21 +64,21 @@ namespace n_e_s::core {
 Mos6502::Stack::Stack(Registers *registers, IMmu *mmu)
         : registers_(registers), mmu_(mmu) {}
 
-uint8_t Mos6502::Stack::read_byte() {
+uint8_t Mos6502::Stack::pop_byte() {
     return mmu_->read_byte(ram_offset_ + ++registers_->sp);
 }
 
-uint16_t Mos6502::Stack::read_word() {
+uint16_t Mos6502::Stack::pop_word() {
     const uint16_t ret = mmu_->read_word(ram_offset_ + ++registers_->sp);
     ++registers_->sp;
     return ret;
 }
 
-void Mos6502::Stack::write_byte(uint8_t byte) {
+void Mos6502::Stack::push_byte(uint8_t byte) {
     mmu_->write_byte(ram_offset_ + registers_->sp--, byte);
 }
 
-void Mos6502::Stack::write_word(uint16_t word) {
+void Mos6502::Stack::push_word(uint16_t word) {
     mmu_->write_word(ram_offset_ + --registers_->sp, word);
     --registers_->sp;
 }
@@ -102,10 +102,10 @@ void Mos6502::execute() {
                 /* Do nothing. */
             });
             pipeline_.push([=]() {
-                stack_.write_word(registers_->pc);
+                stack_.push_word(registers_->pc);
             });
             pipeline_.push([=]() {
-                stack_.write_byte(registers_->p | B_FLAG);
+                stack_.push_byte(registers_->p | B_FLAG);
             });
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push(
@@ -114,7 +114,7 @@ void Mos6502::execute() {
         case PHP:
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() {
-                stack_.write_byte(registers_->p);
+                stack_.push_byte(registers_->p);
             });
             return;
         case BPL:
@@ -143,7 +143,7 @@ void Mos6502::execute() {
         case PHA:
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() {
-                stack_.write_byte(registers_->a);
+                stack_.push_byte(registers_->a);
             });
             return;
         case JMP:

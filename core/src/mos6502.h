@@ -31,11 +31,11 @@ private:
     public:
         Stack(Registers *registers, IMmu *mmu);
 
-        uint8_t read_byte();
-        uint16_t read_word();
+        uint8_t pop_byte();
+        uint16_t pop_word();
 
-        void write_byte(uint8_t byte);
-        void write_word(uint16_t word);
+        void push_byte(uint8_t byte);
+        void push_word(uint16_t word);
 
     private:
         Registers *const registers_;
