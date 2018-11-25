@@ -95,11 +95,11 @@ void Mos6502::execute() {
                 /* Do nothing. */
             });
             pipeline_.push([=]() {
-                registers_->sp -= 2;
-                ram_.write_word(registers_->sp, registers_->pc);
+                ram_.write_word(--registers_->sp, registers_->pc);
+                --registers_->sp;
             });
             pipeline_.push([=]() {
-                ram_.write_byte(--registers_->sp, registers_->p | B_FLAG);
+                ram_.write_byte(registers_->sp--, registers_->p | B_FLAG);
             });
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push(
@@ -108,7 +108,7 @@ void Mos6502::execute() {
         case PHP:
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() {
-                ram_.write_byte(--registers_->sp, registers_->p);
+                ram_.write_byte(registers_->sp--, registers_->p);
             });
             return;
         case BPL:
@@ -137,7 +137,7 @@ void Mos6502::execute() {
         case PHA:
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() {
-                ram_.write_byte(--registers_->sp, registers_->a);
+                ram_.write_byte(registers_->sp--, registers_->a);
             });
             return;
         case JMP:
