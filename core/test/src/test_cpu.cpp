@@ -126,12 +126,10 @@ TEST_F(CpuTest, brk) {
     stage_instruction(BRK);
     expected.pc = 0xDEAD;
 
-    const uint8_t pc_size = 2;
-    const uint8_t expected_pc_stack_addr = expected.sp - pc_size;
-    const uint8_t p_size = 1;
-    const uint8_t expected_p_stack_addr = expected_pc_stack_addr - p_size;
+    const uint8_t expected_pc_stack_addr = expected.sp - 1;
+    const uint8_t expected_p_stack_addr = expected_pc_stack_addr - 1;
 
-    expected.sp -= pc_size + p_size;
+    expected.sp -= 2 + 1; // 1 word and 1 byte
 
     ON_CALL(mmu, read_word(kBrkAddress)).WillByDefault(Return(0xDEAD));
 
@@ -157,11 +155,7 @@ TEST_F(CpuTest, php) {
     expected.p = registers.p;
     ++expected.pc;
 
-    const uint8_t p_size = 1;
-    const uint8_t expected_stack_addr = registers.sp - p_size;
-
-    EXPECT_CALL(
-            mmu, write_byte(kStackOffset + expected_stack_addr, registers.p));
+    EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp, registers.p));
 
     step_execution(3);
     EXPECT_EQ(expected, registers);
@@ -295,11 +289,7 @@ TEST_F(CpuTest, pha) {
     registers.sp = 0x05;
     registers.a = 0x84;
 
-    const uint8_t a_size = 1;
-    const uint8_t expected_stack_addr = registers.sp - a_size;
-
-    EXPECT_CALL(
-            mmu, write_byte(kStackOffset + expected_stack_addr, registers.a));
+    EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp, registers.a));
 
     step_execution(3);
 
