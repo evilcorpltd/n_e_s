@@ -22,7 +22,9 @@ enum Opcode : uint8_t {
     CLI = 0x58,
     BVS = 0x70,
     SEI = 0x78,
+    STY_ABS = 0x8C,
     STA_ABS = 0x8D,
+    STX_ABS = 0x8E,
     BCC = 0x90,
     LDY_I = 0xA0,
     BCS = 0xB0,
@@ -157,13 +159,20 @@ void Mos6502::execute() {
         case SEI:
             pipeline_.push([=]() { set_flag(I_FLAG); });
             return;
+        case STY_ABS:
+            pipeline_.push([=]() { ++registers_->pc; });
+            pipeline_.push([=]() { ++registers_->pc; });
+            pipeline_.push(store_byte_abs_addr(registers_->y));
+            return;
         case STA_ABS:
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() { ++registers_->pc; });
-            pipeline_.push([=]() {
-                uint16_t addr = mmu_->read_word(registers_->pc - 2);
-                mmu_->write_byte(addr, registers_->a);
-            });
+            pipeline_.push(store_byte_abs_addr(registers_->a));
+            return;
+        case STX_ABS:
+            pipeline_.push([=]() { ++registers_->pc; });
+            pipeline_.push([=]() { ++registers_->pc; });
+            pipeline_.push(store_byte_abs_addr(registers_->x));
             return;
         case BCC:
             pipeline_.push(
@@ -274,6 +283,13 @@ std::function<void()> Mos6502::branch_on(std::function<bool()> condition) {
                 pipeline_.push([=]() { /* Do nothing. */ });
             }
         });
+    };
+}
+
+std::function<void()> Mos6502::store_byte_abs_addr(uint8_t byte) {
+    return [=]() {
+        uint16_t addr = mmu_->read_word(registers_->pc - 2);
+        mmu_->write_byte(addr, byte);
     };
 }
 

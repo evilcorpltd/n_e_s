@@ -62,6 +62,10 @@ private:
 
     // Returns an atom for the cpu pipeline for branching on a condition.
     std::function<void()> branch_on(std::function<bool()> condition);
+
+    // Returns a function which, when called, will write the given byte to a
+    // memory address. The address is fetched using absolute addressing mode.
+    std::function<void()> store_byte_abs_addr(uint8_t byte);
 };
 
 } // namespace n_e_s::core
