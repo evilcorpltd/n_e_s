@@ -160,10 +160,7 @@ void Mos6502::execute() {
         case STA_ABS:
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() { ++registers_->pc; });
-            pipeline_.push([=]() {
-                uint16_t addr = mmu_->read_word(registers_->pc - 2);
-                mmu_->write_byte(addr, registers_->a);
-            });
+            pipeline_.push(store_byte_abs_addr(registers_->a));
             return;
         case BCC:
             pipeline_.push(
@@ -274,6 +271,13 @@ std::function<void()> Mos6502::branch_on(std::function<bool()> condition) {
                 pipeline_.push([=]() { /* Do nothing. */ });
             }
         });
+    };
+}
+
+std::function<void()> Mos6502::store_byte_abs_addr(uint8_t byte) {
+    return [=]() {
+        uint16_t addr = mmu_->read_word(registers_->pc - 2);
+        mmu_->write_byte(addr, byte);
     };
 }
 
