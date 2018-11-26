@@ -8,8 +8,4 @@
 
 using namespace n_e_s::core;
 
-namespace {
-
-
-
-} // namespace
+namespace {} // namespace
