@@ -44,6 +44,7 @@ enum Opcode : uint8_t {
     CLI = 0x58,
     BVS = 0x70,
     SEI = 0x78,
+    STY_ABS = 0x8C,
     STA_ABS = 0x8D,
     STX_ABS = 0x8E,
     BCC = 0x90,
@@ -653,6 +654,22 @@ TEST_F(CpuTest, stx_abs) {
 
     EXPECT_CALL(mmu, read_word(0x0159)).WillOnce(Return(0x1987));
     EXPECT_CALL(mmu, write_byte(0x1987, 0x71));
+
+    step_execution(4);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sty_abs) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0x07;
+
+    stage_instruction(STY_ABS);
+
+    expected.pc += 2;
+
+    EXPECT_CALL(mmu, read_word(0x4322)).WillOnce(Return(0x4444));
+    EXPECT_CALL(mmu, write_byte(0x4444, 0x07));
 
     step_execution(4);
 
