@@ -23,6 +23,7 @@ enum Opcode : uint8_t {
     BVS = 0x70,
     SEI = 0x78,
     STA_ABS = 0x8D,
+    STX_ABS = 0x8E,
     BCC = 0x90,
     LDY_I = 0xA0,
     BCS = 0xB0,
@@ -161,6 +162,11 @@ void Mos6502::execute() {
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push(store_byte_abs_addr(registers_->a));
+            return;
+        case STX_ABS:
+            pipeline_.push([=]() { ++registers_->pc; });
+            pipeline_.push([=]() { ++registers_->pc; });
+            pipeline_.push(store_byte_abs_addr(registers_->x));
             return;
         case BCC:
             pipeline_.push(
