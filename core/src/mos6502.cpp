@@ -22,6 +22,7 @@ enum Opcode : uint8_t {
     CLI = 0x58,
     BVS = 0x70,
     SEI = 0x78,
+    STA_ABS = 0x8D,
     BCC = 0x90,
     LDY_I = 0xA0,
     BCS = 0xB0,
@@ -155,6 +156,14 @@ void Mos6502::execute() {
             return;
         case SEI:
             pipeline_.push([=]() { set_flag(I_FLAG); });
+            return;
+        case STA_ABS:
+            pipeline_.push([=]() { ++registers_->pc; });
+            pipeline_.push([=]() { ++registers_->pc; });
+            pipeline_.push([=]() {
+                uint16_t addr = mmu_->read_word(registers_->pc - 2);
+                mmu_->write_byte(addr, registers_->a);
+            });
             return;
         case BCC:
             pipeline_.push(
