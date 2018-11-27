@@ -19,6 +19,7 @@ add_executable(${PROJECT_NAME}
     src/main.cpp
     src/mock_mmu.h
     src/test_cpu.cpp
+    src/test_membank.cpp
     src/test_mmu.cpp
     src/test_ppu.cpp
 )

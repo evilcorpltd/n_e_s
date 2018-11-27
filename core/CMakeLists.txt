@@ -3,6 +3,7 @@ project(n_e_s_core)
 add_library(${PROJECT_NAME}
     include/core/cpu_factory.h
     include/core/mmu_factory.h
+    include/core/membank.h
     include/core/ppu_factory.h
     include/core/icpu.h
     include/core/immu.h
