@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "core/memport.h"
+
 #include <cstdint>
 #include <utility>
 
@@ -17,12 +19,20 @@ public:
 
     MemBank() {}
 
+    void connect(MemPort *mem_port) {
+        mem_port_ = mem_port;
+    }
+
     bool is_address_in_range(uint16_t addr) const {
         return addr >= StartAddr && addr <= EndAddr;
     }
 
     uint8_t read_byte(uint16_t addr) const {
-        return *get_location(addr);
+        if (mem_port_) {
+            return mem_port_->read(addr);
+        } else {
+            return *get_location(addr);
+        }
     }
 
     uint16_t read_word(uint16_t addr) const {
@@ -30,7 +40,11 @@ public:
     }
 
     void write_byte(uint16_t addr, uint8_t byte) {
-        *get_location(addr) = byte;
+        if (mem_port_) {
+            mem_port_->write(addr, byte);
+        } else {
+            *get_location(addr) = byte;
+        }
     }
 
     void write_word(uint16_t addr, uint16_t word) {
@@ -45,10 +59,11 @@ private:
 
     const uint8_t *get_location(uint16_t addr) const {
         addr %= Size;
-        return &bank[addr];
+        return &bank_[addr];
     }
-    
-    uint8_t bank[Size]{};
+
+    uint8_t bank_[Size]{};
+    MemPort *mem_port_{nullptr};
 };
 
 } // namespace n_e_s::core
