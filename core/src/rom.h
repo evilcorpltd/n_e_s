@@ -8,7 +8,7 @@ namespace n_e_s::core {
 
 class Rom : public IRom {
 public:
-    Rom() = default;
+    Rom(const INesHeader& h);
 };
 
 } // namespace n_e_s::core
