@@ -17,7 +17,7 @@ public:
     static_assert(Size > 0u, "Size must be greater than zero");
     static_assert(StartAddr <= EndAddr, "Start addr greater than end addr");
 
-    MemBank() {}
+    MemBank() = default;
 
     void connect(MemPort *mem_port) {
         mem_port_ = mem_port;

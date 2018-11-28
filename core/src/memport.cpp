@@ -5,7 +5,7 @@
 namespace n_e_s::core {
 
 MemPort::MemPort(Reader reader, Writer writer)
-        : reader_(reader), writer_(writer) {}
+        : reader_(std::move(reader)), writer_(std::move(writer)) {}
 
 uint8_t MemPort::read(uint16_t addr) const {
     return reader_(addr);
