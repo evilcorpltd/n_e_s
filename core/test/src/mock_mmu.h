@@ -10,8 +10,6 @@ namespace n_e_s::core::test {
 
 class MockMmu : public IMmu {
 public:
-    MOCK_CONST_METHOD1(get_mem_bank, IMemBank *(uint16_t addr));
-
     MOCK_CONST_METHOD1(read_byte, uint8_t(uint16_t addr));
     MOCK_CONST_METHOD1(read_word, uint16_t(uint16_t addr));
 
