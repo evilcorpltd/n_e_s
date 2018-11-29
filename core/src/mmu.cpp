@@ -8,8 +8,6 @@ namespace n_e_s::core {
 
 Mmu::Mmu() : mem_banks_() {}
 
-Mmu::~Mmu() {}
-
 void Mmu::add_mem_bank(IMemBank *mem_bank) {
     mem_banks_.push_back(mem_bank);
 }

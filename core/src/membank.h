@@ -20,23 +20,23 @@ public:
 
     MemBank() : bank_() {}
 
-    bool is_address_in_range(uint16_t addr) const {
+    bool is_address_in_range(uint16_t addr) const override {
         return addr >= StartAddr && addr <= EndAddr;
     }
 
-    uint8_t read_byte(uint16_t addr) const {
+    uint8_t read_byte(uint16_t addr) const override {
         return *get_location(addr);
     }
 
-    uint16_t read_word(uint16_t addr) const {
+    uint16_t read_word(uint16_t addr) const override {
         return read_byte(addr) | read_byte(addr + 1) << 8;
     }
 
-    void write_byte(uint16_t addr, uint8_t byte) {
+    void write_byte(uint16_t addr, uint8_t byte) override {
         *get_location(addr) = byte;
     }
 
-    void write_word(uint16_t addr, uint16_t word) {
+    void write_word(uint16_t addr, uint16_t word) override {
         write_byte(addr, word & 0xFF);
         write_byte(addr + 1, word >> 8);
     }

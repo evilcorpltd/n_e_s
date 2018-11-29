@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "core/immu.h"
 #include "core/imembank.h"
+#include "core/immu.h"
 
 #include <cstdint>
 #include <vector>
@@ -13,9 +13,9 @@ namespace n_e_s::core {
 class Mmu : public IMmu {
 public:
     Mmu();
-    ~Mmu();
+    ~Mmu() = default;
 
-    void add_mem_bank(IMemBank* mem_bank);
+    void add_mem_bank(IMemBank *mem_bank);
 
     uint8_t read_byte(uint16_t addr) const override;
     uint16_t read_word(uint16_t addr) const override;
@@ -26,7 +26,7 @@ public:
 private:
     IMemBank *get_mem_bank(uint16_t addr) const;
 
-    std::vector<IMemBank*> mem_banks_;
+    std::vector<IMemBank *> mem_banks_;
 };
 
 } // namespace n_e_s::core
