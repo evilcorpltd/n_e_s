@@ -45,7 +45,7 @@ void Mmu::write_byte(uint16_t addr, uint8_t byte) {
 void Mmu::write_word(uint16_t addr, uint16_t word) {
     IMemBank *mem_bank = get_mem_bank(addr);
     if (mem_bank) {
-        mem_bank->write_byte(addr, word);
+        mem_bank->write_word(addr, word);
     }
 }
 
