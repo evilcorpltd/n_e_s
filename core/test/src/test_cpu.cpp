@@ -2,9 +2,12 @@
 
 #include "core/cpu_factory.h"
 
+#include "hexprinter.h"
 #include "mock_mmu.h"
 
 #include <gtest/gtest.h>
+#include <bitset>
+#include <ostream>
 
 using namespace n_e_s::core;
 using namespace n_e_s::core::test;
@@ -18,6 +21,15 @@ namespace n_e_s::core {
 static bool operator==(const Registers &a, const Registers &b) {
     return a.pc == b.pc && a.sp == b.sp && a.a == b.a && a.x == b.x &&
            a.y == b.y && a.p == b.p;
+}
+
+static void PrintTo(const Registers &r, std::ostream *os) {
+    *os << "PC: " << hex_out_s(r.pc);
+    *os << " SP: " << hex_out_s(r.sp);
+    *os << " A: " << hex_out_s(r.a);
+    *os << " X: " << hex_out_s(r.x);
+    *os << " Y: " << hex_out_s(r.y);
+    *os << " P: 0b" << std::bitset<8>(r.p) << std::endl;
 }
 
 } // namespace n_e_s::core
