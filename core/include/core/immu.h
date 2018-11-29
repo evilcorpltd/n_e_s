@@ -6,8 +6,6 @@
 
 namespace n_e_s::core {
 
-class IMemBank;
-
 class IMmu {
 public:
     virtual ~IMmu() = default;
