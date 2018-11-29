@@ -23,6 +23,9 @@ public:
     IRom(const INesHeader& h) : header(h) {}
     virtual ~IRom() = default;
 
+    virtual uint8_t read_byte(uint16_t addr) const = 0;
+    virtual void write_byte(uint16_t addr, uint8_t byte) = 0;
+
     INesHeader header;
 };
 
