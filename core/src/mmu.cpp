@@ -2,6 +2,8 @@
 
 #include "mmu.h"
 
+#include <algorithm>
+
 namespace n_e_s::core {
 
 Mmu::Mmu() : mem_banks_() {}
