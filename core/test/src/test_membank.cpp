@@ -1,6 +1,6 @@
 // Copyright 2018 Robin Linden <dev@robinlinden.eu>
 
-#include "core/membank.h"
+#include "../../src/membank.h"
 
 #include <gtest/gtest.h>
 

@@ -2,8 +2,9 @@
 
 #pragma once
 
-#include "core/memport.h"
+#include "core/imembank.h"
 
+#include <array>
 #include <cstdint>
 #include <utility>
 
@@ -12,27 +13,19 @@ namespace n_e_s::core {
 template <uint16_t StartAddr,
         uint16_t Size = 1u,
         uint16_t EndAddr = StartAddr + (Size - 1u)>
-class MemBank {
+class MemBank : public IMemBank {
 public:
     static_assert(Size > 0u, "Size must be greater than zero");
     static_assert(StartAddr <= EndAddr, "Start addr greater than end addr");
 
-    MemBank() = default;
-
-    void connect(MemPort *mem_port) {
-        mem_port_ = mem_port;
-    }
+    MemBank() : bank_() {}
 
     bool is_address_in_range(uint16_t addr) const {
         return addr >= StartAddr && addr <= EndAddr;
     }
 
     uint8_t read_byte(uint16_t addr) const {
-        if (mem_port_) {
-            return mem_port_->read(addr);
-        } else {
-            return *get_location(addr);
-        }
+        return *get_location(addr);
     }
 
     uint16_t read_word(uint16_t addr) const {
@@ -40,11 +33,7 @@ public:
     }
 
     void write_byte(uint16_t addr, uint8_t byte) {
-        if (mem_port_) {
-            mem_port_->write(addr, byte);
-        } else {
-            *get_location(addr) = byte;
-        }
+        *get_location(addr) = byte;
     }
 
     void write_word(uint16_t addr, uint16_t word) {
@@ -59,11 +48,10 @@ private:
 
     const uint8_t *get_location(uint16_t addr) const {
         addr %= Size;
-        return &bank_[addr];
+        return &bank_.data()[addr];
     }
 
-    uint8_t bank_[Size]{};
-    MemPort *mem_port_{nullptr};
+    std::array<uint8_t, Size> bank_;
 };
 
 } // namespace n_e_s::core

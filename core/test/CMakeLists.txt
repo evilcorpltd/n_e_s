@@ -17,13 +17,12 @@ endif()
 
 add_executable(${PROJECT_NAME}
     src/main.cpp
+    src/mock_membank.h
     src/mock_mmu.h
     src/test_cpu.cpp
     src/test_membank.cpp
-    src/test_memport.cpp
     src/test_mmu.cpp
-    src/test_ppu.cpp
-)
+    src/test_ppu.cpp)
 
 target_compile_options(${PROJECT_NAME}
     PRIVATE

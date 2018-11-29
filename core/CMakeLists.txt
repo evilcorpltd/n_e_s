@@ -3,14 +3,13 @@ project(n_e_s_core)
 add_library(${PROJECT_NAME}
     include/core/cpu_factory.h
     include/core/mmu_factory.h
-    include/core/membank.h
-    include/core/memport.h
     include/core/ppu_factory.h
     include/core/icpu.h
+    include/core/imembank.h
     include/core/immu.h
     include/core/ippu.h
     src/cpu_factory.cpp
-    src/memport.cpp
+    src/membank.h
     src/mmu.h
     src/mmu.cpp
     src/mmu_factory.cpp
@@ -19,7 +18,7 @@ add_library(${PROJECT_NAME}
     src/ppu.h
     src/ppu.cpp
     src/ppu_factory.cpp
-)
+    )
 
 target_compile_options(${PROJECT_NAME}
     PRIVATE
