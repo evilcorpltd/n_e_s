@@ -2,40 +2,13 @@
 
 #include "mos6502.h"
 
+#include "opcode.h"
+
 #include <cassert>
 #include <sstream>
 #include <stdexcept>
 
 namespace {
-
-enum Opcode : uint8_t {
-    BRK = 0x00,
-    PHP = 0x08,
-    BPL = 0x10,
-    CLC = 0x18,
-    BMI = 0x30,
-    SEC = 0x38,
-    LSR_A = 0x4A,
-    PHA = 0x48,
-    JMP = 0x4C,
-    BVC = 0x50,
-    CLI = 0x58,
-    BVS = 0x70,
-    SEI = 0x78,
-    STY_ABS = 0x8C,
-    STA_ABS = 0x8D,
-    STX_ABS = 0x8E,
-    BCC = 0x90,
-    LDY_I = 0xA0,
-    BCS = 0xB0,
-    CLV = 0xB8,
-    BNE = 0xD0,
-    CLD = 0xD8,
-    NOP = 0xEA,
-    INX = 0xE8,
-    BEQ = 0xF0,
-    SED = 0xF8,
-};
 
 const uint16_t kResetAddress = 0xFFFC; // This is where the reset routine is.
 const uint16_t kBrkAddress = 0xFFFE; // This is where the break routine is.
@@ -95,11 +68,11 @@ Mos6502::Mos6502(Registers *const registers, IMmu *const mmu)
 // Most instruction timings are from https://robinli.eu/f/6502_cpu.txt
 void Mos6502::execute() {
     if (pipeline_.empty()) {
-        const auto opcode =
-                static_cast<Opcode>(mmu_->read_byte(registers_->pc++));
+        const auto raw_opcode{mmu_->read_byte(registers_->pc++)};
+        const auto opcode = decode(raw_opcode);
 
-        switch (opcode) {
-        case BRK:
+        switch (opcode.instruction) {
+        case Instruction::BRK:
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() {
                 /* Do nothing. */
@@ -110,114 +83,130 @@ void Mos6502::execute() {
             pipeline_.push(
                     [=]() { registers_->pc = mmu_->read_word(kBrkAddress); });
             return;
-        case PHP:
+        case Instruction::PHP:
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() { stack_.push_byte(registers_->p); });
             return;
-        case BPL:
+        case Instruction::BPL:
             pipeline_.push(
                     branch_on([=]() { return !(registers_->p & N_FLAG); }));
             return;
-        case CLC:
+        case Instruction::CLC:
             pipeline_.push([=]() { clear_flag(C_FLAG); });
             return;
-        case BMI:
+        case Instruction::BMI:
             pipeline_.push(branch_on([=]() { return registers_->p & N_FLAG; }));
             return;
-        case SEC:
+        case Instruction::SEC:
             pipeline_.push([=]() { set_flag(C_FLAG); });
             return;
-        case LSR_A:
-            pipeline_.push([=]() {
-                set_carry(registers_->a & 1);
-                registers_->a &= ~1;
-                registers_->a >>= 1;
-                set_zero(registers_->a);
-                clear_flag(N_FLAG);
-            });
-            return;
-        case PHA:
+        case Instruction::LSR:
+            if (opcode.addressMode == AddressMode::Accumulator) {
+                pipeline_.push([=]() {
+                    set_carry(registers_->a & 1);
+                    registers_->a &= ~1;
+                    registers_->a >>= 1;
+                    set_zero(registers_->a);
+                    clear_flag(N_FLAG);
+                });
+                return;
+            }
+            break;
+        case Instruction::PHA:
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() { stack_.push_byte(registers_->a); });
             return;
-        case JMP:
+        case Instruction::JMP:
             pipeline_.push([=]() { ++registers_->pc; });
             pipeline_.push([=]() {
                 registers_->pc = mmu_->read_word(registers_->pc - 1);
             });
             return;
-        case BVC:
+        case Instruction::BVC:
             pipeline_.push(
                     branch_on([=]() { return !(registers_->p & V_FLAG); }));
             return;
-        case CLI:
+        case Instruction::CLI:
             pipeline_.push([=]() { clear_flag(I_FLAG); });
             return;
-        case BVS:
+        case Instruction::BVS:
             pipeline_.push(branch_on([=]() { return registers_->p & V_FLAG; }));
             return;
-        case SEI:
+        case Instruction::SEI:
             pipeline_.push([=]() { set_flag(I_FLAG); });
             return;
-        case STY_ABS:
-            pipeline_.push([=]() { ++registers_->pc; });
-            pipeline_.push([=]() { ++registers_->pc; });
-            pipeline_.push(store_byte_abs_addr(registers_->y));
-            return;
-        case STA_ABS:
-            pipeline_.push([=]() { ++registers_->pc; });
-            pipeline_.push([=]() { ++registers_->pc; });
-            pipeline_.push(store_byte_abs_addr(registers_->a));
-            return;
-        case STX_ABS:
-            pipeline_.push([=]() { ++registers_->pc; });
-            pipeline_.push([=]() { ++registers_->pc; });
-            pipeline_.push(store_byte_abs_addr(registers_->x));
-            return;
-        case BCC:
+        case Instruction::STY:
+            if (opcode.addressMode == AddressMode::Absolute) {
+                pipeline_.push([=]() { ++registers_->pc; });
+                pipeline_.push([=]() { ++registers_->pc; });
+                pipeline_.push(store_byte_abs_addr(registers_->y));
+                return;
+            }
+            break;
+        case Instruction::STA:
+            if (opcode.addressMode == AddressMode::Absolute) {
+                pipeline_.push([=]() { ++registers_->pc; });
+                pipeline_.push([=]() { ++registers_->pc; });
+                pipeline_.push(store_byte_abs_addr(registers_->a));
+                return;
+            }
+            break;
+        case Instruction::STX:
+            if (opcode.addressMode == AddressMode::Absolute) {
+                pipeline_.push([=]() { ++registers_->pc; });
+                pipeline_.push([=]() { ++registers_->pc; });
+                pipeline_.push(store_byte_abs_addr(registers_->x));
+                return;
+            }
+            break;
+        case Instruction::BCC:
             pipeline_.push(
                     branch_on([=]() { return !(registers_->p & C_FLAG); }));
             return;
-        case LDY_I:
-            pipeline_.push([=]() {
-                registers_->y = mmu_->read_byte(registers_->pc++);
-                set_zero(registers_->y);
-                set_negative(registers_->y);
-            });
-            return;
-        case BCS:
+        case Instruction::LDY:
+            if (opcode.addressMode == AddressMode::Immediate) {
+                pipeline_.push([=]() {
+                    registers_->y = mmu_->read_byte(registers_->pc++);
+                    set_zero(registers_->y);
+                    set_negative(registers_->y);
+                });
+                return;
+            }
+            break;
+        case Instruction::BCS:
             pipeline_.push(branch_on([=]() { return registers_->p & C_FLAG; }));
             return;
-        case CLV:
+        case Instruction::CLV:
             pipeline_.push([=]() { clear_flag(V_FLAG); });
             return;
-        case BNE:
+        case Instruction::BNE:
             pipeline_.push(
                     branch_on([=]() { return !(registers_->p & Z_FLAG); }));
             return;
-        case CLD:
+        case Instruction::CLD:
             pipeline_.push([=]() { clear_flag(D_FLAG); });
             return;
-        case NOP:
+        case Instruction::NOP:
             pipeline_.push([]() { /* Do nothing. */ });
             return;
-        case INX:
+        case Instruction::INX:
             pipeline_.push([=]() {
                 ++registers_->x;
                 set_zero(registers_->x);
                 set_negative(registers_->x);
             });
             return;
-        case BEQ:
+        case Instruction::BEQ:
             pipeline_.push(branch_on([=]() { return registers_->p & Z_FLAG; }));
             return;
-        case SED:
+        case Instruction::SED:
             pipeline_.push([=]() { set_flag(D_FLAG); });
             return;
+        case Instruction::Invalid:
+            break;
         }
-
         std::stringstream err;
-        err << "Bad instruction: " << std::showbase << std::hex << +opcode;
+        err << "Bad instruction: " << std::showbase << std::hex << +raw_opcode;
         throw std::logic_error(err.str());
     }
 
