@@ -3,49 +3,64 @@
 #include "mmu.h"
 
 #include <algorithm>
+#include <stdexcept>
 
 namespace n_e_s::core {
 
+namespace {
+
+auto equal(uint16_t addr) {
+    return [=](const auto &mem_bank) {
+        return mem_bank->is_address_in_range(addr);
+    };
+}
+
+} // namespace
+
 Mmu::Mmu() : mem_banks_() {}
 
-void Mmu::add_mem_bank(IMemBank *mem_bank) {
-    mem_banks_.push_back(mem_bank);
+void Mmu::add_mem_bank(std::unique_ptr<IMemBank> mem_bank) {
+    mem_banks_.push_back(std::move(mem_bank));
 }
 
 IMemBank *Mmu::get_mem_bank(uint16_t addr) const {
-    auto it = std::find_if(
-            begin(mem_banks_), end(mem_banks_), [=](IMemBank *mem_bank) {
-                return mem_bank->is_address_in_range(addr);
-            });
-
+    auto it = std::find_if(begin(mem_banks_), end(mem_banks_), equal(addr));
     if (it != end(mem_banks_)) {
-        return *it;
+        return (*it).get();
     } else {
         return nullptr;
     }
 }
 
 uint8_t Mmu::read_byte(uint16_t addr) const {
-    IMemBank *mem_bank = get_mem_bank(addr);
-    return mem_bank ? mem_bank->read_byte(addr) : 0;
+    if (const IMemBank *mem_bank = get_mem_bank(addr)) {
+        return mem_bank->read_byte(addr);
+    } else {
+        throw std::invalid_argument("Invalid address");
+    }
 }
 
 uint16_t Mmu::read_word(uint16_t addr) const {
-    IMemBank *mem_bank = get_mem_bank(addr);
-    return mem_bank ? mem_bank->read_word(addr) : 0;
+    if (const IMemBank *mem_bank = get_mem_bank(addr)) {
+        return mem_bank->read_word(addr);
+    } else {
+        throw std::invalid_argument("Invalid address");
+    }
 }
 
 void Mmu::write_byte(uint16_t addr, uint8_t byte) {
-    IMemBank *mem_bank = get_mem_bank(addr);
-    if (mem_bank) {
+    if (IMemBank *mem_bank = get_mem_bank(addr)) {
         mem_bank->write_byte(addr, byte);
+    } else {
+        throw std::invalid_argument("Invalid address");
     }
 }
 
 void Mmu::write_word(uint16_t addr, uint16_t word) {
-    IMemBank *mem_bank = get_mem_bank(addr);
-    if (mem_bank) {
+    if (IMemBank *mem_bank = get_mem_bank(addr)) {
         mem_bank->write_word(addr, word);
+    } else {
+        throw std::invalid_argument("Invalid address");
     }
 }
 

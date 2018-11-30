@@ -17,7 +17,8 @@ add_library(${PROJECT_NAME}
     src/mos6502.cpp
     src/ppu.h
     src/ppu.cpp
-    src/ppu_factory.cpp)
+    src/ppu_factory.cpp
+)
 
 target_compile_options(${PROJECT_NAME}
     PRIVATE
