@@ -206,8 +206,7 @@ void Mos6502::execute() {
             break;
         }
         std::stringstream err;
-        err << "Bad instruction: " << std::showbase << std::hex
-           << +raw_opcode;
+        err << "Bad instruction: " << std::showbase << std::hex << +raw_opcode;
         throw std::logic_error(err.str());
     }
 
