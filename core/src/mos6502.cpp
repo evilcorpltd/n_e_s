@@ -203,12 +203,12 @@ void Mos6502::execute() {
             pipeline_.push([=]() { set_flag(D_FLAG); });
             return;
         case Instruction::Invalid:
-        default:
-            std::stringstream err;
-            err << "Bad instruction: " << std::showbase << std::hex
-                << +raw_opcode;
-            throw std::logic_error(err.str());
+            break;
         }
+        std::stringstream err;
+        err << "Bad instruction: " << std::showbase << std::hex
+           << +raw_opcode;
+        throw std::logic_error(err.str());
     }
 
     pipeline_.front()();
