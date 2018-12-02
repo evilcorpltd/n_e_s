@@ -1,5 +1,6 @@
 // Copyright 2018 Robin Linden <dev@robinlinden.eu>
 
+#include "core/membank_factory.h"
 #include "core/mmu_factory.h"
 
 #include <gtest/gtest.h>
@@ -10,7 +11,15 @@ namespace {
 
 class MmuTest : public ::testing::Test {
 public:
-    MmuTest() : mmu{MmuFactory::create()} {}
+    MmuTest()
+            : mmu{MmuFactory::create(MemBankFactory::create_nes_mem_banks())} {}
+
+    std::unique_ptr<IMmu> mmu;
+};
+
+class MmuInvalidAddressTest : public ::testing::Test {
+public:
+    MmuInvalidAddressTest() : mmu{MmuFactory::create(MemBankList())} {}
 
     std::unique_ptr<IMmu> mmu;
 };
@@ -80,6 +89,38 @@ TEST_F(MmuTest, ppu_bank_mirroring) {
         for (uint16_t addr : addrs) {
             EXPECT_EQ(bytes[i], mmu->read_byte(addr));
         }
+    }
+}
+
+TEST_F(MmuInvalidAddressTest, read_byte_invalid_address) {
+    try {
+        mmu->read_byte(0x3333);
+    } catch (const std::invalid_argument &e) {
+        EXPECT_EQ(e.what(), std::string("Invalid address [0x3333]"));
+    }
+}
+
+TEST_F(MmuInvalidAddressTest, read_word_invalid_address) {
+    try {
+        mmu->read_byte(0x2244);
+    } catch (const std::invalid_argument &e) {
+        EXPECT_EQ(e.what(), std::string("Invalid address [0x2244]"));
+    }
+}
+
+TEST_F(MmuInvalidAddressTest, write_byte_invalid_address) {
+    try {
+        mmu->write_byte(0x1234, 0xFF);
+    } catch (const std::invalid_argument &e) {
+        EXPECT_EQ(e.what(), std::string("Invalid address [0x1234]"));
+    }
+}
+
+TEST_F(MmuInvalidAddressTest, write_word_invalid_address) {
+    try {
+        mmu->write_word(0x1111, 0xFFAA);
+    } catch (const std::invalid_argument &e) {
+        EXPECT_EQ(e.what(), std::string("Invalid address [0x1111]"));
     }
 }
 

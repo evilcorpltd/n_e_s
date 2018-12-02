@@ -3,6 +3,7 @@
 #include "mmu.h"
 
 #include <algorithm>
+#include <iomanip>
 #include <sstream>
 #include <stdexcept>
 
@@ -18,7 +19,9 @@ auto equal(uint16_t addr) {
 
 std::string invalid_address_msg(uint16_t addr) {
     std::stringstream ss;
-    ss << "Invalid address [" << addr << "]";
+    ss << "Invalid address [0x";
+    ss << std::uppercase << std::setfill('0') << std::setw(4) << std::hex
+       << addr << "]";
     return ss.str();
 }
 

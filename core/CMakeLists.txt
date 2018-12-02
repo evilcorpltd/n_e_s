@@ -8,8 +8,10 @@ add_library(${PROJECT_NAME}
     include/core/imembank.h
     include/core/immu.h
     include/core/ippu.h
+    include/core/membank_factory.h
     src/cpu_factory.cpp
     src/membank.h
+    src/membank_factory.cpp
     src/mmu.h
     src/mmu.cpp
     src/mmu_factory.cpp
