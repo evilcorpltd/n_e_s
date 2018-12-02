@@ -49,7 +49,7 @@ enum Opcode : uint8_t {
     CLC = 0x18,
     BMI = 0x30,
     SEC = 0x38,
-    LSR_A = 0x4A,
+    LSR_ACC = 0x4A,
     PHA = 0x48,
     JMP = 0x4C,
     BVC = 0x50,
@@ -60,7 +60,7 @@ enum Opcode : uint8_t {
     STA_ABS = 0x8D,
     STX_ABS = 0x8E,
     BCC = 0x90,
-    LDY_I = 0xA0,
+    LDY_IMM = 0xA0,
     BCS = 0xB0,
     CLV = 0xB8,
     BNE = 0xD0,
@@ -252,7 +252,7 @@ TEST_F(CpuTest, sec) {
 }
 
 TEST_F(CpuTest, lsr_a_shifts) {
-    stage_instruction(LSR_A);
+    stage_instruction(LSR_ACC);
     registers.a = 0b01001000;
     expected.a = 0b00100100;
 
@@ -261,7 +261,7 @@ TEST_F(CpuTest, lsr_a_shifts) {
 }
 
 TEST_F(CpuTest, lsr_a_sets_z_flag) {
-    stage_instruction(LSR_A);
+    stage_instruction(LSR_ACC);
     expected.p |= Z_FLAG;
 
     step_execution(2);
@@ -269,7 +269,7 @@ TEST_F(CpuTest, lsr_a_sets_z_flag) {
 }
 
 TEST_F(CpuTest, lsr_a_sets_c_flag) {
-    stage_instruction(LSR_A);
+    stage_instruction(LSR_ACC);
     registers.a = 0b00000011;
     expected.a = 0b00000001;
     expected.p = C_FLAG;
@@ -279,7 +279,7 @@ TEST_F(CpuTest, lsr_a_sets_c_flag) {
 }
 
 TEST_F(CpuTest, lsr_a_sets_c_and_z_flags) {
-    stage_instruction(LSR_A);
+    stage_instruction(LSR_ACC);
     registers.a = 0b00000001;
     expected.a = 0b00000000;
     expected.p = C_FLAG | Z_FLAG;
@@ -289,7 +289,7 @@ TEST_F(CpuTest, lsr_a_sets_c_and_z_flags) {
 }
 
 TEST_F(CpuTest, lsr_a_clears_c_z_n_flags) {
-    stage_instruction(LSR_A);
+    stage_instruction(LSR_ACC);
     registers.a = 0b00000010;
     registers.p = Z_FLAG | C_FLAG | N_FLAG;
     expected.a = 0b00000001;
@@ -422,7 +422,7 @@ TEST_F(CpuTest, bcc_crossing_page_negative) {
 }
 
 TEST_F(CpuTest, ldy_i_sets_y) {
-    stage_instruction(LDY_I);
+    stage_instruction(LDY_IMM);
     expected.y = 42;
     ++expected.pc;
 
@@ -433,7 +433,7 @@ TEST_F(CpuTest, ldy_i_sets_y) {
 }
 
 TEST_F(CpuTest, ldy_i_sets_n_flag) {
-    stage_instruction(LDY_I);
+    stage_instruction(LDY_IMM);
     expected.y = 128;
     expected.p |= N_FLAG;
     ++expected.pc;
@@ -445,7 +445,7 @@ TEST_F(CpuTest, ldy_i_sets_n_flag) {
 }
 
 TEST_F(CpuTest, ldy_i_clears_n_flag) {
-    stage_instruction(LDY_I);
+    stage_instruction(LDY_IMM);
     registers.p |= N_FLAG;
     expected.y = 127;
     ++expected.pc;
@@ -457,7 +457,7 @@ TEST_F(CpuTest, ldy_i_clears_n_flag) {
 }
 
 TEST_F(CpuTest, ldy_i_sets_z_flag) {
-    stage_instruction(LDY_I);
+    stage_instruction(LDY_IMM);
     expected.y = 0;
     expected.p |= Z_FLAG;
     ++expected.pc;
@@ -469,7 +469,7 @@ TEST_F(CpuTest, ldy_i_sets_z_flag) {
 }
 
 TEST_F(CpuTest, ldy_i_clears_z_flag) {
-    stage_instruction(LDY_I);
+    stage_instruction(LDY_IMM);
     registers.p |= Z_FLAG;
     expected.y = 1;
     ++expected.pc;

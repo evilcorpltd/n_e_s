@@ -2,23 +2,25 @@ project(n_e_s_core)
 
 add_library(${PROJECT_NAME}
     include/core/cpu_factory.h
-    include/core/mmu_factory.h
-    include/core/ppu_factory.h
     include/core/icpu.h
     include/core/imembank.h
     include/core/immu.h
     include/core/ippu.h
     include/core/membank_factory.h
+    include/core/mmu_factory.h
+    include/core/ppu_factory.h
     src/cpu_factory.cpp
     src/membank.h
     src/membank_factory.cpp
-    src/mmu.h
     src/mmu.cpp
+    src/mmu.h
     src/mmu_factory.cpp
-    src/mos6502.h
     src/mos6502.cpp
-    src/ppu.h
+    src/mos6502.h
+    src/opcode.cpp
+    src/opcode.h
     src/ppu.cpp
+    src/ppu.h
     src/ppu_factory.cpp
 )
 
