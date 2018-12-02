@@ -102,7 +102,7 @@ TEST_F(MmuInvalidAddressTest, read_byte_invalid_address) {
 
 TEST_F(MmuInvalidAddressTest, read_word_invalid_address) {
     try {
-        mmu->read_byte(0x2244);
+        mmu->read_word(0x2244);
     } catch (const std::invalid_argument &e) {
         EXPECT_EQ(e.what(), std::string("Invalid address [0x2244]"));
     }
