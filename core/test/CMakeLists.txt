@@ -17,6 +17,7 @@ endif()
 
 add_executable(${PROJECT_NAME}
     src/main.cpp
+    src/mock_membank.h
     src/mock_mmu.h
     src/test_cpu.cpp
     src/test_mmu.cpp
