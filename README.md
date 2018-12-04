@@ -1,5 +1,7 @@
 # n e s
 
+[![Build Status][travis-badge]][travis]
+
 ## Description
 
 Modular cycle-accurate NES emulator implemented from scratch in modern C++ and
@@ -11,7 +13,7 @@ and make a C64 or Apple ][ or whatever emulator based on it.
 
 Clone!
 
-`git clone https://github.com/robinlinden/n_e_s.git`
+`git clone https://github.com/evilcorpltd/n_e_s.git`
 
 Build!
 
