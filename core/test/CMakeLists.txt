@@ -29,6 +29,7 @@ target_compile_options(${PROJECT_NAME}
         -Wall
         -Werror
         -Wextra
+        -Wswitch-enum
         -pedantic-errors
 )
 
