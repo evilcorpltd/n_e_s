@@ -1,6 +1,6 @@
 # n e s
 
-[![Build Status][travis-badge]][travis]
+[![Build Status](https://travis-ci.org/evilcorpltd/n_e_s.svg?branch=master)](https://travis-ci.org/evilcorpltd/n_e_s)
 
 ## Description
 
