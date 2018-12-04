@@ -10,6 +10,7 @@ enum class AddressMode {
     Invalid,
     Implied,
     Immediate,
+    Zeropage,
     Relative,
     Absolute,
     Accumulator

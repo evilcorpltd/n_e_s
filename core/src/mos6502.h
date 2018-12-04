@@ -4,6 +4,7 @@
 
 #include "core/icpu.h"
 #include "core/immu.h"
+#include "opcode.h"
 
 #include <cstdint>
 #include <functional>
@@ -48,6 +49,10 @@ private:
     // Holds the atoms staged to be executed.
     std::queue<std::function<void()>> pipeline_;
 
+    // Effective address calculated by an address mode during pipeline
+    // execution.
+    uint16_t effective_address_{};
+
     void clear_flag(uint8_t flag);
     void set_flag(uint8_t flag);
 
@@ -63,9 +68,11 @@ private:
     // Returns an atom for the cpu pipeline for branching on a condition.
     std::function<void()> branch_on(std::function<bool()> condition);
 
-    // Returns a function which, when called, will write the given byte to a
-    // memory address. The address is fetched using absolute addressing mode.
-    std::function<void()> store_byte_abs_addr(uint8_t byte);
+    void create_store_instruction(Opcode opcode);
+
+    void add_zeropage_addressing();
+
+    void add_absolute_addressing();
 };
 
 } // namespace n_e_s::core
