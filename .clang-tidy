@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,bugprone-*,modernize-*'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,bugprone-*,modernize-*,-clang-analyzer-cplusplus.NewDelete'
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
