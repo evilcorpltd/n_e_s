@@ -1,5 +1,7 @@
 // Copyright 2018 Robin Linden <dev@robinlinden.eu>
 
+#pragma once
+
 #include <climits>
 #include <cstdint>
 #include <iomanip>
