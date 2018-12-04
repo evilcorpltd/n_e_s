@@ -18,4 +18,3 @@ public:
 };
 
 } // namespace n_e_s::core::test
-
