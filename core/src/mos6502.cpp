@@ -69,6 +69,10 @@ void Mos6502::execute() {
         const uint8_t raw_opcode{mmu_->read_byte(registers_->pc++)};
         const Opcode opcode = decode(raw_opcode);
 
+        if (opcode.addressMode == AddressMode::Immediate) {
+            effective_address_ = registers_->pc++;
+        }
+
         switch (opcode.instruction) {
         case Instruction::BRK:
             pipeline_.push([=]() { ++registers_->pc; });
@@ -180,16 +184,11 @@ void Mos6502::execute() {
             pipeline_.push(
                     branch_on([=]() { return !(registers_->p & C_FLAG); }));
             return;
+        case Instruction::LDA:
+        case Instruction::LDX:
         case Instruction::LDY:
-            if (opcode.addressMode == AddressMode::Immediate) {
-                pipeline_.push([=]() {
-                    registers_->y = mmu_->read_byte(registers_->pc++);
-                    set_zero(registers_->y);
-                    set_negative(registers_->y);
-                });
-                return;
-            }
-            break;
+            pipeline_.append(create_load_instruction(opcode));
+            return;
         case Instruction::BCS:
             pipeline_.push(branch_on([=]() { return registers_->p & C_FLAG; }));
             return;
@@ -311,6 +310,39 @@ Pipeline Mos6502::create_store_instruction(Opcode opcode) {
         reg = &registers_->a;
     }
     result.push([=]() { mmu_->write_byte(effective_address_, *reg); });
+
+    return result;
+}
+
+Pipeline Mos6502::create_load_instruction(Opcode opcode) {
+    uint8_t *reg{};
+    if (opcode.instruction == Instruction::LDX) {
+        reg = &registers_->x;
+    } else if (opcode.instruction == Instruction::LDY) {
+        reg = &registers_->y;
+    } else if (opcode.instruction == Instruction::LDA) {
+        reg = &registers_->a;
+    }
+
+    Pipeline result;
+
+    if (opcode.addressMode == AddressMode::Immediate) {
+        // Empty
+    } else if (opcode.addressMode == AddressMode::Absolute) {
+        result.append(create_absolute_addressing_steps());
+    } else if (opcode.addressMode == AddressMode::Zeropage) {
+        result.append(create_zeropage_addressing_steps());
+    } else if (opcode.addressMode == AddressMode::ZeropageX) {
+        result.append(create_zeropage_indexed_addressing_steps(&registers_->x));
+    } else if (opcode.addressMode == AddressMode::ZeropageY) {
+        result.append(create_zeropage_indexed_addressing_steps(&registers_->y));
+    }
+
+    result.push([=]() {
+        *reg = mmu_->read_byte(effective_address_);
+        set_zero(*reg);
+        set_negative(*reg);
+    });
 
     return result;
 }
