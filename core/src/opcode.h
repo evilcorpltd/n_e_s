@@ -11,6 +11,8 @@ enum class AddressMode {
     Implied,
     Immediate,
     Zeropage,
+    ZeropageX,
+    ZeropageY,
     Relative,
     Absolute,
     Accumulator

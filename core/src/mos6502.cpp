@@ -261,6 +261,10 @@ void Mos6502::create_store_instruction(Opcode opcode) {
         add_absolute_addressing();
     } else if (opcode.addressMode == AddressMode::Zeropage) {
         add_zeropage_addressing();
+    } else if (opcode.addressMode == AddressMode::ZeropageX) {
+        add_zeropage_indexed_addresing(&registers_->x);
+    } else if (opcode.addressMode == AddressMode::ZeropageY) {
+        add_zeropage_indexed_addresing(&registers_->y);
     }
 
     uint8_t *reg{};
@@ -277,6 +281,16 @@ void Mos6502::create_store_instruction(Opcode opcode) {
 void Mos6502::add_zeropage_addressing() {
     pipeline_.push([=]() {
         effective_address_ = mmu_->read_byte(registers_->pc);
+        ++registers_->pc;
+    });
+}
+
+void Mos6502::add_zeropage_indexed_addresing(uint8_t *index_reg) {
+    pipeline_.push([=]() { /* Empty */ });
+    pipeline_.push([=]() {
+        const uint8_t address = mmu_->read_byte(registers_->pc);
+        const uint8_t effective_address_low = address + *index_reg;
+        effective_address_ = effective_address_low;
         ++registers_->pc;
     });
 }

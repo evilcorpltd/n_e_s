@@ -72,6 +72,8 @@ private:
 
     void add_zeropage_addressing();
 
+    void add_zeropage_indexed_addresing(uint8_t *index_reg);
+
     void add_absolute_addressing();
 };
 

@@ -62,6 +62,9 @@ enum Opcode : uint8_t {
     STY_ZERO = 0x84,
     STA_ZERO = 0x85,
     STX_ZERO = 0x86,
+    STY_ZEROX = 0x94,
+    STA_ZEROX = 0x95,
+    STX_ZEROY = 0x96,
     BCC = 0x90,
     LDY_IMM = 0xA0,
     BCS = 0xB0,
@@ -675,6 +678,23 @@ TEST_F(CpuTest, sta_zero) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(CpuTest, sta_zero_x_indexed) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = expected.a = 0x07;
+    registers.x = expected.x = 0xED;
+
+    stage_instruction(STA_ZEROX);
+
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+    EXPECT_CALL(mmu, write_byte(static_cast<uint8_t>(0x44 + 0xED), 0x07));
+
+    step_execution(4);
+
+    EXPECT_EQ(expected, registers);
+}
+
 TEST_F(CpuTest, stx_abs) {
     registers.pc = expected.pc = 0x158;
     registers.x = expected.x = 0x71;
@@ -707,6 +727,23 @@ TEST_F(CpuTest, stx_zero) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(CpuTest, stx_zero_y_indexed) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0x07;
+    registers.y = expected.y = 0xED;
+
+    stage_instruction(STX_ZEROY);
+
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+    EXPECT_CALL(mmu, write_byte(static_cast<uint8_t>(0x44 + 0xED), 0x07));
+
+    step_execution(4);
+
+    EXPECT_EQ(expected, registers);
+}
+
 TEST_F(CpuTest, sty_abs) {
     registers.pc = expected.pc = 0x4321;
     registers.y = expected.y = 0x07;
@@ -735,6 +772,23 @@ TEST_F(CpuTest, sty_zero) {
     EXPECT_CALL(mmu, write_byte(0x44, 0x07));
 
     step_execution(3);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sty_zero_x_indexed) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0x07;
+    registers.x = expected.x = 0xED;
+
+    stage_instruction(STY_ZEROX);
+
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+    EXPECT_CALL(mmu, write_byte(static_cast<uint8_t>(0x44 + 0xED), 0x07));
+
+    step_execution(4);
 
     EXPECT_EQ(expected, registers);
 }
