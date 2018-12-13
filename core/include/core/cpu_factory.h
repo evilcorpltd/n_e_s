@@ -5,11 +5,13 @@
 #include "core/icpu.h"
 #include "core/immu.h"
 
+#include <memory>
+
 namespace n_e_s::core {
 
 class CpuFactory {
 public:
-    static ICpu *create(Registers *registers, IMmu *mmu);
+    static std::unique_ptr<ICpu> create(Registers *registers, IMmu *mmu);
 };
 
 } // namespace n_e_s::core
