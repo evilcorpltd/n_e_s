@@ -5,10 +5,9 @@
 #include "core/icpu.h"
 #include "core/immu.h"
 #include "opcode.h"
+#include "pipeline.h"
 
 #include <cstdint>
-#include <functional>
-#include <queue>
 
 namespace n_e_s::core {
 
@@ -47,7 +46,7 @@ private:
     Stack stack_;
 
     // Holds the atoms staged to be executed.
-    std::queue<std::function<void()>> pipeline_;
+    Pipeline pipeline_;
 
     // Effective address calculated by an address mode during pipeline
     // execution.

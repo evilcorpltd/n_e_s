@@ -191,14 +191,11 @@ void Mos6502::execute() {
         throw std::logic_error(err.str());
     }
 
-    pipeline_.front()();
-    pipeline_.pop();
+    pipeline_.execute_step();
 }
 
 void Mos6502::reset() {
-    while (!pipeline_.empty()) {
-        pipeline_.pop();
-    }
+    pipeline_.clear();
 
     registers_->pc = mmu_->read_word(kResetAddress);
 }
