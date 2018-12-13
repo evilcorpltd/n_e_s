@@ -69,11 +69,11 @@ private:
 
     void create_store_instruction(Opcode opcode);
 
-    void add_zeropage_addressing();
+    Pipeline create_zeropage_addressing_steps();
 
-    void add_zeropage_indexed_addresing(uint8_t *index_reg);
+    Pipeline create_zeropage_indexed_addressing_steps(uint8_t *index_reg);
 
-    void add_absolute_addressing();
+    Pipeline create_absolute_addressing_steps();
 };
 
 } // namespace n_e_s::core

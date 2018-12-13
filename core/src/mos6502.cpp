@@ -255,13 +255,15 @@ std::function<void()> Mos6502::branch_on(std::function<bool()> condition) {
 
 void Mos6502::create_store_instruction(Opcode opcode) {
     if (opcode.addressMode == AddressMode::Absolute) {
-        add_absolute_addressing();
+        pipeline_.append(create_absolute_addressing_steps());
     } else if (opcode.addressMode == AddressMode::Zeropage) {
-        add_zeropage_addressing();
+        pipeline_.append(create_zeropage_addressing_steps());
     } else if (opcode.addressMode == AddressMode::ZeropageX) {
-        add_zeropage_indexed_addresing(&registers_->x);
+        pipeline_.append(
+                create_zeropage_indexed_addressing_steps(&registers_->x));
     } else if (opcode.addressMode == AddressMode::ZeropageY) {
-        add_zeropage_indexed_addresing(&registers_->y);
+        pipeline_.append(
+                create_zeropage_indexed_addressing_steps(&registers_->y));
     }
 
     uint8_t *reg{};
@@ -275,29 +277,35 @@ void Mos6502::create_store_instruction(Opcode opcode) {
     pipeline_.push([=]() { mmu_->write_byte(effective_address_, *reg); });
 }
 
-void Mos6502::add_zeropage_addressing() {
-    pipeline_.push([=]() {
+Pipeline Mos6502::create_zeropage_addressing_steps() {
+    Pipeline result;
+    result.push([=]() {
         effective_address_ = mmu_->read_byte(registers_->pc);
         ++registers_->pc;
     });
+    return result;
 }
 
-void Mos6502::add_zeropage_indexed_addresing(uint8_t *index_reg) {
-    pipeline_.push([=]() { /* Empty */ });
-    pipeline_.push([=]() {
+Pipeline Mos6502::create_zeropage_indexed_addressing_steps(uint8_t *index_reg) {
+    Pipeline result;
+    result.push([=]() { /* Empty */ });
+    result.push([=]() {
         const uint8_t address = mmu_->read_byte(registers_->pc);
         const uint8_t effective_address_low = address + *index_reg;
         effective_address_ = effective_address_low;
         ++registers_->pc;
     });
+    return result;
 }
 
-void Mos6502::add_absolute_addressing() {
-    pipeline_.push([=]() { ++registers_->pc; });
-    pipeline_.push([=]() {
+Pipeline Mos6502::create_absolute_addressing_steps() {
+    Pipeline result;
+    result.push([=]() { ++registers_->pc; });
+    result.push([=]() {
         ++registers_->pc;
         effective_address_ = mmu_->read_word(registers_->pc - 2);
     });
+    return result;
 }
 
 } // namespace n_e_s::core
