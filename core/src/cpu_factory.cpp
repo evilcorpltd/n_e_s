@@ -6,8 +6,9 @@
 
 namespace n_e_s::core {
 
-ICpu *CpuFactory::create(Registers *const registers, IMmu *const mmu) {
-    return new Mos6502(registers, mmu);
+std::unique_ptr<ICpu> CpuFactory::create(Registers *const registers,
+        IMmu *const mmu) {
+    return std::make_unique<Mos6502>(registers, mmu);
 }
 
 } // namespace n_e_s::core

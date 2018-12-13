@@ -6,8 +6,8 @@
 
 namespace n_e_s::core {
 
-IPpu *PpuFactory::create() {
-    return new Ppu();
+std::unique_ptr<IPpu> PpuFactory::create() {
+    return std::make_unique<Ppu>();
 }
 
 } // namespace n_e_s::core
