@@ -138,7 +138,7 @@ void Mos6502::execute() {
         case Instruction::STA:
         case Instruction::STX:
         case Instruction::STY:
-            create_store_instruction(opcode);
+            pipeline_.append(create_store_instruction(opcode));
             return;
         case Instruction::BCC:
             pipeline_.push(
@@ -253,17 +253,16 @@ std::function<void()> Mos6502::branch_on(std::function<bool()> condition) {
     };
 }
 
-void Mos6502::create_store_instruction(Opcode opcode) {
+Pipeline Mos6502::create_store_instruction(Opcode opcode) {
+    Pipeline result;
     if (opcode.addressMode == AddressMode::Absolute) {
-        pipeline_.append(create_absolute_addressing_steps());
+        result.append(create_absolute_addressing_steps());
     } else if (opcode.addressMode == AddressMode::Zeropage) {
-        pipeline_.append(create_zeropage_addressing_steps());
+        result.append(create_zeropage_addressing_steps());
     } else if (opcode.addressMode == AddressMode::ZeropageX) {
-        pipeline_.append(
-                create_zeropage_indexed_addressing_steps(&registers_->x));
+        result.append(create_zeropage_indexed_addressing_steps(&registers_->x));
     } else if (opcode.addressMode == AddressMode::ZeropageY) {
-        pipeline_.append(
-                create_zeropage_indexed_addressing_steps(&registers_->y));
+        result.append(create_zeropage_indexed_addressing_steps(&registers_->y));
     }
 
     uint8_t *reg{};
@@ -274,7 +273,9 @@ void Mos6502::create_store_instruction(Opcode opcode) {
     } else if (opcode.instruction == Instruction::STA) {
         reg = &registers_->a;
     }
-    pipeline_.push([=]() { mmu_->write_byte(effective_address_, *reg); });
+    result.push([=]() { mmu_->write_byte(effective_address_, *reg); });
+
+    return result;
 }
 
 Pipeline Mos6502::create_zeropage_addressing_steps() {
