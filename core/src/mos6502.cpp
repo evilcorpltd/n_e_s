@@ -135,30 +135,11 @@ void Mos6502::execute() {
         case Instruction::SEI:
             pipeline_.push([=]() { set_flag(I_FLAG); });
             return;
-        case Instruction::STY:
-            if (opcode.addressMode == AddressMode::Absolute) {
-                pipeline_.push([=]() { ++registers_->pc; });
-                pipeline_.push([=]() { ++registers_->pc; });
-                pipeline_.push(store_byte_abs_addr(registers_->y));
-                return;
-            }
-            break;
         case Instruction::STA:
-            if (opcode.addressMode == AddressMode::Absolute) {
-                pipeline_.push([=]() { ++registers_->pc; });
-                pipeline_.push([=]() { ++registers_->pc; });
-                pipeline_.push(store_byte_abs_addr(registers_->a));
-                return;
-            }
-            break;
         case Instruction::STX:
-            if (opcode.addressMode == AddressMode::Absolute) {
-                pipeline_.push([=]() { ++registers_->pc; });
-                pipeline_.push([=]() { ++registers_->pc; });
-                pipeline_.push(store_byte_abs_addr(registers_->x));
-                return;
-            }
-            break;
+        case Instruction::STY:
+            pipeline_.append(create_store_instruction(opcode));
+            return;
         case Instruction::BCC:
             pipeline_.push(
                     branch_on([=]() { return !(registers_->p & C_FLAG); }));
@@ -210,14 +191,11 @@ void Mos6502::execute() {
         throw std::logic_error(err.str());
     }
 
-    pipeline_.front()();
-    pipeline_.pop();
+    pipeline_.execute_step();
 }
 
 void Mos6502::reset() {
-    while (!pipeline_.empty()) {
-        pipeline_.pop();
-    }
+    pipeline_.clear();
 
     registers_->pc = mmu_->read_word(kResetAddress);
 }
@@ -275,11 +253,60 @@ std::function<void()> Mos6502::branch_on(std::function<bool()> condition) {
     };
 }
 
-std::function<void()> Mos6502::store_byte_abs_addr(uint8_t byte) {
-    return [=]() {
-        uint16_t addr = mmu_->read_word(registers_->pc - 2);
-        mmu_->write_byte(addr, byte);
-    };
+Pipeline Mos6502::create_store_instruction(Opcode opcode) {
+    Pipeline result;
+    if (opcode.addressMode == AddressMode::Absolute) {
+        result.append(create_absolute_addressing_steps());
+    } else if (opcode.addressMode == AddressMode::Zeropage) {
+        result.append(create_zeropage_addressing_steps());
+    } else if (opcode.addressMode == AddressMode::ZeropageX) {
+        result.append(create_zeropage_indexed_addressing_steps(&registers_->x));
+    } else if (opcode.addressMode == AddressMode::ZeropageY) {
+        result.append(create_zeropage_indexed_addressing_steps(&registers_->y));
+    }
+
+    uint8_t *reg{};
+    if (opcode.instruction == Instruction::STX) {
+        reg = &registers_->x;
+    } else if (opcode.instruction == Instruction::STY) {
+        reg = &registers_->y;
+    } else if (opcode.instruction == Instruction::STA) {
+        reg = &registers_->a;
+    }
+    result.push([=]() { mmu_->write_byte(effective_address_, *reg); });
+
+    return result;
+}
+
+Pipeline Mos6502::create_zeropage_addressing_steps() {
+    Pipeline result;
+    result.push([=]() {
+        effective_address_ = mmu_->read_byte(registers_->pc);
+        ++registers_->pc;
+    });
+    return result;
+}
+
+Pipeline Mos6502::create_zeropage_indexed_addressing_steps(uint8_t *index_reg) {
+    Pipeline result;
+    result.push([=]() { /* Empty */ });
+    result.push([=]() {
+        const uint8_t address = mmu_->read_byte(registers_->pc);
+        const uint8_t effective_address_low = address + *index_reg;
+        effective_address_ = effective_address_low;
+        ++registers_->pc;
+    });
+    return result;
+}
+
+Pipeline Mos6502::create_absolute_addressing_steps() {
+    Pipeline result;
+    result.push([=]() { ++registers_->pc; });
+    result.push([=]() {
+        ++registers_->pc;
+        effective_address_ = mmu_->read_word(registers_->pc - 2);
+    });
+    return result;
 }
 
 } // namespace n_e_s::core
