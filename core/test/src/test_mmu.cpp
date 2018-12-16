@@ -76,11 +76,11 @@ TEST_F(MmuTest, ppu_bank_mirroring) {
     std::vector<uint16_t> addrs;
     std::vector<uint8_t> bytes;
 
-    uint16_t addr = 0x2004;
+    uint16_t curraddr = 0x2004;
     for (uint8_t i = 1; i <= 0x80; ++i) {
         bytes.push_back(i % 0xF);
-        addrs.push_back(addr);
-        addr += 0x40;
+        addrs.push_back(curraddr);
+        curraddr += 0x40;
     }
 
     for (uint8_t i = 0; i < addrs.size(); ++i) {
