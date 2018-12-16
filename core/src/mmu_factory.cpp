@@ -1,3 +1,4 @@
+// Copyright 2018 Evil Corp contributors
 // Copyright 2018 Robin Linden <dev@robinlinden.eu>
 
 #include "core/mmu_factory.h"
@@ -7,8 +8,8 @@
 
 namespace n_e_s::core {
 
-IMmu *MmuFactory::create(MemBankList mem_banks) {
-    auto mmu = new Mmu();
+std::unique_ptr<IMmu> MmuFactory::create(MemBankList mem_banks) {
+    auto mmu = std::make_unique<Mmu>();
 
     for (std::unique_ptr<IMemBank> &mem_bank : mem_banks) {
         mmu->add_mem_bank(std::move(mem_bank));

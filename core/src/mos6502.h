@@ -1,13 +1,14 @@
+// Copyright 2018 Evil Corp contributors
 // Copyright 2018 Robin Linden <dev@robinlinden.eu>
 
 #pragma once
 
 #include "core/icpu.h"
 #include "core/immu.h"
+#include "opcode.h"
+#include "pipeline.h"
 
 #include <cstdint>
-#include <functional>
-#include <queue>
 
 namespace n_e_s::core {
 
@@ -46,7 +47,11 @@ private:
     Stack stack_;
 
     // Holds the atoms staged to be executed.
-    std::queue<std::function<void()>> pipeline_;
+    Pipeline pipeline_;
+
+    // Effective address calculated by an address mode during pipeline
+    // execution.
+    uint16_t effective_address_{};
 
     void clear_flag(uint8_t flag);
     void set_flag(uint8_t flag);
@@ -63,9 +68,10 @@ private:
     // Returns an atom for the cpu pipeline for branching on a condition.
     std::function<void()> branch_on(std::function<bool()> condition);
 
-    // Returns a function which, when called, will write the given byte to a
-    // memory address. The address is fetched using absolute addressing mode.
-    std::function<void()> store_byte_abs_addr(uint8_t byte);
+    Pipeline create_store_instruction(Opcode opcode);
+    Pipeline create_zeropage_addressing_steps();
+    Pipeline create_zeropage_indexed_addressing_steps(uint8_t *index_reg);
+    Pipeline create_absolute_addressing_steps();
 };
 
 } // namespace n_e_s::core

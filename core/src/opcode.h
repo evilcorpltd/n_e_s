@@ -1,3 +1,4 @@
+// Copyright 2018 Evil Corp contributors
 // Copyright 2018 Robin Linden <dev@robinlinden.eu>
 
 #pragma once
@@ -10,6 +11,9 @@ enum class AddressMode {
     Invalid,
     Implied,
     Immediate,
+    Zeropage,
+    ZeropageX,
+    ZeropageY,
     Relative,
     Absolute,
     Accumulator

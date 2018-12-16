@@ -1,3 +1,4 @@
+// Copyright 2018 Evil Corp contributors
 // Copyright 2018 Robin Linden <dev@robinlinden.eu>
 
 #include "opcode.h"
@@ -32,6 +33,12 @@ Opcode decode(const uint8_t op) {
         return {Instruction::BVS, AddressMode::Relative};
     case 0x78:
         return {Instruction::SEI, AddressMode::Implied};
+    case 0x84:
+        return {Instruction::STY, AddressMode::Zeropage};
+    case 0x85:
+        return {Instruction::STA, AddressMode::Zeropage};
+    case 0x86:
+        return {Instruction::STX, AddressMode::Zeropage};
     case 0x8C:
         return {Instruction::STY, AddressMode::Absolute};
     case 0x8D:
@@ -40,6 +47,12 @@ Opcode decode(const uint8_t op) {
         return {Instruction::STX, AddressMode::Absolute};
     case 0x90:
         return {Instruction::BCC, AddressMode::Relative};
+    case 0x94:
+        return {Instruction::STY, AddressMode::ZeropageX};
+    case 0x95:
+        return {Instruction::STA, AddressMode::ZeropageX};
+    case 0x96:
+        return {Instruction::STX, AddressMode::ZeropageY};
     case 0xA0:
         return {Instruction::LDY, AddressMode::Immediate};
     case 0xB0:

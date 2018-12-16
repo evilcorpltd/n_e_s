@@ -21,6 +21,8 @@ add_library(${PROJECT_NAME}
     src/mos6502.h
     src/opcode.cpp
     src/opcode.h
+    src/pipeline.cpp
+    src/pipeline.h
     src/ppu.cpp
     src/ppu.h
     src/ppu_factory.cpp
@@ -31,6 +33,9 @@ target_compile_options(${PROJECT_NAME}
         -Wall
         -Werror
         -Wextra
+        -Wswitch-enum
+        -Wshadow
+        -Wnon-virtual-dtor
         -pedantic-errors
 )
 
