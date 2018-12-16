@@ -1,3 +1,4 @@
+// Copyright 2018 Evil Corp contributors
 // Copyright 2018 Robin Linden <dev@robinlinden.eu>
 
 #include "opcode.h"

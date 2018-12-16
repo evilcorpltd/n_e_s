@@ -1,4 +1,4 @@
-// Copyright 2018 Robin Linden <dev@robinlinden.eu>
+// Copyright 2018 Evil Corp contributors
 
 #pragma once
 
