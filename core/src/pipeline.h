@@ -12,14 +12,10 @@ class Pipeline {
 
 public:
     void push(StepT step);
-
-    bool empty() const;
-
     void append(const Pipeline &pipeline);
-
-    void execute_step();
-
+    bool empty() const;
     void clear();
+    void execute_step();
 
 private:
     std::deque<StepT> steps_;
