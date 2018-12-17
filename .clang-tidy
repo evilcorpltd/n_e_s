@@ -4,6 +4,7 @@ Checks: '
   clang-analyzer-*,
   clang-diagnostic-*,
   google-*,
+  -google-build-using-namespace,
   misc-*,
   modernize-*,
   performance-*,

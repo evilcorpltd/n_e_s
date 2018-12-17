@@ -13,7 +13,6 @@
 using namespace n_e_s::core;
 using namespace n_e_s::core::test;
 
-using testing::_;
 using testing::NiceMock;
 using testing::Return;
 
