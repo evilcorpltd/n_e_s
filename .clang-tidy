@@ -3,6 +3,8 @@ Checks: '
   bugprone-*,
   clang-analyzer-*,
   clang-diagnostic-*,
+  google-*,
+  misc-*,
   modernize-*,
   performance-*,
   readability-else-after-return,
