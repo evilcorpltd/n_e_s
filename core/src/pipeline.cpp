@@ -1,5 +1,3 @@
-// Copyright 2018 Evil Corp contributors
-
 #include "pipeline.h"
 
 namespace n_e_s::core {

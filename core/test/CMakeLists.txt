@@ -6,7 +6,7 @@ project(test_n_e_s_core)
 FetchContent_Declare(
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG        release-1.8.1
+    GIT_TAG        7515e399436a832a0109d64a70b4e1125568dda5
 )
 
 FetchContent_GetProperties(googletest)

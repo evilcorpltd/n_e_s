@@ -1,5 +1,3 @@
-// Copyright 2018 Robin Linden <dev@robinlinden.eu>
-
 #include "mmu.h"
 
 #include <algorithm>
@@ -37,25 +35,25 @@ IMemBank *Mmu::get_mem_bank(uint16_t addr) const {
     auto it = std::find_if(begin(mem_banks_), end(mem_banks_), equal(addr));
     if (it != end(mem_banks_)) {
         return (*it).get();
-    } else {
-        return nullptr;
     }
+
+    return nullptr;
 }
 
 uint8_t Mmu::read_byte(uint16_t addr) const {
     if (const IMemBank *mem_bank = get_mem_bank(addr)) {
         return mem_bank->read_byte(addr);
-    } else {
-        throw std::invalid_argument(invalid_address_msg(addr));
     }
+
+    throw std::invalid_argument(invalid_address_msg(addr));
 }
 
 uint16_t Mmu::read_word(uint16_t addr) const {
     if (const IMemBank *mem_bank = get_mem_bank(addr)) {
         return mem_bank->read_byte(addr) | mem_bank->read_byte(addr + 1) << 8;
-    } else {
-        throw std::invalid_argument(invalid_address_msg(addr));
     }
+
+    throw std::invalid_argument(invalid_address_msg(addr));
 }
 
 void Mmu::write_byte(uint16_t addr, uint8_t byte) {
