@@ -4,7 +4,7 @@ Checks: '
   clang-analyzer-*,
   clang-diagnostic-*,
   modernize-*,
-  performance-unnecessary-value-param,
+  performance-*,
   readability-else-after-return,
   readability-non-const-parameter'
 WarningsAsErrors: '*'
