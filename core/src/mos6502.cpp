@@ -233,7 +233,8 @@ void Mos6502::set_negative(uint8_t byte) {
     }
 }
 
-std::function<void()> Mos6502::branch_on(std::function<bool()> condition) {
+std::function<void()> Mos6502::branch_on(
+        const std::function<bool()> &condition) {
     return [=]() {
         if (!condition()) {
             ++registers_->pc;
@@ -288,7 +289,8 @@ Pipeline Mos6502::create_zeropage_addressing_steps() {
     return result;
 }
 
-Pipeline Mos6502::create_zeropage_indexed_addressing_steps(uint8_t *index_reg) {
+Pipeline Mos6502::create_zeropage_indexed_addressing_steps(
+        const uint8_t *index_reg) {
     Pipeline result;
     result.push([=]() { /* Empty */ });
     result.push([=]() {
