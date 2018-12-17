@@ -1,5 +1,3 @@
-// Copyright 2018 Robin Linden <dev@robinlinden.eu>
-
 #include "core/cpu_factory.h"
 #include "core/membank_factory.h"
 #include "core/mmu_factory.h"

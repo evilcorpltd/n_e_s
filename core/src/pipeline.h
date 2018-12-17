@@ -1,5 +1,3 @@
-// Copyright 2018 Evil Corp contributors
-
 #pragma once
 
 #include <deque>

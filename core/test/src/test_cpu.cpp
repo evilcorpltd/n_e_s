@@ -1,6 +1,3 @@
-// Copyright 2018 Evil Corp contributors
-// Copyright 2018 Robin Linden <dev@robinlinden.eu>
-
 #include "core/cpu_factory.h"
 
 #include "hexprinter.h"
