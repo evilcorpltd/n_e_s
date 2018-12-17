@@ -1,6 +1,3 @@
-// Copyright 2018 Evil Corp contributors
-// Copyright 2018 Robin Linden <dev@robinlinden.eu>
-
 #include "core/cpu_factory.h"
 
 #include "hexprinter.h"
@@ -13,7 +10,6 @@
 using namespace n_e_s::core;
 using namespace n_e_s::core::test;
 
-using testing::_;
 using testing::NiceMock;
 using testing::Return;
 

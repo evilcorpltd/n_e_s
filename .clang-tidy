@@ -1,5 +1,15 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,bugprone-*,modernize-*'
+Checks: '
+  bugprone-*,
+  clang-analyzer-*,
+  clang-diagnostic-*,
+  google-*,
+  -google-build-using-namespace,
+  misc-*,
+  modernize-*,
+  performance-*,
+  readability-else-after-return,
+  readability-non-const-parameter'
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false

@@ -1,6 +1,3 @@
-// Copyright 2018 Evil Corp contributors
-// Copyright 2018 Robin Linden <dev@robinlinden.eu>
-
 #include "core/ppu_factory.h"
 
 #include "ppu.h"
