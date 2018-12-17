@@ -8,14 +8,14 @@
 using namespace n_e_s::core;
 
 int main(int, char **) {
-    MemBankList mem_banks(MemBankFactory::create_nes_mem_banks());
+    std::unique_ptr<IPpu> ppu{PpuFactory::create()};
+
+    MemBankList mem_banks(MemBankFactory::create_nes_mem_banks(ppu.get()));
     std::unique_ptr<IMmu> mmu{MmuFactory::create(std::move(mem_banks))};
 
     Registers registers;
     std::unique_ptr<ICpu> cpu{CpuFactory::create(&registers, mmu.get())};
-    std::unique_ptr<IPpu> ppu{PpuFactory::create()};
     (void)cpu;
-    (void)ppu;
 
     return 0;
 }

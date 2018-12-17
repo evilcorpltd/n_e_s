@@ -10,7 +10,9 @@ add_library(${PROJECT_NAME}
     include/core/mmu_factory.h
     include/core/ppu_factory.h
     src/cpu_factory.cpp
+    src/mapped_membank.h
     src/membank.h
+    src/membank_base.h
     src/membank_factory.cpp
     src/mmu.cpp
     src/mmu.h
