@@ -9,7 +9,7 @@ namespace n_e_s::core {
 
 class PpuFactory {
 public:
-    static std::unique_ptr<IPpu> create();
+    static std::unique_ptr<IPpu> create(std::unique_ptr<PpuRegisters> registers);
 };
 
 } // namespace n_e_s::core
