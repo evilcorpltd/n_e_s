@@ -1,3 +1,4 @@
+#include "core/invalid_address.h"
 #include "core/membank_factory.h"
 #include "core/mmu_factory.h"
 
@@ -126,35 +127,19 @@ TEST_F(MmuTest, ram_bank_mirroring) {
 }
 
 TEST_F(MmuInvalidAddressTest, read_byte_invalid_address) {
-    try {
-        mmu->read_byte(0x3333);
-    } catch (const std::invalid_argument &e) {
-        EXPECT_EQ(e.what(), std::string("Invalid address [0x3333]"));
-    }
+    EXPECT_THROW(mmu->read_byte(0x3333), InvalidAddress);
 }
 
 TEST_F(MmuInvalidAddressTest, read_word_invalid_address) {
-    try {
-        mmu->read_word(0x2244);
-    } catch (const std::invalid_argument &e) {
-        EXPECT_EQ(e.what(), std::string("Invalid address [0x2244]"));
-    }
+    EXPECT_THROW(mmu->read_word(0x2244), InvalidAddress);
 }
 
 TEST_F(MmuInvalidAddressTest, write_byte_invalid_address) {
-    try {
-        mmu->write_byte(0x1234, 0xFF);
-    } catch (const std::invalid_argument &e) {
-        EXPECT_EQ(e.what(), std::string("Invalid address [0x1234]"));
-    }
+    EXPECT_THROW(mmu->write_byte(0x1234, 0xFF), InvalidAddress);
 }
 
 TEST_F(MmuInvalidAddressTest, write_word_invalid_address) {
-    try {
-        mmu->write_word(0x1111, 0xFFAA);
-    } catch (const std::invalid_argument &e) {
-        EXPECT_EQ(e.what(), std::string("Invalid address [0x1111]"));
-    }
+    EXPECT_THROW(mmu->write_word(0x1111, 0xFFAA), InvalidAddress);
 }
 
 } // namespace

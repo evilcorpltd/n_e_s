@@ -1,4 +1,5 @@
 #include "ppu.h"
+#include "core/invalid_address.h"
 
 #include <stdexcept>
 
@@ -15,10 +16,12 @@ uint8_t Ppu::read_byte(uint16_t addr) {
         return status;
     }
 
-    throw std::invalid_argument("Address not supported");
+    throw InvalidAddress(addr);
 }
 
-void Ppu::write_byte(uint16_t, uint8_t) {}
+void Ppu::write_byte(uint16_t addr, uint8_t) {
+    throw InvalidAddress(addr);
+}
 
 void Ppu::execute() {}
 

@@ -1,3 +1,4 @@
+#include "core/invalid_address.h"
 #include "core/ppu_factory.h"
 
 #include <gtest/gtest.h>
@@ -28,6 +29,14 @@ public:
 
     PpuRegisters expected;
 };
+
+TEST_F(PpuTest, read_invalid_address) {
+    EXPECT_THROW(ppu->read_byte(0x5000), InvalidAddress);
+}
+
+TEST_F(PpuTest, write_invalid_address) {
+    EXPECT_THROW(ppu->write_byte(0x3000, 0xAB), InvalidAddress);
+}
 
 TEST_F(PpuTest, read_status_register) {
     registers->status = 0x25;
