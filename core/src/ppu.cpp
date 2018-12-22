@@ -1,8 +1,6 @@
 #include "ppu.h"
 #include "core/invalid_address.h"
 
-#include <stdexcept>
-
 namespace n_e_s::core {
 
 Ppu::Ppu(PpuRegisters *registers) : registers_(registers) {}

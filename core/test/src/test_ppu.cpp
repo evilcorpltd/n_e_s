@@ -40,7 +40,7 @@ TEST_F(PpuTest, read_status_register) {
 
     const uint8_t status = ppu->read_byte(0x2002);
 
-    EXPECT_EQ(status, status);
+    EXPECT_EQ(0x25, status);
 }
 
 TEST_F(PpuTest, clear_status_when_reading_status) {
