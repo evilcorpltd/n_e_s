@@ -19,10 +19,7 @@ namespace {
 
 class PpuTest : public ::testing::Test {
 public:
-    PpuTest()
-            : registers(),
-              ppu(PpuFactory::create(&registers)),
-              expected() {}
+    PpuTest() : registers(), ppu(PpuFactory::create(&registers)), expected() {}
 
     PpuRegisters registers;
     std::unique_ptr<IPpu> ppu;
