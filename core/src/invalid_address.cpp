@@ -14,7 +14,7 @@ InvalidAddress::InvalidAddress(uint16_t addr) : message_() {
     message_ = ss.str();
 }
 
-const char *InvalidAddress::what() const throw() {
+const char *InvalidAddress::what() const noexcept {
     return message_.c_str();
 }
 

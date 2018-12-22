@@ -5,9 +5,7 @@
 
 namespace n_e_s::core {
 
-Ppu::Ppu(std::unique_ptr<PpuRegisters> registers)
-        : registers_(std::move(registers)) {
-}
+Ppu::Ppu(PpuRegisters *registers) : registers_(registers) {}
 
 uint8_t Ppu::read_byte(uint16_t addr) {
     if (addr == 0x2002) {

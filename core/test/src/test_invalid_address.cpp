@@ -11,8 +11,7 @@ TEST(InvalidAddress, throw_invalid_address) {
 
     try {
         throw InvalidAddress(0xABCD);
-    }
-    catch (const InvalidAddress& e) {
+    } catch (const InvalidAddress &e) {
         EXPECT_STREQ(e.what(), expected.c_str());
     }
 }

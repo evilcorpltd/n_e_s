@@ -20,11 +20,11 @@ namespace {
 class PpuTest : public ::testing::Test {
 public:
     PpuTest()
-            : registers(new PpuRegisters),
-              ppu(PpuFactory::create(std::unique_ptr<PpuRegisters>(registers))),
+            : registers(),
+              ppu(PpuFactory::create(&registers)),
               expected() {}
 
-    PpuRegisters *const registers;
+    PpuRegisters registers;
     std::unique_ptr<IPpu> ppu;
 
     PpuRegisters expected;
@@ -39,7 +39,7 @@ TEST_F(PpuTest, write_invalid_address) {
 }
 
 TEST_F(PpuTest, read_status_register) {
-    registers->status = 0x25;
+    registers.status = 0x25;
 
     const uint8_t status = ppu->read_byte(0x2002);
 
@@ -47,12 +47,12 @@ TEST_F(PpuTest, read_status_register) {
 }
 
 TEST_F(PpuTest, clear_status_when_reading_status) {
-    registers->status = 0xFF;
+    registers.status = 0xFF;
     expected.status = 0x7F;
 
     ppu->read_byte(0x2002);
 
-    EXPECT_EQ(expected, *registers);
+    EXPECT_EQ(expected, registers);
 }
 
 } // namespace

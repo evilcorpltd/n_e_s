@@ -9,7 +9,7 @@ class InvalidAddress : public std::exception {
 public:
     InvalidAddress(uint16_t addr);
 
-    const char *what() const throw();
+    const char *what() const noexcept;
 
 private:
     std::string message_;
