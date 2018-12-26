@@ -1,5 +1,3 @@
-// Copyright 2018 Robin Linden <dev@robinlinden.eu>
-
 #include "core/rom_factory.h"
 
 #include "rom.h"
@@ -30,10 +28,10 @@ namespace n_e_s::core {
 
 class Nrom : IRom {
 public:
-    Nrom(const INesHeader &header,
+    Nrom(const INesHeader &h,
             std::vector<uint8_t> prg_ram,
             std::vector<uint8_t> prg_rom)
-            : IRom(header),
+            : IRom(h),
               prg_ram_(std::move(prg_ram)),
               prg_rom_(std::move(prg_rom)) {
         assert(prg_ram_.size() == 2 * 1024 || prg_ram_.size() == 4 * 1024);
@@ -108,17 +106,18 @@ IRom *RomFactory::fromFile(const std::string &filepath) {
     memcpy(&h, &bytes[0], sizeof(h));
 
     // Not null terminated, so we'll get some trash, but that's fine.
-    printf("%s\n", h.nes);
-    printf("%u\n", h.prg_rom_size);
-    printf("%u\n", h.chr_rom_size);
-    printf("%u\n", h.flags_6);
-    printf("%u\n", h.flags_7);
-    printf("%u\n", h.prg_ram_size);
-    printf("%u\n", h.flags_9);
-    printf("%u\n", h.flags_10);
+    printf("NES: %s\n", h.nes);
+    printf("prg_rom: %u\n", h.prg_rom_size);
+    printf("chr_rom: %u\n", h.chr_rom_size);
+    printf("flags_6: %u\n", h.flags_6);
+    printf("flags_7: %u\n", h.flags_7);
+    printf("prg_ram_size: %u\n", h.prg_ram_size);
+    printf("flags_9: %u\n", h.flags_9);
+    printf("flags_10: %u\n", h.flags_10);
 
     uint8_t mapper = (h.flags_6 & 0xF0) >> 4;
     mapper |= h.flags_7 & 0xF0;
+    printf("mapper: %u\n", mapper);
 
     const uint32_t expected_rom_size =
             sizeof(INesHeader) + h.prg_rom_size * 16 * 1024 +
