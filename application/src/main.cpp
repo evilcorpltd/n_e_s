@@ -8,9 +8,10 @@
 using namespace n_e_s::core;
 
 int main(int, char **) {
-    std::unique_ptr<IPpu> ppu{PpuFactory::create()};
+    PpuRegisters ppu_registers;
+    std::unique_ptr<IPpu> ppu{PpuFactory::create(&ppu_registers)};
 
-    MemBankList mem_banks(MemBankFactory::create_nes_mem_banks(ppu.get()));
+    MemBankList mem_banks = MemBankFactory::create_nes_mem_banks(ppu.get());
     std::unique_ptr<IMmu> mmu{MmuFactory::create(std::move(mem_banks))};
 
     Registers registers;

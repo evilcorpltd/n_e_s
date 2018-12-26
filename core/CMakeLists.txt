@@ -3,6 +3,7 @@ project(n_e_s_core)
 add_library(${PROJECT_NAME}
     include/core/cpu_factory.h
     include/core/icpu.h
+    include/core/invalid_address.h
     include/core/imembank.h
     include/core/immu.h
     include/core/ippu.h
@@ -10,6 +11,7 @@ add_library(${PROJECT_NAME}
     include/core/mmu_factory.h
     include/core/ppu_factory.h
     src/cpu_factory.cpp
+    src/invalid_address.cpp
     src/mapped_membank.h
     src/membank.h
     src/membank_base.h
