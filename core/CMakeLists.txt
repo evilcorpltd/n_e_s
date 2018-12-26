@@ -2,21 +2,33 @@ project(n_e_s_core)
 
 add_library(${PROJECT_NAME}
     include/core/cpu_factory.h
+    include/core/membank_factory.h
     include/core/mmu_factory.h
     include/core/ppu_factory.h
     include/core/rom_factory.h
     include/core/icpu.h
+    include/core/invalid_address.h
+    include/core/imembank.h
     include/core/immu.h
     include/core/ippu.h
     include/core/irom.h
     src/cpu_factory.cpp
-    src/mmu.h
+    src/invalid_address.cpp
+    src/mapped_membank.h
+    src/membank.h
+    src/membank_base.h
+    src/membank_factory.cpp
     src/mmu.cpp
+    src/mmu.h
     src/mmu_factory.cpp
-    src/mos6502.h
     src/mos6502.cpp
-    src/ppu.h
+    src/mos6502.h
+    src/opcode.cpp
+    src/opcode.h
+    src/pipeline.cpp
+    src/pipeline.h
     src/ppu.cpp
+    src/ppu.h
     src/ppu_factory.cpp
     src/rom.h
     src/rom.cpp
@@ -28,6 +40,9 @@ target_compile_options(${PROJECT_NAME}
         -Wall
         -Werror
         -Wextra
+        -Wswitch-enum
+        -Wshadow
+        -Wnon-virtual-dtor
         -pedantic-errors
 )
 

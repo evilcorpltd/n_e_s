@@ -1,13 +1,11 @@
-// Copyright 2018 Robin Linden <dev@robinlinden.eu>
-
 #pragma once
 
 #include "core/icpu.h"
 #include "core/immu.h"
+#include "opcode.h"
+#include "pipeline.h"
 
 #include <cstdint>
-#include <functional>
-#include <queue>
 
 namespace n_e_s::core {
 
@@ -46,7 +44,11 @@ private:
     Stack stack_;
 
     // Holds the atoms staged to be executed.
-    std::queue<std::function<void()>> pipeline_;
+    Pipeline pipeline_;
+
+    // Effective address calculated by an address mode during pipeline
+    // execution.
+    uint16_t effective_address_{};
 
     void clear_flag(uint8_t flag);
     void set_flag(uint8_t flag);
@@ -61,7 +63,12 @@ private:
     void set_negative(uint8_t byte);
 
     // Returns an atom for the cpu pipeline for branching on a condition.
-    std::function<void()> branch_on(std::function<bool()> condition);
+    std::function<void()> branch_on(const std::function<bool()> &condition);
+
+    Pipeline create_store_instruction(Opcode opcode);
+    Pipeline create_zeropage_addressing_steps();
+    Pipeline create_zeropage_indexed_addressing_steps(const uint8_t *index_reg);
+    Pipeline create_absolute_addressing_steps();
 };
 
 } // namespace n_e_s::core

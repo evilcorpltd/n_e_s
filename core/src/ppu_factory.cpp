@@ -1,13 +1,11 @@
-// Copyright 2018 Robin Linden <dev@robinlinden.eu>
-
 #include "core/ppu_factory.h"
 
 #include "ppu.h"
 
 namespace n_e_s::core {
 
-IPpu *PpuFactory::create() {
-    return new Ppu();
+std::unique_ptr<IPpu> PpuFactory::create(PpuRegisters *registers) {
+    return std::make_unique<Ppu>(registers);
 }
 
 } // namespace n_e_s::core

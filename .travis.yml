@@ -40,6 +40,14 @@ matrix:
       addons: *clang7
       env: MATRIX_EVAL="CXX=clang++-7 BUILD_TYPE=Release"
 
+    - name: "clang 7 sanitizers"
+      addons: *clang7
+      env:
+        - MATRIX_EVAL="CXX=clang++-7 BUILD_TYPE=Debug"
+        - CMAKE_EXTRA_OPTIONS="-DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON"
+        - UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=1"
+        - LLVM_SYMBOLIZER_PATH="$(which llvm-symbolizer)"
+
     - name: "clang-tidy 7"
       addons:
         apt:
@@ -69,6 +77,6 @@ before_script:
   - eval "${MATRIX_EVAL}"
 
 script:
-  - cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ..
-  - cmake --build .
+  - cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" $CMAKE_EXTRA_OPTIONS ..
+  - cmake --build . --parallel 2
   - ctest --output-on-failure

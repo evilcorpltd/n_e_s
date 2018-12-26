@@ -1,15 +1,15 @@
-// Copyright 2018 Robin Linden <dev@robinlinden.eu>
-
 #include "core/cpu_factory.h"
 
+#include "hexprinter.h"
 #include "mock_mmu.h"
 
 #include <gtest/gtest.h>
+#include <bitset>
+#include <ostream>
 
 using namespace n_e_s::core;
 using namespace n_e_s::core::test;
 
-using testing::_;
 using testing::NiceMock;
 using testing::Return;
 
@@ -18,6 +18,15 @@ namespace n_e_s::core {
 static bool operator==(const Registers &a, const Registers &b) {
     return a.pc == b.pc && a.sp == b.sp && a.a == b.a && a.x == b.x &&
            a.y == b.y && a.p == b.p;
+}
+
+static void PrintTo(const Registers &r, std::ostream *os) {
+    *os << "PC: " << hex_out_s(r.pc);
+    *os << " SP: " << hex_out_s(r.sp);
+    *os << " A: " << hex_out_s(r.a);
+    *os << " X: " << hex_out_s(r.x);
+    *os << " Y: " << hex_out_s(r.y);
+    *os << " P: 0b" << std::bitset<8>(r.p) << std::endl;
 }
 
 } // namespace n_e_s::core
@@ -37,16 +46,24 @@ enum Opcode : uint8_t {
     CLC = 0x18,
     BMI = 0x30,
     SEC = 0x38,
-    LSR_A = 0x4A,
+    LSR_ACC = 0x4A,
     PHA = 0x48,
     JMP = 0x4C,
     BVC = 0x50,
     CLI = 0x58,
     BVS = 0x70,
     SEI = 0x78,
+    STY_ABS = 0x8C,
     STA_ABS = 0x8D,
+    STX_ABS = 0x8E,
+    STY_ZERO = 0x84,
+    STA_ZERO = 0x85,
+    STX_ZERO = 0x86,
+    STY_ZEROX = 0x94,
+    STA_ZEROX = 0x95,
+    STX_ZEROY = 0x96,
     BCC = 0x90,
-    LDY_I = 0xA0,
+    LDY_IMM = 0xA0,
     BCS = 0xB0,
     CLV = 0xB8,
     BNE = 0xD0,
@@ -238,7 +255,7 @@ TEST_F(CpuTest, sec) {
 }
 
 TEST_F(CpuTest, lsr_a_shifts) {
-    stage_instruction(LSR_A);
+    stage_instruction(LSR_ACC);
     registers.a = 0b01001000;
     expected.a = 0b00100100;
 
@@ -247,7 +264,7 @@ TEST_F(CpuTest, lsr_a_shifts) {
 }
 
 TEST_F(CpuTest, lsr_a_sets_z_flag) {
-    stage_instruction(LSR_A);
+    stage_instruction(LSR_ACC);
     expected.p |= Z_FLAG;
 
     step_execution(2);
@@ -255,7 +272,7 @@ TEST_F(CpuTest, lsr_a_sets_z_flag) {
 }
 
 TEST_F(CpuTest, lsr_a_sets_c_flag) {
-    stage_instruction(LSR_A);
+    stage_instruction(LSR_ACC);
     registers.a = 0b00000011;
     expected.a = 0b00000001;
     expected.p = C_FLAG;
@@ -265,7 +282,7 @@ TEST_F(CpuTest, lsr_a_sets_c_flag) {
 }
 
 TEST_F(CpuTest, lsr_a_sets_c_and_z_flags) {
-    stage_instruction(LSR_A);
+    stage_instruction(LSR_ACC);
     registers.a = 0b00000001;
     expected.a = 0b00000000;
     expected.p = C_FLAG | Z_FLAG;
@@ -275,7 +292,7 @@ TEST_F(CpuTest, lsr_a_sets_c_and_z_flags) {
 }
 
 TEST_F(CpuTest, lsr_a_clears_c_z_n_flags) {
-    stage_instruction(LSR_A);
+    stage_instruction(LSR_ACC);
     registers.a = 0b00000010;
     registers.p = Z_FLAG | C_FLAG | N_FLAG;
     expected.a = 0b00000001;
@@ -408,7 +425,7 @@ TEST_F(CpuTest, bcc_crossing_page_negative) {
 }
 
 TEST_F(CpuTest, ldy_i_sets_y) {
-    stage_instruction(LDY_I);
+    stage_instruction(LDY_IMM);
     expected.y = 42;
     ++expected.pc;
 
@@ -419,7 +436,7 @@ TEST_F(CpuTest, ldy_i_sets_y) {
 }
 
 TEST_F(CpuTest, ldy_i_sets_n_flag) {
-    stage_instruction(LDY_I);
+    stage_instruction(LDY_IMM);
     expected.y = 128;
     expected.p |= N_FLAG;
     ++expected.pc;
@@ -431,7 +448,7 @@ TEST_F(CpuTest, ldy_i_sets_n_flag) {
 }
 
 TEST_F(CpuTest, ldy_i_clears_n_flag) {
-    stage_instruction(LDY_I);
+    stage_instruction(LDY_IMM);
     registers.p |= N_FLAG;
     expected.y = 127;
     ++expected.pc;
@@ -443,7 +460,7 @@ TEST_F(CpuTest, ldy_i_clears_n_flag) {
 }
 
 TEST_F(CpuTest, ldy_i_sets_z_flag) {
-    stage_instruction(LDY_I);
+    stage_instruction(LDY_IMM);
     expected.y = 0;
     expected.p |= Z_FLAG;
     ++expected.pc;
@@ -455,7 +472,7 @@ TEST_F(CpuTest, ldy_i_sets_z_flag) {
 }
 
 TEST_F(CpuTest, ldy_i_clears_z_flag) {
-    stage_instruction(LDY_I);
+    stage_instruction(LDY_IMM);
     registers.p |= Z_FLAG;
     expected.y = 1;
     ++expected.pc;
@@ -636,6 +653,137 @@ TEST_F(CpuTest, sta_abs) {
 
     EXPECT_CALL(mmu, read_word(0x1122)).WillOnce(Return(0x0987));
     EXPECT_CALL(mmu, write_byte(0x0987, 0x45));
+
+    step_execution(4);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sta_zero) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = expected.a = 0x07;
+
+    stage_instruction(STA_ZERO);
+
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+    EXPECT_CALL(mmu, write_byte(0x44, 0x07));
+
+    step_execution(3);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sta_zero_x_indexed) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = expected.a = 0x07;
+    registers.x = expected.x = 0xED;
+
+    stage_instruction(STA_ZEROX);
+
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+    EXPECT_CALL(mmu, write_byte(static_cast<uint8_t>(0x44 + 0xED), 0x07));
+
+    step_execution(4);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, stx_abs) {
+    registers.pc = expected.pc = 0x158;
+    registers.x = expected.x = 0x71;
+
+    stage_instruction(STX_ABS);
+
+    expected.pc += 2;
+
+    EXPECT_CALL(mmu, read_word(0x0159)).WillOnce(Return(0x1987));
+    EXPECT_CALL(mmu, write_byte(0x1987, 0x71));
+
+    step_execution(4);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, stx_zero) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0x07;
+
+    stage_instruction(STX_ZERO);
+
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+    EXPECT_CALL(mmu, write_byte(0x44, 0x07));
+
+    step_execution(3);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, stx_zero_y_indexed) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0x07;
+    registers.y = expected.y = 0xED;
+
+    stage_instruction(STX_ZEROY);
+
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+    EXPECT_CALL(mmu, write_byte(static_cast<uint8_t>(0x44 + 0xED), 0x07));
+
+    step_execution(4);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sty_abs) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0x07;
+
+    stage_instruction(STY_ABS);
+
+    expected.pc += 2;
+
+    EXPECT_CALL(mmu, read_word(0x4322)).WillOnce(Return(0x4444));
+    EXPECT_CALL(mmu, write_byte(0x4444, 0x07));
+
+    step_execution(4);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sty_zero) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0x07;
+
+    stage_instruction(STY_ZERO);
+
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+    EXPECT_CALL(mmu, write_byte(0x44, 0x07));
+
+    step_execution(3);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sty_zero_x_indexed) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0x07;
+    registers.x = expected.x = 0xED;
+
+    stage_instruction(STY_ZEROX);
+
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+    EXPECT_CALL(mmu, write_byte(static_cast<uint8_t>(0x44 + 0xED), 0x07));
 
     step_execution(4);
 
