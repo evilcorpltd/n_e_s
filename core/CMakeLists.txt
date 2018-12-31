@@ -30,9 +30,9 @@ add_library(${PROJECT_NAME}
     src/ppu.cpp
     src/ppu.h
     src/ppu_factory.cpp
-    src/rom.h
-    src/rom.cpp
     src/rom_factory.cpp
+    src/rom/nrom.cpp
+    src/rom/nrom.h
 )
 
 target_compile_options(${PROJECT_NAME}

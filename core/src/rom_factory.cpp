@@ -1,6 +1,6 @@
 #include "core/rom_factory.h"
 
-#include "rom.h"
+#include "rom/nrom.h"
 
 #include <cassert>
 #include <cstdio>
@@ -25,58 +25,6 @@ std::ifstream::pos_type filesize(const std::string &filename) {
 } // namespace
 
 namespace n_e_s::core {
-
-class Nrom : IRom {
-public:
-    Nrom(const INesHeader &h,
-            std::vector<uint8_t> prg_ram,
-            std::vector<uint8_t> prg_rom)
-            : IRom(h),
-              prg_ram_(std::move(prg_ram)),
-              prg_rom_(std::move(prg_rom)) {
-        assert(prg_ram_.size() == 2 * 1024 || prg_ram_.size() == 4 * 1024);
-        assert(prg_rom_.size() == 16 * 1024 || prg_rom_.size() == 32 * 1024);
-    }
-
-    uint8_t read_byte(uint16_t addr) const override {
-        assert(addr >= prg_ram_start_);
-
-        const std::vector<uint8_t> &memory = translate_address(addr);
-        addr -= prg_ram_start_;
-
-        return memory[addr % memory.size()];
-    }
-
-    void write_byte(uint16_t addr, uint8_t byte) override {
-        assert(addr >= prg_ram_start_);
-
-        std::vector<uint8_t> &memory = translate_address(addr);
-        addr -= prg_ram_start_;
-
-        memory[addr % memory.size()] = byte;
-    }
-
-private:
-    std::vector<uint8_t> &translate_address(uint16_t addr) {
-        return const_cast<std::vector<uint8_t> &>(
-                std::as_const(*this).translate_address(addr));
-    }
-
-    const std::vector<uint8_t> &translate_address(uint16_t addr) const {
-        if (addr <= prg_ram_end_) {
-            return prg_ram_;
-        }
-
-        return prg_rom_;
-    }
-
-    std::vector<uint8_t> prg_ram_;
-    std::vector<uint8_t> prg_rom_; // TODO: const?
-
-    constexpr static uint16_t prg_ram_start_{0x6000};
-    constexpr static uint16_t prg_ram_end_{0x7FFF};
-    constexpr static uint16_t prg_rom_start_{0x8000};
-};
 
 IRom *RomFactory::fromFile(const std::string &filepath) {
     std::vector<uint8_t> bytes(filesize(filepath));
@@ -103,15 +51,21 @@ IRom *RomFactory::fromFile(const std::string &filepath) {
         exit(1); // No valid iNes header.
     }
 
+    // This is fine because the header is exactly 16 bytes with no padding.
     memcpy(&h, &bytes[0], sizeof(h));
+    if (h.prg_ram_size == 0) {
+        h.prg_ram_size = 1; // For compatibility reasons, 0 ram means 1 ram.
+    }
 
     // Not null terminated, so we'll get some trash, but that's fine.
     printf("NES: %s\n", h.nes);
-    printf("prg_rom: %u\n", h.prg_rom_size);
-    printf("chr_rom: %u\n", h.chr_rom_size);
+    printf("prg_rom: %u (%u)\n", h.prg_rom_size, h.prg_rom_size * 16 * 1024);
+    printf("chr_rom: %u (%u)\n", h.chr_rom_size, h.chr_rom_size * 8 * 1024);
     printf("flags_6: %u\n", h.flags_6);
     printf("flags_7: %u\n", h.flags_7);
-    printf("prg_ram_size: %u\n", h.prg_ram_size);
+    printf("prg_ram_size: %u (%u)\n",
+            h.prg_ram_size,
+            h.prg_ram_size * 8 * 1024);
     printf("flags_9: %u\n", h.flags_9);
     printf("flags_10: %u\n", h.flags_10);
 
@@ -119,13 +73,26 @@ IRom *RomFactory::fromFile(const std::string &filepath) {
     mapper |= h.flags_7 & 0xF0;
     printf("mapper: %u\n", mapper);
 
-    const uint32_t expected_rom_size =
-            sizeof(INesHeader) + h.prg_rom_size * 16 * 1024 +
-            h.chr_rom_size * 8 * 1024 + h.prg_ram_size * 8 * 1024;
-    assert(bytes.size() == expected_rom_size);
+    const uint32_t expected_rom_size = sizeof(INesHeader) +
+                                       h.prg_rom_size * 16 * 1024 +
+                                       h.chr_rom_size * 8 * 1024;
+    if (bytes.size() != expected_rom_size) {
+        assert(false);
+        exit(1);
+    }
+
+    std::vector<uint8_t> prg_rom(bytes.begin() + 16,
+            bytes.begin() + 16 + h.prg_rom_size * 16 * 1024);
+    printf("prg rom size: %zu\n", prg_rom.size());
+
+    std::vector<uint8_t> chr_rom(
+            bytes.begin() + 16 + h.prg_rom_size * 16 * 1024,
+            bytes.begin() + 16 + h.prg_rom_size * 16 * 1024 +
+                    h.chr_rom_size * 8 * 1024);
+    printf("chr rom size: %zu\n", chr_rom.size());
 
     if (mapper == 0) {
-        return nullptr; // TODO: Mapper 0.
+        return new Nrom(h, prg_rom, chr_rom);
     }
 
     std::stringstream err;
