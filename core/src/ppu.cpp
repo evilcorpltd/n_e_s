@@ -6,7 +6,6 @@ namespace {
 const uint16_t kLastCycleInScanline = 340;
 const uint16_t kLastScanlineInFrame = 261;
 const uint16_t kPreRenderScanline = 261;
-const uint16_t kVisibleScanlineStart = 0;
 const uint16_t kVisibleScanlineEnd = 239;
 const uint16_t kPostRenderScanline = 240;
 const uint16_t kVBlankScanlineStart = 241;
@@ -65,8 +64,8 @@ bool Ppu::is_pre_render_scanline() const {
 }
 
 bool Ppu::is_visible_scanline() const {
-    return scanline_ >= kVisibleScanlineStart &&
-           scanline_ <= kVisibleScanlineEnd;
+    // Visible scanlines starts at 0
+    return scanline_ <= kVisibleScanlineEnd;
 }
 
 bool Ppu::is_post_render_scanline() const {
