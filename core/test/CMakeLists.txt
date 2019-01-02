@@ -9,6 +9,8 @@ FetchContent_Declare(
     GIT_TAG        7515e399436a832a0109d64a70b4e1125568dda5
 )
 
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
 FetchContent_GetProperties(googletest)
 if(NOT googletest_POPULATED)
     FetchContent_Populate(googletest)
@@ -26,16 +28,18 @@ add_executable(${PROJECT_NAME}
     src/test_ppu.cpp
 )
 
-target_compile_options(${PROJECT_NAME}
-    PRIVATE
-        -Wall
-        -Werror
-        -Wextra
-        -Wswitch-enum
-        -Wshadow
-        -Wnon-virtual-dtor
-        -pedantic-errors
-)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    target_compile_options(${PROJECT_NAME}
+        PRIVATE
+           -Wall
+           -Werror
+           -Wextra
+           -Wswitch-enum
+           -Wshadow
+           -Wnon-virtual-dtor
+           -pedantic-errors
+    )
+endif()
 
 target_compile_features(${PROJECT_NAME}
     PRIVATE

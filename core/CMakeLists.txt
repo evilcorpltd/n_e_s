@@ -35,16 +35,18 @@ add_library(${PROJECT_NAME}
     src/rom/nrom.h
 )
 
-target_compile_options(${PROJECT_NAME}
-    PRIVATE
-        -Wall
-        -Werror
-        -Wextra
-        -Wswitch-enum
-        -Wshadow
-        -Wnon-virtual-dtor
-        -pedantic-errors
-)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    target_compile_options(${PROJECT_NAME}
+        PRIVATE
+           -Wall
+           -Werror
+           -Wextra
+           -Wswitch-enum
+           -Wshadow
+           -Wnon-virtual-dtor
+           -pedantic-errors
+    )
+endif()
 
 target_compile_features(${PROJECT_NAME}
     PRIVATE

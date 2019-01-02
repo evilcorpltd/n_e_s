@@ -66,8 +66,8 @@ Mos6502::Mos6502(Registers *const registers, IMmu *const mmu)
 // Most instruction timings are from https://robinli.eu/f/6502_cpu.txt
 void Mos6502::execute() {
     if (pipeline_.empty()) {
-        const auto raw_opcode{mmu_->read_byte(registers_->pc++)};
-        const auto opcode = decode(raw_opcode);
+        const uint8_t raw_opcode{mmu_->read_byte(registers_->pc++)};
+        const Opcode opcode = decode(raw_opcode);
 
         switch (opcode.instruction) {
         case Instruction::BRK:
