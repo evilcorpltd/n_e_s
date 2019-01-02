@@ -6,6 +6,7 @@
 #include "membank.h"
 
 namespace n_e_s::core {
+namespace {
 
 auto create_ppu_reader(IPpu *ppu) {
     return [=](uint16_t addr) { return ppu->read_byte(addr); };
@@ -14,6 +15,8 @@ auto create_ppu_reader(IPpu *ppu) {
 auto create_ppu_writer(IPpu *ppu) {
     return [=](uint16_t addr, uint8_t byte) { ppu->write_byte(addr, byte); };
 }
+
+} // namespace
 
 MemBankList MemBankFactory::create_nes_mem_banks(IPpu *ppu) {
     MemBankList mem_banks;

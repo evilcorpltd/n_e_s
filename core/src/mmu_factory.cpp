@@ -1,6 +1,6 @@
 #include "core/mmu_factory.h"
-#include "membank.h"
 
+#include "membank.h"
 #include "mmu.h"
 
 namespace n_e_s::core {

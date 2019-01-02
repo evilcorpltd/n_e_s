@@ -8,7 +8,7 @@ namespace n_e_s::core {
 namespace {
 
 auto equal(uint16_t addr) {
-    return [=](const auto &mem_bank) {
+    return [=](const std::unique_ptr<IMemBank> &mem_bank) {
         return mem_bank->is_address_in_range(addr);
     };
 }
