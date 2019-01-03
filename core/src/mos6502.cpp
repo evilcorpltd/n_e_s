@@ -139,38 +139,38 @@ void Mos6502::execute() {
             pipeline_.append(create_store_instruction(opcode));
             return;
         case Instruction::TXS:
-            pipeline_.push([=](){ registers_->sp = registers_->x; });
+            pipeline_.push([=]() { registers_->sp = registers_->x; });
             return;
         case Instruction::TYA:
-            pipeline_.push([=](){
+            pipeline_.push([=]() {
                 registers_->a = registers_->y;
                 set_zero(registers_->a);
                 set_negative(registers_->a);
             });
             return;
         case Instruction::TAY:
-            pipeline_.push([=](){
+            pipeline_.push([=]() {
                 registers_->y = registers_->a;
                 set_zero(registers_->y);
                 set_negative(registers_->y);
             });
             return;
         case Instruction::TAX:
-            pipeline_.push([=](){
+            pipeline_.push([=]() {
                 registers_->x = registers_->a;
                 set_zero(registers_->x);
                 set_negative(registers_->x);
             });
             return;
         case Instruction::TSX:
-            pipeline_.push([=](){
+            pipeline_.push([=]() {
                 registers_->x = registers_->sp;
                 set_zero(registers_->x);
                 set_negative(registers_->x);
             });
             return;
         case Instruction::TXA:
-            pipeline_.push([=](){
+            pipeline_.push([=]() {
                 registers_->a = registers_->x;
                 set_zero(registers_->a);
                 set_negative(registers_->a);
