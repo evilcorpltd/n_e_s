@@ -34,6 +34,7 @@ enum class Instruction {
     STY,
     STA,
     STX,
+    TXS,
     BCC,
     LDY,
     BCS,
@@ -43,7 +44,12 @@ enum class Instruction {
     NOP,
     INX,
     BEQ,
-    SED
+    SED,
+    TYA,
+    TAY,
+    TAX,
+    TSX,
+    TXA,
 };
 
 struct Opcode {

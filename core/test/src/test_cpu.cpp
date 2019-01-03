@@ -53,19 +53,25 @@ enum Opcode : uint8_t {
     CLI = 0x58,
     BVS = 0x70,
     SEI = 0x78,
+    TXA = 0x8A,
     STY_ABS = 0x8C,
     STA_ABS = 0x8D,
     STX_ABS = 0x8E,
     STY_ZERO = 0x84,
     STA_ZERO = 0x85,
     STX_ZERO = 0x86,
+    BCC = 0x90,
     STY_ZEROX = 0x94,
     STA_ZEROX = 0x95,
     STX_ZEROY = 0x96,
-    BCC = 0x90,
+    TYA = 0x98,
+    TXS = 0x9A,
     LDY_IMM = 0xA0,
+    TAY = 0xA8,
+    TAX = 0xAA,
     BCS = 0xB0,
     CLV = 0xB8,
+    TSX = 0xBA,
     BNE = 0xD0,
     CLD = 0xD8,
     NOP = 0xEA,
@@ -103,6 +109,61 @@ public:
         ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(offset));
 
         step_execution(expected_cycles);
+        EXPECT_EQ(expected, registers);
+    }
+
+    // This is a bit silly, but we need both registers.from and expected.from.
+    void move_test(uint8_t *expected_dest,
+            uint8_t *expected_from,
+            uint8_t *registers_from) {
+        *expected_from = *registers_from = 10;
+        *expected_dest = 10;
+
+        step_execution(2);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void move_test_sets_n(uint8_t *expected_dest,
+            uint8_t *expected_from,
+            uint8_t *registers_from) {
+        *expected_from = *registers_from = 128;
+        *expected_dest = 128;
+        expected.p |= N_FLAG;
+
+        step_execution(2);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void move_test_clears_n(uint8_t *expected_dest,
+            uint8_t *expected_from,
+            uint8_t *registers_from) {
+        *expected_from = *registers_from = 5;
+        *expected_dest = 5;
+        registers.p |= N_FLAG;
+
+        step_execution(2);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void move_test_sets_z(uint8_t *expected_dest,
+            uint8_t *expected_from,
+            uint8_t *registers_from) {
+        *expected_from = *registers_from = 0;
+        *expected_dest = 0;
+        expected.p |= Z_FLAG;
+
+        step_execution(2);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void move_test_clears_z(uint8_t *expected_dest,
+            uint8_t *expected_from,
+            uint8_t *registers_from) {
+        *expected_from = *registers_from = 5;
+        *expected_dest = 5;
+        registers.p |= Z_FLAG;
+
+        step_execution(2);
         EXPECT_EQ(expected, registers);
     }
 
@@ -741,6 +802,17 @@ TEST_F(CpuTest, stx_zero_y_indexed) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(CpuTest, txs) {
+    registers.x = expected.x = 0xAA;
+
+    stage_instruction(TXS);
+    expected.sp = 0xAA;
+
+    step_execution(2);
+
+    EXPECT_EQ(expected, registers);
+}
+
 TEST_F(CpuTest, sty_abs) {
     registers.pc = expected.pc = 0x4321;
     registers.y = expected.y = 0x07;
@@ -788,6 +860,94 @@ TEST_F(CpuTest, sty_zero_x_indexed) {
     step_execution(4);
 
     EXPECT_EQ(expected, registers);
+}
+
+// TSX
+TEST_F(CpuTest, tsx) {
+    stage_instruction(TSX);
+    move_test(&expected.x, &expected.sp, &registers.sp);
+}
+TEST_F(CpuTest, tsx_sets_n_flag) {
+    stage_instruction(TSX);
+    move_test_sets_n(&expected.x, &expected.sp, &registers.sp);
+}
+TEST_F(CpuTest, tsx_clears_n_flag) {
+    stage_instruction(TSX);
+    move_test_clears_n(&expected.x, &expected.sp, &registers.sp);
+}
+TEST_F(CpuTest, tsx_sets_z_flag) {
+    stage_instruction(TSX);
+    move_test_sets_z(&expected.x, &expected.sp, &registers.sp);
+}
+TEST_F(CpuTest, tsx_clears_z_flag) {
+    stage_instruction(TSX);
+    move_test_clears_z(&expected.x, &expected.sp, &registers.sp);
+}
+
+// TYA
+TEST_F(CpuTest, tya) {
+    stage_instruction(TYA);
+    move_test(&expected.a, &expected.y, &registers.y);
+}
+TEST_F(CpuTest, tya_sets_n_flag) {
+    stage_instruction(TYA);
+    move_test_sets_n(&expected.a, &expected.y, &registers.y);
+}
+TEST_F(CpuTest, tya_clears_n_flag) {
+    stage_instruction(TYA);
+    move_test_clears_n(&expected.a, &expected.y, &registers.y);
+}
+TEST_F(CpuTest, tya_sets_z_flag) {
+    stage_instruction(TYA);
+    move_test_sets_z(&expected.a, &expected.y, &registers.y);
+}
+TEST_F(CpuTest, tya_clears_z_flag) {
+    stage_instruction(TYA);
+    move_test_clears_z(&expected.a, &expected.y, &registers.y);
+}
+
+// TAY
+TEST_F(CpuTest, tay) {
+    stage_instruction(TAY);
+    move_test(&expected.y, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tay_sets_n_flag) {
+    stage_instruction(TAY);
+    move_test_sets_n(&expected.y, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tay_clears_n_flag) {
+    stage_instruction(TAY);
+    move_test_clears_n(&expected.y, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tay_sets_z_flag) {
+    stage_instruction(TAY);
+    move_test_sets_z(&expected.y, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tay_clears_z_flag) {
+    stage_instruction(TAY);
+    move_test_clears_z(&expected.y, &expected.a, &registers.a);
+}
+
+// TXA
+TEST_F(CpuTest, txa) {
+    stage_instruction(TXA);
+    move_test(&expected.a, &expected.x, &registers.x);
+}
+TEST_F(CpuTest, txa_sets_n_flag) {
+    stage_instruction(TXA);
+    move_test_sets_n(&expected.a, &expected.x, &registers.x);
+}
+TEST_F(CpuTest, txa_clears_n_flag) {
+    stage_instruction(TXA);
+    move_test_clears_n(&expected.a, &expected.x, &registers.x);
+}
+TEST_F(CpuTest, txa_sets_z_flag) {
+    stage_instruction(TXA);
+    move_test_sets_z(&expected.a, &expected.x, &registers.x);
+}
+TEST_F(CpuTest, txa_clears_z_flag) {
+    stage_instruction(TXA);
+    move_test_clears_z(&expected.a, &expected.x, &registers.x);
 }
 
 } // namespace
