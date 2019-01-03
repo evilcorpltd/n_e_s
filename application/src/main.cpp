@@ -23,7 +23,11 @@ int main(int argc, char **argv) {
 
     Registers registers;
     std::unique_ptr<ICpu> cpu{CpuFactory::create(&registers, mmu.get())};
-    (void)cpu;
+
+    cpu->reset();
+    for (uint32_t i = 0; i < 9000; ++i) {
+        cpu->execute();
+    }
 
     return 0;
 }
