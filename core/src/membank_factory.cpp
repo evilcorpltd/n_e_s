@@ -34,9 +34,6 @@ MemBankList MemBankFactory::create_nes_mem_banks(IPpu *ppu) {
     // Io dev
     mem_banks.push_back(std::make_unique<MemBank<0x4018, 0x401F, 0x8>>());
 
-    // Cartridge
-    mem_banks.push_back(std::make_unique<MemBank<0x4020, 0xFFFF, 0xBFE0>>());
-
     return mem_banks;
 }
 

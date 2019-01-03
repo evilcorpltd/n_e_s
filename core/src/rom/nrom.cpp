@@ -24,7 +24,7 @@ uint8_t Nrom::read_byte(uint16_t addr) const {
     assert(addr >= prg_ram_start_);
 
     const std::vector<uint8_t> &memory = translate_address(addr);
-    addr -= prg_ram_start_;
+    addr -= addr <= prg_ram_end_ ? prg_ram_start_ : prg_rom_start_;
 
     return memory[addr % memory.size()];
 }
