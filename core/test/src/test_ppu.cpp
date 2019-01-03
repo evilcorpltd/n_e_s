@@ -7,7 +7,7 @@ using namespace n_e_s::core;
 
 namespace n_e_s::core {
 
-bool operator==(const PpuRegisters &a, const PpuRegisters &b) {
+bool operator==(const IPpu::Registers &a, const IPpu::Registers &b) {
     return a.ctrl == b.ctrl && a.mask == b.mask && a.status == b.status &&
            a.oamaddr == b.oamaddr && a.oamdata == b.oamdata &&
            a.scroll == b.scroll && a.data == b.data;
@@ -27,10 +27,10 @@ public:
         }
     }
 
-    PpuRegisters registers;
+    IPpu::Registers registers;
     std::unique_ptr<IPpu> ppu;
 
-    PpuRegisters expected;
+    IPpu::Registers expected;
 };
 
 TEST_F(PpuTest, read_invalid_address) {

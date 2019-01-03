@@ -15,12 +15,12 @@ using testing::Return;
 
 namespace n_e_s::core {
 
-static bool operator==(const Registers &a, const Registers &b) {
+static bool operator==(const ICpu::Registers &a, const ICpu::Registers &b) {
     return a.pc == b.pc && a.sp == b.sp && a.a == b.a && a.x == b.x &&
            a.y == b.y && a.p == b.p;
 }
 
-static void PrintTo(const Registers &r, std::ostream *os) {
+static void PrintTo(const ICpu::Registers &r, std::ostream *os) {
     *os << "PC: " << hex_out_s(r.pc);
     *os << " SP: " << hex_out_s(r.sp);
     *os << " A: " << hex_out_s(r.a);
@@ -167,11 +167,11 @@ public:
         EXPECT_EQ(expected, registers);
     }
 
-    Registers registers;
+    ICpu::Registers registers;
     NiceMock<MockMmu> mmu;
     std::unique_ptr<ICpu> cpu;
 
-    Registers expected;
+    ICpu::Registers expected;
 };
 
 TEST_F(CpuTest, reset) {

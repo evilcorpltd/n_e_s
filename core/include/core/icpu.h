@@ -13,15 +13,6 @@ const uint8_t FLAG_5 = 1 << 5; // unused, always 1
 const uint8_t V_FLAG = 1 << 6; // overflow
 const uint8_t N_FLAG = 1 << 7; // negative
 
-struct Registers {
-    uint16_t pc; // program counter
-    uint8_t sp; // stack pointer
-    uint8_t a; // accumulator
-    uint8_t x; // x index
-    uint8_t y; // y index
-    uint8_t p; // status
-};
-
 class ICpu {
 public:
     virtual ~ICpu() = default;
@@ -31,6 +22,15 @@ public:
 
     // Causes the CPU to jump to its reset routine.
     virtual void reset() = 0;
+
+    struct Registers {
+        uint16_t pc; // program counter
+        uint8_t sp; // stack pointer
+        uint8_t a; // accumulator
+        uint8_t x; // x index
+        uint8_t y; // y index
+        uint8_t p; // status
+    };
 };
 
 } // namespace n_e_s::core
