@@ -50,6 +50,8 @@ Opcode decode(const uint8_t op) {
         return {Instruction::STA, AddressMode::ZeropageX};
     case 0x96:
         return {Instruction::STX, AddressMode::ZeropageY};
+    case 0x9A:
+        return {Instruction::TXS, AddressMode::Implied};
     case 0xA0:
         return {Instruction::LDY, AddressMode::Immediate};
     case 0xB0:

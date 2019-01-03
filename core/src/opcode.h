@@ -34,6 +34,7 @@ enum class Instruction {
     STY,
     STA,
     STX,
+    TXS,
     BCC,
     LDY,
     BCS,

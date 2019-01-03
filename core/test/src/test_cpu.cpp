@@ -59,10 +59,11 @@ enum Opcode : uint8_t {
     STY_ZERO = 0x84,
     STA_ZERO = 0x85,
     STX_ZERO = 0x86,
+    BCC = 0x90,
     STY_ZEROX = 0x94,
     STA_ZEROX = 0x95,
     STX_ZEROY = 0x96,
-    BCC = 0x90,
+    TXS = 0x9A,
     LDY_IMM = 0xA0,
     BCS = 0xB0,
     CLV = 0xB8,
@@ -737,6 +738,17 @@ TEST_F(CpuTest, stx_zero_y_indexed) {
     EXPECT_CALL(mmu, write_byte(static_cast<uint8_t>(0x44 + 0xED), 0x07));
 
     step_execution(4);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, txs) {
+    registers.x = expected.x = 0xAA;
+
+    stage_instruction(TXS);
+    expected.sp = 0xAA;
+
+    step_execution(2);
 
     EXPECT_EQ(expected, registers);
 }

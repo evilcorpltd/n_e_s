@@ -138,6 +138,9 @@ void Mos6502::execute() {
         case Instruction::STY:
             pipeline_.append(create_store_instruction(opcode));
             return;
+        case Instruction::TXS:
+            pipeline_.push([=](){ registers_->sp = registers_->x; });
+            return;
         case Instruction::BCC:
             pipeline_.push(
                     branch_on([=]() { return !(registers_->p & C_FLAG); }));
