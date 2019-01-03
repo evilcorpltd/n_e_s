@@ -16,15 +16,14 @@ int main(int argc, char **argv) {
     PpuRegisters ppu_registers;
     std::unique_ptr<IPpu> ppu{PpuFactory::create(&ppu_registers)};
 
+    std::unique_ptr<IRom> rom{RomFactory::fromFile(argv[1])};
     MemBankList mem_banks = MemBankFactory::create_nes_mem_banks(ppu.get());
+    mem_banks.push_back(std::move(rom));
     std::unique_ptr<IMmu> mmu{MmuFactory::create(std::move(mem_banks))};
 
     Registers registers;
     std::unique_ptr<ICpu> cpu{CpuFactory::create(&registers, mmu.get())};
     (void)cpu;
-
-    std::unique_ptr<IRom> rom{RomFactory::fromFile(argv[1])};
-    (void)rom;
 
     return 0;
 }

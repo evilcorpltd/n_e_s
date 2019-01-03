@@ -12,6 +12,7 @@ public:
             std::vector<uint8_t> prg_rom,
             std::vector<uint8_t> chr_rom);
 
+    bool is_address_in_range(uint16_t addr) const override;
     uint8_t read_byte(uint16_t addr) const override;
     void write_byte(uint16_t addr, uint8_t byte) override;
 

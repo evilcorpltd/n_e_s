@@ -15,6 +15,11 @@ Nrom::Nrom(const INesHeader &h,
     assert(chr_rom_.size() == 8 * 1024);
 }
 
+// The cartridge owns all space from 0x6000 to 0xFFFF.
+bool Nrom::is_address_in_range(uint16_t addr) const {
+    return addr >= prg_ram_start_;
+}
+
 uint8_t Nrom::read_byte(uint16_t addr) const {
     assert(addr >= prg_ram_start_);
 
