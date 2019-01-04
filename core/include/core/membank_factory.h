@@ -1,15 +1,9 @@
 #pragma once
 
 #include "core/imembank.h"
-
-#include <memory>
-#include <vector>
+#include "core/ippu.h"
 
 namespace n_e_s::core {
-
-class IPpu;
-
-using MemBankList = std::vector<std::unique_ptr<IMemBank>>;
 
 class MemBankFactory {
 public:
