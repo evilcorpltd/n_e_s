@@ -16,8 +16,9 @@ class Nes::Impl {
 public:
     Impl()
             : ppu_(PpuFactory::create(&ppu_registers_)),
-            mmu_(MmuFactory::create(MemBankFactory::create_nes_mem_banks(ppu_.get()))),
-            cpu_(CpuFactory::create(&registers_, mmu_.get())) {}
+              mmu_(MmuFactory::create(
+                      MemBankFactory::create_nes_mem_banks(ppu_.get()))),
+              cpu_(CpuFactory::create(&registers_, mmu_.get())) {}
 
     void execute() {
         if (cycle_++ % 3 == 0) {
@@ -43,8 +44,7 @@ private:
     uint64_t cycle_{};
 };
 
-Nes::Nes() : impl_(std::make_unique<Impl>()) {
-}
+Nes::Nes() : impl_(std::make_unique<Impl>()) {}
 
 Nes::~Nes() = default;
 
