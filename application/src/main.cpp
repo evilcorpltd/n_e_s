@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    PpuRegisters ppu_registers;
+    IPpu::Registers ppu_registers;
     std::unique_ptr<IPpu> ppu{PpuFactory::create(&ppu_registers)};
 
     std::unique_ptr<IRom> rom{RomFactory::fromFile(argv[1])};
@@ -21,8 +21,8 @@ int main(int argc, char **argv) {
     mem_banks.push_back(std::move(rom));
     std::unique_ptr<IMmu> mmu{MmuFactory::create(std::move(mem_banks))};
 
-    Registers registers;
-    std::unique_ptr<ICpu> cpu{CpuFactory::create(&registers, mmu.get())};
+    ICpu::Registers cpu_registers;
+    std::unique_ptr<ICpu> cpu{CpuFactory::create(&cpu_registers, mmu.get())};
 
     cpu->reset();
     for (uint32_t i = 0; i < 9000; ++i) {

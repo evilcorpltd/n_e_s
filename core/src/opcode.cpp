@@ -36,6 +36,8 @@ Opcode decode(const uint8_t op) {
         return {Instruction::STA, AddressMode::Zeropage};
     case 0x86:
         return {Instruction::STX, AddressMode::Zeropage};
+    case 0x8A:
+        return {Instruction::TXA, AddressMode::Implied};
     case 0x8C:
         return {Instruction::STY, AddressMode::Absolute};
     case 0x8D:
@@ -50,12 +52,22 @@ Opcode decode(const uint8_t op) {
         return {Instruction::STA, AddressMode::ZeropageX};
     case 0x96:
         return {Instruction::STX, AddressMode::ZeropageY};
+    case 0x98:
+        return {Instruction::TYA, AddressMode::Implied};
+    case 0x9A:
+        return {Instruction::TXS, AddressMode::Implied};
     case 0xA0:
         return {Instruction::LDY, AddressMode::Immediate};
+    case 0xA8:
+        return {Instruction::TAY, AddressMode::Implied};
+    case 0xAA:
+        return {Instruction::TAX, AddressMode::Implied};
     case 0xB0:
         return {Instruction::BCS, AddressMode::Relative};
     case 0xB8:
         return {Instruction::CLV, AddressMode::Implied};
+    case 0xBA:
+        return {Instruction::TSX, AddressMode::Implied};
     case 0xD0:
         return {Instruction::BNE, AddressMode::Relative};
     case 0xD8:

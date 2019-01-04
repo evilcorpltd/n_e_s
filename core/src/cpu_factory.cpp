@@ -4,7 +4,7 @@
 
 namespace n_e_s::core {
 
-std::unique_ptr<ICpu> CpuFactory::create(Registers *const registers,
+std::unique_ptr<ICpu> CpuFactory::create(ICpu::Registers *const registers,
         IMmu *const mmu) {
     return std::make_unique<Mos6502>(registers, mmu);
 }
