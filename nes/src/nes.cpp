@@ -18,7 +18,7 @@ public:
             : ppu_(PpuFactory::create(&ppu_registers_)),
               mmu_(MmuFactory::create(
                       MemBankFactory::create_nes_mem_banks(ppu_.get()))),
-              cpu_(CpuFactory::create(&registers_, mmu_.get())) {}
+              cpu_(CpuFactory::create(&cpu_registers_, mmu_.get())) {}
 
     void execute() {
         if (cycle_++ % 3 == 0) {
@@ -33,12 +33,12 @@ public:
     }
 
 private:
-    PpuRegisters ppu_registers_{};
+    IPpu::Registers ppu_registers_{};
     std::unique_ptr<IPpu> ppu_;
 
     std::unique_ptr<IMmu> mmu_;
 
-    Registers registers_{};
+    ICpu::Registers cpu_registers_{};
     std::unique_ptr<ICpu> cpu_;
 
     uint64_t cycle_{};

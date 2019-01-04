@@ -1,4 +1,5 @@
 #include "ppu.h"
+
 #include "core/invalid_address.h"
 
 namespace {
@@ -15,7 +16,7 @@ const uint16_t kVBlankScanlineEnd = 260;
 
 namespace n_e_s::core {
 
-Ppu::Ppu(PpuRegisters *registers)
+Ppu::Ppu(IPpu::Registers *registers)
         : registers_(registers), scanline_(0), cycle_(0) {}
 
 uint8_t Ppu::read_byte(uint16_t addr) {
