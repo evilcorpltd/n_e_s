@@ -1,6 +1,7 @@
 #pragma once
 
-#include <stdexcept>
+#include <cstdint>
+#include <exception>
 #include <string>
 
 namespace n_e_s::core {
@@ -9,7 +10,7 @@ class InvalidAddress : public std::exception {
 public:
     InvalidAddress(uint16_t addr);
 
-    const char *what() const noexcept;
+    const char *what() const noexcept override;
 
 private:
     std::string message_;
