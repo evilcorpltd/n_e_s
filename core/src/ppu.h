@@ -28,6 +28,13 @@ private:
     bool is_post_render_scanline() const;
     bool is_vblank_scanline() const;
 
+    // Rendering is enabled if bit 3 or bit 4 is enabled in the mask register.
+    bool is_rendering_enabled() const;
+
+    // Rendering is active if rendering is enabled and the PPU is currently
+    // in pre render scanline or a visible scanline.
+    bool is_rendering_active() const;
+
     void execute_pre_render_scanline();
     void execute_visible_scanline();
     void execute_post_render_scanline();

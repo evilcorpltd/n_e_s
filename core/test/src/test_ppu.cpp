@@ -78,4 +78,79 @@ TEST_F(PpuTest, clear_vblank_flag_during_pre_render_line) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(PpuTest, write_to_ctrl_register) {
+    expected.ctrl = 0xBA;
+
+    ppu->write_byte(0x2000, 0xBA);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, write_to_mask_register) {
+    expected.mask = 0x33;
+
+    ppu->write_byte(0x2001, 0x33);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, write_to_oamaddr_register) {
+    expected.oamaddr = 0x05;
+
+    ppu->write_byte(0x2003, 0x05);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, ignore_oamdata_write_background_enabled) {
+    registers.mask = 0b00001000;
+    expected.mask = registers.mask;
+
+    ppu->write_byte(0x2004, 0x5A);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, ignore_oamdata_write_sprite_enabled) {
+    registers.mask = 0b00010000;
+    expected.mask = registers.mask;
+
+    ppu->write_byte(0x2004, 0x73);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, ignore_oamdata_during_pre_render_scanline) {
+    registers.mask = 0b00011000;
+    expected.status = 0x80;
+    expected.mask = registers.mask;
+
+    step_execution(341 * 261);
+
+    ppu->write_byte(0x2004, 0x73);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, write_to_oamdata_register_rendering_disabled) {
+    expected.oamaddr = 0x01;
+    expected.oamdata = 0x77;
+
+    ppu->write_byte(0x2004, 0x77);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, write_to_oamdata_register_during_vertical_blanking) {
+    expected.status = 0x80;
+    expected.oamaddr = 0x01;
+    expected.oamdata = 0x21;
+
+    step_execution(341 * 250);
+
+    ppu->write_byte(0x2004, 0x21);
+
+    EXPECT_EQ(expected, registers);
+}
+
 } // namespace

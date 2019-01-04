@@ -29,8 +29,24 @@ uint8_t Ppu::read_byte(uint16_t addr) {
     throw InvalidAddress(addr);
 }
 
-void Ppu::write_byte(uint16_t addr, uint8_t) {
-    throw InvalidAddress(addr);
+void Ppu::write_byte(uint16_t addr, uint8_t byte) {
+    if (addr == 0x2000) {
+        // When we have implemented NMI we should check if NMI is set to be
+        // enabled (bit 7). If this is the case and we currently are in
+        // vertical blanking a NMI shall be generated.
+        registers_->ctrl = byte;
+    } else if (addr == 0x2001) {
+        registers_->mask = byte;
+    } else if (addr == 0x2003) {
+        registers_->oamaddr = byte;
+    } else if (addr == 0x2004) {
+        if (!is_rendering_active()) {
+            registers_->oamdata = byte;
+            ++registers_->oamaddr;
+        }
+    } else {
+        throw InvalidAddress(addr);
+    }
 }
 
 void Ppu::execute() {
@@ -75,6 +91,15 @@ bool Ppu::is_post_render_scanline() const {
 
 bool Ppu::is_vblank_scanline() const {
     return scanline_ >= kVBlankScanlineStart && scanline_ <= kVBlankScanlineEnd;
+}
+
+bool Ppu::is_rendering_enabled() const {
+    return (registers_->mask & (1 << 3)) || (registers_->mask & (1 << 4));
+}
+
+bool Ppu::is_rendering_active() const {
+    return is_rendering_enabled() &&
+           (is_pre_render_scanline() || is_visible_scanline());
 }
 
 void Ppu::execute_pre_render_scanline() {
