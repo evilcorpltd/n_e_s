@@ -60,7 +60,7 @@ matrix:
             - libstdc++-7-dev
       script:
         - CXX=clang++-7 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-        - run-clang-tidy-7.py -q -p . "core|application"
+        - run-clang-tidy-7.py -q -p . "application|core|nes"
 
     - name: "clang-format"
       addons:
@@ -69,7 +69,7 @@ matrix:
             - clang-format
       before_script: []
       script:
-        - find application core -name *.h -o -name *.cpp | xargs clang-format -style=file -i
+        - find application core nes -name *.h -o -name *.cpp | xargs clang-format -style=file -i
         - git diff --exit-code
 
 before_script:
