@@ -12,13 +12,11 @@ static_assert(sizeof(n_e_s::core::INesHeader) == 16);
 
 namespace {
 
-std::ifstream::pos_type filesize(const std::string &filename) {
-    std::ifstream file(filename, std::ifstream::ate | std::ifstream::binary);
-    if (!file) {
-        return 0;
-    }
-
-    return file.tellg();
+std::istream::pos_type streamsize(std::istream &stream) {
+    stream.seekg(0, std::ios::end);
+    std::istream::pos_type size = stream.tellg();
+    stream.seekg(0, std::ios::beg);
+    return size;
 }
 
 } // namespace
@@ -26,22 +24,25 @@ std::ifstream::pos_type filesize(const std::string &filename) {
 namespace n_e_s::core {
 
 IRom *RomFactory::from_file(const std::string &filepath) {
-    std::vector<uint8_t> bytes(filesize(filepath));
-
     std::ifstream file(filepath, std::ios::binary);
     if (!file) {
         assert(false);
         exit(1); // Unable to open file.
     }
 
+    return from_bytes(file);
+}
+
+IRom *RomFactory::from_bytes(std::istream &bytestream) {
+    std::vector<uint8_t> bytes(streamsize(bytestream));
     if (bytes.size() < 16) {
         assert(false);
         exit(1); // File isn't big enough to contain a header.
     }
 
-    if (!file.read(reinterpret_cast<char *>(&bytes[0]), bytes.size())) {
+    if (!bytestream.read(reinterpret_cast<char *>(&bytes[0]), bytes.size())) {
         assert(false);
-        exit(1); // Unable to get file bytes.
+        exit(1); // Unable to get bytes.
     }
 
     INesHeader h;
