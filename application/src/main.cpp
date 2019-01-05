@@ -7,11 +7,8 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    (void)argv;
-
     Nes nes;
-    nes.reset();
-    // TODO: load rom into NES
+    nes.load_rom(argv[1]);
 
     for (uint32_t i = 0; i < 9000; ++i) {
         nes.execute();

@@ -25,7 +25,7 @@ std::ifstream::pos_type filesize(const std::string &filename) {
 
 namespace n_e_s::core {
 
-IRom *RomFactory::fromFile(const std::string &filepath) {
+IRom *RomFactory::from_file(const std::string &filepath) {
     std::vector<uint8_t> bytes(filesize(filepath));
 
     std::ifstream file(filepath, std::ios::binary);
