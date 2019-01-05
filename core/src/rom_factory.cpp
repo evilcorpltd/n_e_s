@@ -2,10 +2,10 @@
 
 #include "rom/nrom.h"
 
-#include <cassert>
 #include <cstring>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
 #include <vector>
 
 static_assert(sizeof(n_e_s::core::INesHeader) == 16);
@@ -26,8 +26,7 @@ namespace n_e_s::core {
 IRom *RomFactory::from_file(const std::string &filepath) {
     std::ifstream file(filepath, std::ios::binary);
     if (!file) {
-        assert(false);
-        exit(1); // Unable to open file.
+        throw std::invalid_argument("Unable to open file.");
     }
 
     return from_bytes(file);
@@ -36,19 +35,17 @@ IRom *RomFactory::from_file(const std::string &filepath) {
 IRom *RomFactory::from_bytes(std::istream &bytestream) {
     std::vector<uint8_t> bytes(streamsize(bytestream));
     if (bytes.size() < 16) {
-        assert(false);
-        exit(1); // File isn't big enough to contain a header.
+        throw std::invalid_argument(
+                "File isn't big enough to contain a header.");
     }
 
     if (!bytestream.read(reinterpret_cast<char *>(&bytes[0]), bytes.size())) {
-        assert(false);
-        exit(1); // Unable to get bytes.
+        throw std::invalid_argument("Unable to get bytes.");
     }
 
     INesHeader h;
     if (!std::equal(bytes.begin(), bytes.begin() + sizeof(h.nes), h.nes)) {
-        assert(false);
-        exit(1); // No valid iNes header.
+        throw std::invalid_argument("No valid iNes header.");
     }
 
     // This is fine because the header is exactly 16 bytes with no padding.
@@ -64,8 +61,7 @@ IRom *RomFactory::from_bytes(std::istream &bytestream) {
                                        h.prg_rom_size * 16 * 1024 +
                                        h.chr_rom_size * 8 * 1024;
     if (bytes.size() != expected_rom_size) {
-        assert(false);
-        exit(1);
+        throw std::invalid_argument("Unexpected rom size.");
     }
 
     std::vector<uint8_t> prg_rom(bytes.begin() + 16,

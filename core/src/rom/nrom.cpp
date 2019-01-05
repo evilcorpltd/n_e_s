@@ -11,8 +11,13 @@ Nrom::Nrom(const INesHeader &h,
           prg_rom_(std::move(prg_rom)),
           chr_rom_(std::move(chr_rom)),
           prg_ram_(h.prg_ram_size * 8 * 1024) {
-    assert(prg_rom_.size() == 16 * 1024 || prg_rom_.size() == 32 * 1024);
-    assert(chr_rom_.size() == 8 * 1024);
+    if (prg_rom_.size() != 16 * 1024 && prg_rom_.size() != 32 * 1024) {
+        throw std::invalid_argument("Invalid prg_rom size");
+    }
+
+    if (chr_rom_.size() != 8 * 1024) {
+        throw std::invalid_argument("Invalid chr_rom size");
+    }
 }
 
 // The cartridge owns all space from 0x6000 to 0xFFFF.
