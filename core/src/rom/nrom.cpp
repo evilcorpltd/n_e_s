@@ -38,7 +38,7 @@ void Nrom::write_byte(uint16_t addr, uint8_t byte) {
     assert(addr >= prg_ram_start_);
 
     std::vector<uint8_t> &memory = translate_address(addr);
-    addr -= prg_ram_start_;
+    addr -= addr <= prg_ram_end_ ? prg_ram_start_ : prg_rom_start_;
 
     memory[addr % memory.size()] = byte;
 }
