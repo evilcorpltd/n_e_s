@@ -23,7 +23,7 @@ matrix:
         - CXX=g++-7 CXXFLAGS="-fprofile-arcs -ftest-coverage" cmake ..
         - make
         - ctest --output-on-failure
-        - gcovr core/CMakeFiles/n_e_s_core.dir/src/ -p --root .. --fail-under-line=95
+        - gcovr -p --root .. --fail-under-line=95 --exclude '_deps/' --exclude '(.+/)?test/'
 
     - name: "clang 7"
       addons: &clang7
