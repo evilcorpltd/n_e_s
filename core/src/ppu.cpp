@@ -4,6 +4,13 @@
 
 namespace {
 
+const uint16_t kPpuCtrl = 0x2000;
+const uint16_t kPpuMask = 0x2001;
+const uint16_t kPpuStatus = 0x2002;
+const uint16_t kOamAddr = 0x2003;
+const uint16_t kOamData = 0x2004;
+const uint16_t kPpuScroll = 0x2005;
+
 const uint16_t kLastCycleInScanline = 340;
 const uint16_t kLastScanlineInFrame = 261;
 const uint16_t kPreRenderScanline = 261;
@@ -30,19 +37,36 @@ uint8_t Ppu::read_byte(uint16_t addr) {
 }
 
 void Ppu::write_byte(uint16_t addr, uint8_t byte) {
-    if (addr == 0x2000) {
+    if (addr == kPpuCtrl) {
         // When we have implemented NMI we should check if NMI is set to be
         // enabled (bit 7). If this is the case and we currently are in
         // vertical blanking a NMI shall be generated.
         registers_->ctrl = byte;
-    } else if (addr == 0x2001) {
+        uint16_t name_table_bits = (byte & 3);
+        registers_->temp_vram_addr &= 0b1111'0011'1111'1111;
+        registers_->temp_vram_addr |= (name_table_bits << 10);
+    } else if (addr == kPpuMask) {
         registers_->mask = byte;
-    } else if (addr == 0x2003) {
+    } else if (addr == kOamAddr) {
         registers_->oamaddr = byte;
-    } else if (addr == 0x2004) {
+    } else if (addr == kOamData) {
         if (!is_rendering_active()) {
-            registers_->oamdata = byte;
-            ++registers_->oamaddr;
+            oam_data_[registers_->oamaddr++] = byte;
+        }
+    } else if (addr == kPpuScroll) {
+        if (registers_->write_toggle) { // Second write, Y scroll
+            uint16_t y_scroll = (byte >> 3);
+            uint16_t fine_y_scroll = (byte & 7);
+            registers_->temp_vram_addr &= 0b1000'1100'0001'1111;
+            registers_->temp_vram_addr |= (y_scroll << 5);
+            registers_->temp_vram_addr |= (fine_y_scroll << 12);
+            registers_->write_toggle = false;
+        } else { // First write, X Scroll
+            uint16_t x_scroll = (byte >> 3);
+            registers_->temp_vram_addr &= 0b1111'1111'1110'0000;
+            registers_->temp_vram_addr |= x_scroll;
+            registers_->fine_x_scroll = (byte & 7);
+            registers_->write_toggle = true;
         }
     } else {
         throw InvalidAddress(addr);

@@ -9,8 +9,7 @@ namespace n_e_s::core {
 
 bool operator==(const IPpu::Registers &a, const IPpu::Registers &b) {
     return a.ctrl == b.ctrl && a.mask == b.mask && a.status == b.status &&
-           a.oamaddr == b.oamaddr && a.oamdata == b.oamdata &&
-           a.scroll == b.scroll && a.data == b.data;
+           a.oamaddr == b.oamaddr;
 }
 
 } // namespace n_e_s::core
@@ -104,7 +103,9 @@ TEST_F(PpuTest, write_to_oamaddr_register) {
 
 TEST_F(PpuTest, ignore_oamdata_write_background_enabled) {
     registers.mask = 0b00001000;
+    registers.oamaddr = 0x02;
     expected.mask = registers.mask;
+    expected.oamaddr = registers.oamaddr;
 
     ppu->write_byte(0x2004, 0x5A);
 
@@ -113,7 +114,9 @@ TEST_F(PpuTest, ignore_oamdata_write_background_enabled) {
 
 TEST_F(PpuTest, ignore_oamdata_write_sprite_enabled) {
     registers.mask = 0b00010000;
+    registers.oamaddr = 0x02;
     expected.mask = registers.mask;
+    expected.oamaddr = registers.oamaddr;
 
     ppu->write_byte(0x2004, 0x73);
 
@@ -122,8 +125,10 @@ TEST_F(PpuTest, ignore_oamdata_write_sprite_enabled) {
 
 TEST_F(PpuTest, ignore_oamdata_during_pre_render_scanline) {
     registers.mask = 0b00011000;
+    registers.oamaddr = 0x02;
     expected.status = 0x80;
     expected.mask = registers.mask;
+    expected.oamaddr = registers.oamaddr;
 
     step_execution(341 * 261);
 
@@ -134,7 +139,6 @@ TEST_F(PpuTest, ignore_oamdata_during_pre_render_scanline) {
 
 TEST_F(PpuTest, write_to_oamdata_register_rendering_disabled) {
     expected.oamaddr = 0x01;
-    expected.oamdata = 0x77;
 
     ppu->write_byte(0x2004, 0x77);
 
@@ -144,7 +148,6 @@ TEST_F(PpuTest, write_to_oamdata_register_rendering_disabled) {
 TEST_F(PpuTest, write_to_oamdata_register_during_vertical_blanking) {
     expected.status = 0x80;
     expected.oamaddr = 0x01;
-    expected.oamdata = 0x21;
 
     step_execution(341 * 250);
 

@@ -20,6 +20,9 @@ private:
     uint16_t scanline_;
     uint16_t cycle_;
 
+    // Object Atribute Memory
+    uint8_t oam_data_[256]{};
+
     // Updates cycle and scanline counters
     void update_counters();
 
