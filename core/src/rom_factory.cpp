@@ -23,7 +23,7 @@ std::istream::pos_type streamsize(std::istream &stream) {
 
 namespace n_e_s::core {
 
-IRom *RomFactory::from_file(const std::string &filepath) {
+std::unique_ptr<IRom> RomFactory::from_file(const std::string &filepath) {
     std::ifstream file(filepath, std::ios::binary);
     if (!file) {
         throw std::invalid_argument("Unable to open file");
@@ -32,7 +32,7 @@ IRom *RomFactory::from_file(const std::string &filepath) {
     return from_bytes(file);
 }
 
-IRom *RomFactory::from_bytes(std::istream &bytestream) {
+std::unique_ptr<IRom> RomFactory::from_bytes(std::istream &bytestream) {
     std::vector<uint8_t> bytes(streamsize(bytestream));
     if (bytes.size() < 16) {
         throw std::invalid_argument(
@@ -73,7 +73,7 @@ IRom *RomFactory::from_bytes(std::istream &bytestream) {
                     h.chr_rom_size * 8 * 1024);
 
     if (mapper == 0) {
-        return new Nrom(h, prg_rom, chr_rom);
+        return std::make_unique<Nrom>(h, prg_rom, chr_rom);
     }
 
     std::stringstream err;

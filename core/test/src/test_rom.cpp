@@ -59,7 +59,7 @@ TEST(RomFactory, doesnt_parse_bytes_without_a_nes_header) {
 TEST(Nrom, creation_works_with_correct_rom_sizes) {
     std::string bytes{nrom_bytes(1, 1)};
     std::stringstream ss(bytes);
-    IRom *nrom = RomFactory::from_bytes(ss);
+    std::unique_ptr<IRom> nrom{RomFactory::from_bytes(ss)};
     EXPECT_NE(nullptr, nrom);
 
     bytes = nrom_bytes(2, 1);
@@ -71,32 +71,26 @@ TEST(Nrom, creation_works_with_correct_rom_sizes) {
 TEST(Nrom, creation_fails_with_bad_rom_sizes) {
     std::string bytes{nrom_bytes(0, 1)};
     std::stringstream ss(bytes);
-    IRom *nrom;
-    (void)nrom;
 
-    EXPECT_THROW(nrom = RomFactory::from_bytes(ss), std::invalid_argument);
-    (void)nrom;
+    EXPECT_THROW(RomFactory::from_bytes(ss), std::invalid_argument);
 
     bytes = nrom_bytes(3, 1);
     ss = std::stringstream(bytes);
-    EXPECT_THROW(nrom = RomFactory::from_bytes(ss), std::invalid_argument);
-    (void)nrom;
+    EXPECT_THROW(RomFactory::from_bytes(ss), std::invalid_argument);
 
     bytes = nrom_bytes(1, 0);
     ss = std::stringstream(bytes);
-    EXPECT_THROW(nrom = RomFactory::from_bytes(ss), std::invalid_argument);
-    (void)nrom;
+    EXPECT_THROW(RomFactory::from_bytes(ss), std::invalid_argument);
 
     bytes = nrom_bytes(1, 2);
     ss = std::stringstream(bytes);
-    EXPECT_THROW(nrom = RomFactory::from_bytes(ss), std::invalid_argument);
-    (void)nrom;
+    EXPECT_THROW(RomFactory::from_bytes(ss), std::invalid_argument);
 }
 
 TEST(Nrom, write_and_read_byte) {
     std::string bytes{nrom_bytes(1, 1)};
     std::stringstream ss(bytes);
-    IRom *nrom = RomFactory::from_bytes(ss);
+    std::unique_ptr<IRom> nrom = RomFactory::from_bytes(ss);
 
     nrom->write_byte(0x8000, 0xAB);
     EXPECT_EQ(0xAB, nrom->read_byte(0x8000));
