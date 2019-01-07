@@ -9,7 +9,9 @@ namespace n_e_s::core {
 
 bool operator==(const IPpu::Registers &a, const IPpu::Registers &b) {
     return a.ctrl == b.ctrl && a.mask == b.mask && a.status == b.status &&
-           a.oamaddr == b.oamaddr;
+           a.oamaddr == b.oamaddr && a.fine_x_scroll == b.fine_x_scroll &&
+           a.vram_addr == b.vram_addr && a.temp_vram_addr == b.temp_vram_addr &&
+           a.write_toggle == b.write_toggle;
 }
 
 } // namespace n_e_s::core
@@ -79,6 +81,7 @@ TEST_F(PpuTest, clear_vblank_flag_during_pre_render_line) {
 
 TEST_F(PpuTest, write_to_ctrl_register) {
     expected.ctrl = 0xBA;
+    expected.temp_vram_addr = 0x800;
 
     ppu->write_byte(0x2000, 0xBA);
 
@@ -152,6 +155,27 @@ TEST_F(PpuTest, write_to_oamdata_register_during_vertical_blanking) {
     step_execution(341 * 250);
 
     ppu->write_byte(0x2004, 0x21);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, write_ppu_scroll_one_time) {
+    expected.fine_x_scroll = 0b110;
+    expected.temp_vram_addr = 0b0000'0000'0001'1101;
+    expected.write_toggle = true;
+
+    ppu->write_byte(0x2005, 0b1110'1110);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, write_ppu_scroll_two_times) {
+    expected.fine_x_scroll = 0b101;
+    expected.temp_vram_addr = 0b0111'0010'1000'0111;
+    expected.write_toggle = false;
+
+    ppu->write_byte(0x2005, 0b0011'1101);
+    ppu->write_byte(0x2005, 0b1010'0111);
 
     EXPECT_EQ(expected, registers);
 }
