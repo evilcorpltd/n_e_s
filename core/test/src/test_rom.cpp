@@ -56,6 +56,12 @@ TEST(RomFactory, doesnt_parse_bytes_without_a_nes_header) {
     EXPECT_THROW(RomFactory::from_bytes(ss), std::invalid_argument);
 }
 
+TEST(RomFactory, fails_if_mapper_not_supported) {
+    std::string bytes{ines_header_bytes(0xCD, 1, 1, 1)};
+    std::stringstream ss(bytes);
+    EXPECT_THROW(RomFactory::from_bytes(ss), std::logic_error);
+}
+
 TEST(Nrom, creation_works_with_correct_rom_sizes) {
     std::string bytes{nrom_bytes(1, 1)};
     std::stringstream ss(bytes);
@@ -68,10 +74,22 @@ TEST(Nrom, creation_works_with_correct_rom_sizes) {
     EXPECT_NE(nullptr, nrom);
 }
 
+TEST(Nrom, has_the_correct_address_space) {
+    std::string bytes{nrom_bytes(1, 1)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> nrom{RomFactory::from_bytes(ss)};
+    EXPECT_TRUE(nrom->is_address_in_range(0x6000));
+    EXPECT_TRUE(nrom->is_address_in_range(0xFFFF));
+}
+
 TEST(Nrom, creation_fails_with_bad_rom_sizes) {
     std::string bytes{nrom_bytes(0, 1)};
     std::stringstream ss(bytes);
+    EXPECT_THROW(RomFactory::from_bytes(ss), std::invalid_argument);
 
+    bytes = nrom_bytes(1, 1);
+    bytes.pop_back();
+    ss = std::stringstream(bytes);
     EXPECT_THROW(RomFactory::from_bytes(ss), std::invalid_argument);
 
     bytes = nrom_bytes(3, 1);
@@ -91,6 +109,9 @@ TEST(Nrom, write_and_read_byte) {
     std::string bytes{nrom_bytes(1, 1)};
     std::stringstream ss(bytes);
     std::unique_ptr<IRom> nrom = RomFactory::from_bytes(ss);
+
+    nrom->write_byte(0x6000, 0x0F);
+    EXPECT_EQ(0x0F, nrom->read_byte(0x6000));
 
     nrom->write_byte(0x8000, 0xAB);
     EXPECT_EQ(0xAB, nrom->read_byte(0x8000));
