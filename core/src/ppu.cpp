@@ -10,6 +10,7 @@ const uint16_t kPpuStatus = 0x2002;
 const uint16_t kOamAddr = 0x2003;
 const uint16_t kOamData = 0x2004;
 const uint16_t kPpuScroll = 0x2005;
+const uint16_t kPpuAddr = 0x2006;
 
 const uint16_t kLastCycleInScanline = 340;
 const uint16_t kLastScanlineInFrame = 261;
@@ -27,7 +28,7 @@ Ppu::Ppu(IPpu::Registers *registers)
         : registers_(registers), scanline_(0), cycle_(0) {}
 
 uint8_t Ppu::read_byte(uint16_t addr) {
-    if (addr == 0x2002) {
+    if (addr == kPpuStatus) {
         const uint8_t status = registers_->status;
         clear_vblank_flag();
         return status;
@@ -66,6 +67,16 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
             registers_->temp_vram_addr &= 0b1111'1111'1110'0000;
             registers_->temp_vram_addr |= x_scroll;
             registers_->fine_x_scroll = (byte & 7);
+            registers_->write_toggle = true;
+        }
+    } else if (addr == kPpuAddr) {
+        if (registers_->write_toggle) { // Second write, lower address byte
+            registers_->temp_vram_addr |= byte;
+            registers_->vram_addr = registers_->temp_vram_addr;
+            registers_->write_toggle = false;
+        } else { // First write, upper address byte
+            uint16_t upper_addr_byte = byte;
+            registers_->temp_vram_addr = (upper_addr_byte << 8);
             registers_->write_toggle = true;
         }
     } else {

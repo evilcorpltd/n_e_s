@@ -180,4 +180,35 @@ TEST_F(PpuTest, write_ppu_scroll_two_times) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(PpuTest, write_ppu_scroll_nametable_bits_not_overwritten) {
+    expected.ctrl = 0b0000'0011;
+    expected.temp_vram_addr = 0b00'1100'0001'1111;
+    expected.write_toggle = true;
+
+    ppu->write_byte(0x2000, 0b0000'0011);
+    ppu->write_byte(0x2005, 0b1111'1000);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, write_ppu_addr_one_time) {
+    expected.temp_vram_addr = 0b0010'1101'0000'0000;
+    expected.write_toggle = true;
+
+    ppu->write_byte(0x2006, 0b0010'1101);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, write_ppu_addr_two_times) {
+    expected.temp_vram_addr = 0b0010'1101'0110'0001;
+    expected.vram_addr = expected.temp_vram_addr;
+    expected.write_toggle = false;
+
+    ppu->write_byte(0x2006, 0b0010'1101);
+    ppu->write_byte(0x2006, 0b0110'0001);
+
+    EXPECT_EQ(expected, registers);
+}
+
 } // namespace
