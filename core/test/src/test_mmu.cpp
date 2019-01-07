@@ -12,9 +12,7 @@ using namespace n_e_s::core::test;
 namespace {
 
 std::vector<uint16_t> get_addr_list() {
-    return {0x0000,
-            0x1000,
-            0x4000};
+    return {0x0000, 0x1000, 0x4000};
 }
 
 class MmuTest : public ::testing::Test {

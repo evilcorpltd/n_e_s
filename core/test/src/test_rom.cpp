@@ -10,8 +10,7 @@ using namespace n_e_s::core;
 
 namespace {
 
-std::string ines_header_bytes(
-        const uint8_t mapper,
+std::string ines_header_bytes(const uint8_t mapper,
         const uint8_t prg_rom_size,
         const uint8_t chr_rom_size,
         const uint8_t prg_ram_size) {
@@ -31,9 +30,7 @@ std::string ines_header_bytes(
     return bytes;
 }
 
-std::string nrom_bytes(
-        const uint8_t prg_rom_size,
-        const uint8_t chr_rom_size) {
+std::string nrom_bytes(const uint8_t prg_rom_size, const uint8_t chr_rom_size) {
     std::string bytes{ines_header_bytes(0, prg_rom_size, chr_rom_size, 0)};
 
     bytes.append(prg_rom_size * 16 * 1024, 0);
