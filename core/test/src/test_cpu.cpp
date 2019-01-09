@@ -906,6 +906,28 @@ TEST_F(CpuTest, tya_clears_z_flag) {
     move_test_clears_z(&expected.a, &expected.y, &registers.y);
 }
 
+// TAX
+TEST_F(CpuTest, tax) {
+    stage_instruction(TAX);
+    move_test(&expected.x, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tax_sets_n_flag) {
+    stage_instruction(TAX);
+    move_test_sets_n(&expected.x, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tax_clears_n_flag) {
+    stage_instruction(TAX);
+    move_test_clears_n(&expected.x, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tax_sets_z_flag) {
+    stage_instruction(TAX);
+    move_test_sets_z(&expected.x, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tax_clears_z_flag) {
+    stage_instruction(TAX);
+    move_test_clears_z(&expected.x, &expected.a, &registers.a);
+}
+
 // TAY
 TEST_F(CpuTest, tay) {
     stage_instruction(TAY);
