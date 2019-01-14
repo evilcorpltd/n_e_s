@@ -146,11 +146,13 @@ bool Ppu::is_rendering_active() const {
 }
 
 uint8_t Ppu::get_vram_address_increment() const {
+    uint8_t addr_increment = 1;
+
     if (registers_->ctrl & (1 << 2)) {
-        return 32;
-    } else {
-        return 1;
+        addr_increment = 32;
     }
+
+    return addr_increment;
 }
 
 void Ppu::execute_pre_render_scanline() {

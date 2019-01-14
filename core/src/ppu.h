@@ -28,7 +28,7 @@ private:
     // we let it fill the whole address space which the PPU has. This should be
     // changed once we have support for letting the cartridge map stuff in this
     // address space.
-    constexpr static uint16_t VRAM_SIZE{6 * 1024}; 
+    constexpr static uint16_t VRAM_SIZE{6 * 1024};
     uint8_t ppu_vram_[VRAM_SIZE]{};
 
     // Updates cycle and scanline counters

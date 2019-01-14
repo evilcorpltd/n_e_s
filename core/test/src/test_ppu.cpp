@@ -220,7 +220,7 @@ TEST_F(PpuTest, increment_vram_addr_by_1_after_writing) {
 }
 
 TEST_F(PpuTest, increment_vram_addr_by_32_after_writing) {
-    registers.ctrl = expected.ctrl = 0x04; 
+    registers.ctrl = expected.ctrl = 0x04;
     expected.vram_addr = 0x20;
 
     ppu->write_byte(0x2007, 0x05);
