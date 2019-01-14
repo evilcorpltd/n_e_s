@@ -4,7 +4,6 @@
 #include "mock_mmu.h"
 
 #include <gtest/gtest.h>
-#include <bitset>
 #include <ostream>
 
 using namespace n_e_s::core;
@@ -26,7 +25,16 @@ static void PrintTo(const ICpu::Registers &r, std::ostream *os) {
     *os << " A: " << hex_out_s(r.a);
     *os << " X: " << hex_out_s(r.x);
     *os << " Y: " << hex_out_s(r.y);
-    *os << " P: 0b" << std::bitset<8>(r.p) << std::endl;
+    *os << " P: ";
+    *os << (r.p & N_FLAG ? "N" : "-");
+    *os << (r.p & V_FLAG ? "V" : "-");
+    *os << "-";
+    *os << (r.p & B_FLAG ? "B" : "-");
+    *os << (r.p & D_FLAG ? "D" : "-");
+    *os << (r.p & I_FLAG ? "I" : "-");
+    *os << (r.p & Z_FLAG ? "Z" : "-");
+    *os << (r.p & C_FLAG ? "C" : "-");
+    *os << std::endl;
 }
 
 } // namespace n_e_s::core
@@ -904,6 +912,28 @@ TEST_F(CpuTest, tya_sets_z_flag) {
 TEST_F(CpuTest, tya_clears_z_flag) {
     stage_instruction(TYA);
     move_test_clears_z(&expected.a, &expected.y, &registers.y);
+}
+
+// TAX
+TEST_F(CpuTest, tax) {
+    stage_instruction(TAX);
+    move_test(&expected.x, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tax_sets_n_flag) {
+    stage_instruction(TAX);
+    move_test_sets_n(&expected.x, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tax_clears_n_flag) {
+    stage_instruction(TAX);
+    move_test_clears_n(&expected.x, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tax_sets_z_flag) {
+    stage_instruction(TAX);
+    move_test_sets_z(&expected.x, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tax_clears_z_flag) {
+    stage_instruction(TAX);
+    move_test_clears_z(&expected.x, &expected.a, &registers.a);
 }
 
 // TAY
