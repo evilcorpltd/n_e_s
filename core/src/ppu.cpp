@@ -11,6 +11,7 @@ const uint16_t kOamAddr = 0x2003;
 const uint16_t kOamData = 0x2004;
 const uint16_t kPpuScroll = 0x2005;
 const uint16_t kPpuAddr = 0x2006;
+const uint16_t kPpuData = 0x2007;
 
 const uint16_t kLastCycleInScanline = 340;
 const uint16_t kLastScanlineInFrame = 261;
@@ -79,10 +80,17 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
             registers_->temp_vram_addr = (upper_addr_byte << 8);
             registers_->write_toggle = true;
         }
+    } else if (addr == kPpuData) {
+        if (registers_->vram_addr < VRAM_SIZE) {
+            ppu_vram_[registers_->vram_addr] = byte;
+            registers_->vram_addr += get_vram_address_increment();
+        } else {
+            throw InvalidAddress(registers_->vram_addr);
+        }
     } else {
         throw InvalidAddress(addr);
     }
-}
+} // namespace n_e_s::core
 
 void Ppu::execute() {
     if (is_pre_render_scanline()) {
@@ -135,6 +143,14 @@ bool Ppu::is_rendering_enabled() const {
 bool Ppu::is_rendering_active() const {
     return is_rendering_enabled() &&
            (is_pre_render_scanline() || is_visible_scanline());
+}
+
+uint8_t Ppu::get_vram_address_increment() const {
+    if (registers_->ctrl & (1 << 2)) {
+        return 32;
+    } else {
+        return 1;
+    }
 }
 
 void Ppu::execute_pre_render_scanline() {

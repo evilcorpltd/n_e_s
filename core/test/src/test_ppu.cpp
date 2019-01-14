@@ -211,4 +211,27 @@ TEST_F(PpuTest, write_ppu_addr_two_times) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(PpuTest, increment_vram_addr_by_1_after_writing) {
+    expected.vram_addr = 0x01;
+
+    ppu->write_byte(0x2007, 0x05);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, increment_vram_addr_by_32_after_writing) {
+    registers.ctrl = expected.ctrl = 0x04; 
+    expected.vram_addr = 0x20;
+
+    ppu->write_byte(0x2007, 0x05);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, throw_if_ppu_address_is_out_of_range) {
+    registers.vram_addr = 0x4001;
+
+    EXPECT_THROW(ppu->write_byte(0x2007, 0x05), InvalidAddress);
+}
+
 } // namespace

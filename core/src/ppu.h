@@ -21,7 +21,15 @@ private:
     uint16_t cycle_;
 
     // Object Atribute Memory
-    uint8_t oam_data_[256]{};
+    constexpr static uint16_t OAM_SIZE{256};
+    uint8_t oam_data_[OAM_SIZE]{};
+
+    // PPU vram. The size of this memory bank shall only be 2kB, but for now
+    // we let it fill the whole address space which the PPU has. This should be
+    // changed once we have support for letting the cartridge map stuff in this
+    // address space.
+    constexpr static uint16_t VRAM_SIZE{6 * 1024}; 
+    uint8_t ppu_vram_[VRAM_SIZE]{};
 
     // Updates cycle and scanline counters
     void update_counters();
@@ -37,6 +45,11 @@ private:
     // Rendering is active if rendering is enabled and the PPU is currently
     // in pre render scanline or a visible scanline.
     bool is_rendering_active() const;
+
+    // Gets how much the vram address should be incremented after read or write
+    // has been done. Returns 1 if bit 2 in the ctrl register is not set and 32
+    // if the bit is set.
+    uint8_t get_vram_address_increment() const;
 
     void execute_pre_render_scanline();
     void execute_visible_scanline();
