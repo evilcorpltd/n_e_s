@@ -57,20 +57,23 @@ std::unique_ptr<IRom> RomFactory::from_bytes(std::istream &bytestream) {
     uint8_t mapper = (h.flags_6 & 0xF0) >> 4;
     mapper |= h.flags_7 & 0xF0;
 
+    const uint32_t prg_rom_byte_count = h.prg_rom_size * 16 * 1024;
+    const uint32_t chr_rom_byte_count = h.chr_rom_size * 8 * 1024;
+
     const uint32_t expected_rom_size = sizeof(INesHeader) +
-                                       h.prg_rom_size * 16 * 1024 +
-                                       h.chr_rom_size * 8 * 1024;
+                                       prg_rom_byte_count +
+                                       chr_rom_byte_count;
     if (bytes.size() != expected_rom_size) {
         throw std::invalid_argument("Unexpected rom size");
     }
 
-    std::vector<uint8_t> prg_rom(bytes.begin() + 16,
-            bytes.begin() + 16 + h.prg_rom_size * 16 * 1024);
+    std::vector<uint8_t> prg_rom(bytes.begin() + sizeof(INesHeader),
+            bytes.begin() + sizeof(INesHeader) + prg_rom_byte_count);
 
     std::vector<uint8_t> chr_rom(
-            bytes.begin() + 16 + h.prg_rom_size * 16 * 1024,
-            bytes.begin() + 16 + h.prg_rom_size * 16 * 1024 +
-                    h.chr_rom_size * 8 * 1024);
+            bytes.begin() + sizeof(INesHeader) + prg_rom_byte_count,
+            bytes.begin() + sizeof(INesHeader) + prg_rom_byte_count +
+                    chr_rom_byte_count);
 
     if (mapper == 0) {
         return std::make_unique<Nrom>(h, prg_rom, chr_rom);
