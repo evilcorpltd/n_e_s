@@ -4,7 +4,6 @@
 #include "mock_mmu.h"
 
 #include <gtest/gtest.h>
-#include <bitset>
 #include <ostream>
 
 using namespace n_e_s::core;
@@ -26,7 +25,16 @@ static void PrintTo(const ICpu::Registers &r, std::ostream *os) {
     *os << " A: " << hex_out_s(r.a);
     *os << " X: " << hex_out_s(r.x);
     *os << " Y: " << hex_out_s(r.y);
-    *os << " P: 0b" << std::bitset<8>(r.p) << std::endl;
+    *os << " P: ";
+    *os << (r.p & N_FLAG ? "N" : "-");
+    *os << (r.p & V_FLAG ? "V" : "-");
+    *os << "-";
+    *os << (r.p & B_FLAG ? "B" : "-");
+    *os << (r.p & D_FLAG ? "D" : "-");
+    *os << (r.p & I_FLAG ? "I" : "-");
+    *os << (r.p & Z_FLAG ? "Z" : "-");
+    *os << (r.p & C_FLAG ? "C" : "-");
+    *os << std::endl;
 }
 
 } // namespace n_e_s::core
@@ -67,9 +75,20 @@ enum Opcode : uint8_t {
     TYA = 0x98,
     TXS = 0x9A,
     LDY_IMM = 0xA0,
+    LDX_IMM = 0xA2,
+    LDY_ZERO = 0xA4,
+    LDA_ZERO = 0xA5,
+    LDX_ZERO = 0xA6,
     TAY = 0xA8,
+    LDA_IMM = 0xA9,
     TAX = 0xAA,
+    LDY_ABS = 0xAC,
+    LDA_ABS = 0xAD,
+    LDX_ABS = 0xAE,
     BCS = 0xB0,
+    LDY_ZEROX = 0xB4,
+    LDA_ZEROX = 0xB5,
+    LDX_ZEROY = 0xB6,
     CLV = 0xB8,
     TSX = 0xBA,
     BNE = 0xD0,
@@ -164,6 +183,154 @@ public:
         registers.p |= Z_FLAG;
 
         step_execution(2);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void load_immediate_sets_reg(uint8_t *reg) {
+        *reg = 42;
+        ++expected.pc;
+
+        ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(*reg));
+
+        step_execution(2);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void load_immediate_sets_n_flag(uint8_t *reg) {
+        *reg = 128;
+        expected.p |= N_FLAG;
+        ++expected.pc;
+
+        ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(*reg));
+
+        step_execution(2);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void load_immediate_clears_n_flag(uint8_t *reg) {
+        registers.p |= N_FLAG;
+        *reg = 127;
+        ++expected.pc;
+
+        ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(*reg));
+
+        step_execution(2);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void load_immediate_sets_z_flag(uint8_t *reg) {
+        *reg = 0;
+        expected.p |= Z_FLAG;
+        ++expected.pc;
+
+        ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(*reg));
+
+        step_execution(2);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void load_immediate_clears_z_flag(uint8_t *reg) {
+        registers.p |= Z_FLAG;
+        *reg = 1;
+        ++expected.pc;
+
+        ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(*reg));
+
+        step_execution(2);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void load_absolute_sets_reg(uint8_t *reg) {
+        *reg = 0x42;
+        expected.pc += 2;
+
+        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x4567));
+        ON_CALL(mmu, read_byte(0x4567)).WillByDefault(Return(*reg));
+
+        step_execution(4);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void load_absolute_sets_n_flag(uint8_t *reg) {
+        *reg = 128;
+        expected.p |= N_FLAG;
+        expected.pc += 2;
+
+        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x4567));
+        ON_CALL(mmu, read_byte(0x4567)).WillByDefault(Return(*reg));
+
+        step_execution(4);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void load_absolute_clears_n_flag(uint8_t *reg) {
+        registers.p |= N_FLAG;
+        *reg = 127;
+        expected.pc += 2;
+
+        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x4567));
+        ON_CALL(mmu, read_byte(0x4567)).WillByDefault(Return(*reg));
+
+        step_execution(4);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void load_absolute_sets_z_flag(uint8_t *reg) {
+        *reg = 0;
+        expected.p |= Z_FLAG;
+        expected.pc += 2;
+
+        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x4567));
+        ON_CALL(mmu, read_byte(0x4567)).WillByDefault(Return(*reg));
+
+        step_execution(4);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void load_absolute_clears_z_flag(uint8_t *reg) {
+        registers.p |= Z_FLAG;
+        *reg = 1;
+        expected.pc += 2;
+
+        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x4567));
+        ON_CALL(mmu, read_byte(0x4567)).WillByDefault(Return(*reg));
+
+        step_execution(4);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void load_zeropage_sets_reg(uint8_t instruction, uint8_t *target_reg) {
+        registers.pc = expected.pc = 0x4321;
+
+        stage_instruction(instruction);
+
+        *target_reg = 0x42;
+        expected.pc += 1;
+
+        ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+        ON_CALL(mmu, read_byte(0x44)).WillByDefault(Return(0x42));
+
+        step_execution(3);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void load_zeropage_reg_sets_reg(uint8_t instruction,
+            uint8_t *target_reg,
+            uint8_t *index_reg,
+            uint8_t *expected_index_reg) {
+        registers.pc = expected.pc = 0x4321;
+        *index_reg = *expected_index_reg = 0xED;
+
+        stage_instruction(instruction);
+
+        *target_reg = 0x42;
+        expected.pc += 1;
+
+        ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+        ON_CALL(mmu, read_byte(static_cast<uint8_t>(0x44 + 0xED)))
+                .WillByDefault(Return(0x42));
+
+        step_execution(4);
         EXPECT_EQ(expected, registers);
     }
 
@@ -485,63 +652,163 @@ TEST_F(CpuTest, bcc_crossing_page_negative) {
     branch_test(0, -70, 4);
 }
 
-TEST_F(CpuTest, ldy_i_sets_y) {
-    stage_instruction(LDY_IMM);
-    expected.y = 42;
-    ++expected.pc;
-
-    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(expected.y));
-
-    step_execution(2);
-    EXPECT_EQ(expected, registers);
+// LDX Immediate mode
+TEST_F(CpuTest, ldx_i_sets_reg) {
+    stage_instruction(LDX_IMM);
+    load_immediate_sets_reg(&expected.x);
+}
+TEST_F(CpuTest, ldx_i_sets_n_flag) {
+    stage_instruction(LDX_IMM);
+    load_immediate_sets_n_flag(&expected.x);
+}
+TEST_F(CpuTest, ldx_i_clears_n_flag) {
+    stage_instruction(LDX_IMM);
+    load_immediate_clears_n_flag(&expected.x);
+}
+TEST_F(CpuTest, ldx_i_sets_z_flag) {
+    stage_instruction(LDX_IMM);
+    load_immediate_sets_z_flag(&expected.x);
+}
+TEST_F(CpuTest, ldx_i_clears_z_flag) {
+    stage_instruction(LDX_IMM);
+    load_immediate_clears_z_flag(&expected.x);
 }
 
+// LDY Immediate mode
+TEST_F(CpuTest, ldy_i_sets_reg) {
+    stage_instruction(LDY_IMM);
+    load_immediate_sets_reg(&expected.y);
+}
 TEST_F(CpuTest, ldy_i_sets_n_flag) {
     stage_instruction(LDY_IMM);
-    expected.y = 128;
-    expected.p |= N_FLAG;
-    ++expected.pc;
-
-    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(expected.y));
-
-    step_execution(2);
-    EXPECT_EQ(expected, registers);
+    load_immediate_sets_n_flag(&expected.y);
 }
-
 TEST_F(CpuTest, ldy_i_clears_n_flag) {
     stage_instruction(LDY_IMM);
-    registers.p |= N_FLAG;
-    expected.y = 127;
-    ++expected.pc;
-
-    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(expected.y));
-
-    step_execution(2);
-    EXPECT_EQ(expected, registers);
+    load_immediate_clears_n_flag(&expected.y);
 }
-
 TEST_F(CpuTest, ldy_i_sets_z_flag) {
     stage_instruction(LDY_IMM);
-    expected.y = 0;
-    expected.p |= Z_FLAG;
-    ++expected.pc;
-
-    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(expected.y));
-
-    step_execution(2);
-    EXPECT_EQ(expected, registers);
+    load_immediate_sets_z_flag(&expected.y);
 }
-
 TEST_F(CpuTest, ldy_i_clears_z_flag) {
     stage_instruction(LDY_IMM);
-    registers.p |= Z_FLAG;
-    expected.y = 1;
-    ++expected.pc;
+    load_immediate_clears_z_flag(&expected.y);
+}
 
-    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(expected.y));
+// LDA Immediate mode
+TEST_F(CpuTest, lda_i_sets_reg) {
+    stage_instruction(LDA_IMM);
+    load_immediate_sets_reg(&expected.a);
+}
+TEST_F(CpuTest, lda_i_sets_n_flag) {
+    stage_instruction(LDA_IMM);
+    load_immediate_sets_n_flag(&expected.a);
+}
+TEST_F(CpuTest, lda_i_clears_n_flag) {
+    stage_instruction(LDA_IMM);
+    load_immediate_clears_n_flag(&expected.a);
+}
+TEST_F(CpuTest, lda_i_sets_z_flag) {
+    stage_instruction(LDA_IMM);
+    load_immediate_sets_z_flag(&expected.a);
+}
+TEST_F(CpuTest, lda_i_clears_z_flag) {
+    stage_instruction(LDA_IMM);
+    load_immediate_clears_z_flag(&expected.a);
+}
 
-    step_execution(2);
-    EXPECT_EQ(expected, registers);
+// LDX Absolute mode
+TEST_F(CpuTest, ldx_abs_sets_reg) {
+    stage_instruction(LDX_ABS);
+    load_absolute_sets_reg(&expected.x);
+}
+TEST_F(CpuTest, ldx_abs_sets_n_flag) {
+    stage_instruction(LDX_ABS);
+    load_absolute_sets_n_flag(&expected.x);
+}
+TEST_F(CpuTest, ldx_abs_clears_n_flag) {
+    stage_instruction(LDX_ABS);
+    load_absolute_clears_n_flag(&expected.x);
+}
+TEST_F(CpuTest, ldx_abs_sets_z_flag) {
+    stage_instruction(LDX_ABS);
+    load_absolute_sets_z_flag(&expected.x);
+}
+TEST_F(CpuTest, ldx_abs_clears_z_flag) {
+    stage_instruction(LDX_ABS);
+    load_absolute_clears_z_flag(&expected.x);
+}
+
+// LDY Absolute mode
+TEST_F(CpuTest, ldy_abs_sets_reg) {
+    stage_instruction(LDY_ABS);
+    load_absolute_sets_reg(&expected.y);
+}
+TEST_F(CpuTest, ldy_abs_sets_n_flag) {
+    stage_instruction(LDY_ABS);
+    load_absolute_sets_n_flag(&expected.y);
+}
+TEST_F(CpuTest, ldy_abs_clears_n_flag) {
+    stage_instruction(LDY_ABS);
+    load_absolute_clears_n_flag(&expected.y);
+}
+TEST_F(CpuTest, ldy_abs_sets_z_flag) {
+    stage_instruction(LDY_ABS);
+    load_absolute_sets_z_flag(&expected.y);
+}
+TEST_F(CpuTest, ldy_abs_clears_z_flag) {
+    stage_instruction(LDY_ABS);
+    load_absolute_clears_z_flag(&expected.y);
+}
+
+// LDA Absolute mode
+TEST_F(CpuTest, lda_abs_sets_reg) {
+    stage_instruction(LDA_ABS);
+    load_absolute_sets_reg(&expected.a);
+}
+TEST_F(CpuTest, lda_abs_sets_n_flag) {
+    stage_instruction(LDA_ABS);
+    load_absolute_sets_n_flag(&expected.a);
+}
+TEST_F(CpuTest, lda_abs_clears_n_flag) {
+    stage_instruction(LDA_ABS);
+    load_absolute_clears_n_flag(&expected.a);
+}
+TEST_F(CpuTest, lda_abs_sets_z_flag) {
+    stage_instruction(LDA_ABS);
+    load_absolute_sets_z_flag(&expected.a);
+}
+TEST_F(CpuTest, lda_abs_clears_z_flag) {
+    stage_instruction(LDA_ABS);
+    load_absolute_clears_z_flag(&expected.a);
+}
+
+// LD Zeropage
+TEST_F(CpuTest, lda_zeropage_sets_reg) {
+    load_zeropage_sets_reg(LDA_ZERO, &expected.a);
+}
+TEST_F(CpuTest, ldx_zeropage_sets_reg) {
+    load_zeropage_sets_reg(LDX_ZERO, &expected.x);
+}
+TEST_F(CpuTest, ldy_zeropage_sets_reg) {
+    load_zeropage_sets_reg(LDY_ZERO, &expected.y);
+}
+
+// LD Zeropage X
+TEST_F(CpuTest, lda_zeropagex_sets_reg) {
+    load_zeropage_reg_sets_reg(
+            LDA_ZEROX, &expected.a, &registers.x, &expected.x);
+}
+TEST_F(CpuTest, ldy_zeropagex_sets_reg) {
+    load_zeropage_reg_sets_reg(
+            LDY_ZEROX, &expected.y, &registers.x, &expected.x);
+}
+
+// LD Zeropage Y
+TEST_F(CpuTest, ldx_zeropagey_sets_reg) {
+    load_zeropage_reg_sets_reg(
+            LDX_ZEROY, &expected.x, &registers.y, &expected.y);
 }
 
 TEST_F(CpuTest, bcs_branch_not_taken) {
@@ -904,6 +1171,28 @@ TEST_F(CpuTest, tya_sets_z_flag) {
 TEST_F(CpuTest, tya_clears_z_flag) {
     stage_instruction(TYA);
     move_test_clears_z(&expected.a, &expected.y, &registers.y);
+}
+
+// TAX
+TEST_F(CpuTest, tax) {
+    stage_instruction(TAX);
+    move_test(&expected.x, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tax_sets_n_flag) {
+    stage_instruction(TAX);
+    move_test_sets_n(&expected.x, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tax_clears_n_flag) {
+    stage_instruction(TAX);
+    move_test_clears_n(&expected.x, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tax_sets_z_flag) {
+    stage_instruction(TAX);
+    move_test_sets_z(&expected.x, &expected.a, &registers.a);
+}
+TEST_F(CpuTest, tax_clears_z_flag) {
+    stage_instruction(TAX);
+    move_test_clears_z(&expected.x, &expected.a, &registers.a);
 }
 
 // TAY
