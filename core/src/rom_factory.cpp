@@ -60,9 +60,8 @@ std::unique_ptr<IRom> RomFactory::from_bytes(std::istream &bytestream) {
     const uint32_t prg_rom_byte_count = h.prg_rom_size * 16 * 1024;
     const uint32_t chr_rom_byte_count = h.chr_rom_size * 8 * 1024;
 
-    const uint32_t expected_rom_size = sizeof(INesHeader) +
-                                       prg_rom_byte_count +
-                                       chr_rom_byte_count;
+    const uint32_t expected_rom_size =
+            sizeof(INesHeader) + prg_rom_byte_count + chr_rom_byte_count;
     if (bytes.size() != expected_rom_size) {
         throw std::invalid_argument("Unexpected rom size");
     }
