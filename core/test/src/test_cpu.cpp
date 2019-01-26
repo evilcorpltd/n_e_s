@@ -1287,7 +1287,7 @@ TEST_F(CpuTest, txa_clears_z_flag) {
 }
 
 // DEY
-TEST_F(CpuTest, dey_increments) {
+TEST_F(CpuTest, dey_decrements) {
     stage_instruction(DEY);
     registers.y = 3;
     expected.y = 2;
@@ -1335,7 +1335,7 @@ TEST_F(CpuTest, dey_clears_z_flag) {
 }
 
 // DEX
-TEST_F(CpuTest, dex_increments) {
+TEST_F(CpuTest, dex_decrements) {
     stage_instruction(DEX);
     registers.x = 3;
     expected.x = 2;
