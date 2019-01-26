@@ -18,9 +18,10 @@ public:
         uint8_t mask;
         uint8_t status;
         uint8_t oamaddr;
-        uint8_t oamdata;
-        uint8_t scroll;
-        uint8_t data;
+        uint8_t fine_x_scroll;
+        uint16_t vram_addr;
+        uint16_t temp_vram_addr;
+        bool write_toggle;
     };
 };
 

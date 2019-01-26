@@ -4,6 +4,15 @@
 
 namespace {
 
+const uint16_t kPpuCtrl = 0x2000;
+const uint16_t kPpuMask = 0x2001;
+const uint16_t kPpuStatus = 0x2002;
+const uint16_t kOamAddr = 0x2003;
+const uint16_t kOamData = 0x2004;
+const uint16_t kPpuScroll = 0x2005;
+const uint16_t kPpuAddr = 0x2006;
+const uint16_t kPpuData = 0x2007;
+
 const uint16_t kLastCycleInScanline = 340;
 const uint16_t kLastScanlineInFrame = 261;
 const uint16_t kPreRenderScanline = 261;
@@ -20,7 +29,7 @@ Ppu::Ppu(IPpu::Registers *registers)
         : registers_(registers), scanline_(0), cycle_(0) {}
 
 uint8_t Ppu::read_byte(uint16_t addr) {
-    if (addr == 0x2002) {
+    if (addr == kPpuStatus) {
         const uint8_t status = registers_->status;
         clear_vblank_flag();
         return status;
@@ -29,9 +38,59 @@ uint8_t Ppu::read_byte(uint16_t addr) {
     throw InvalidAddress(addr);
 }
 
-void Ppu::write_byte(uint16_t addr, uint8_t) {
-    throw InvalidAddress(addr);
-}
+void Ppu::write_byte(uint16_t addr, uint8_t byte) {
+    if (addr == kPpuCtrl) {
+        // When we have implemented NMI we should check if NMI is set to be
+        // enabled (bit 7). If this is the case and we currently are in
+        // vertical blanking a NMI shall be generated.
+        registers_->ctrl = byte;
+        uint16_t name_table_bits = (byte & 3);
+        registers_->temp_vram_addr &= 0b1111'0011'1111'1111;
+        registers_->temp_vram_addr |= (name_table_bits << 10);
+    } else if (addr == kPpuMask) {
+        registers_->mask = byte;
+    } else if (addr == kOamAddr) {
+        registers_->oamaddr = byte;
+    } else if (addr == kOamData) {
+        if (!is_rendering_active()) {
+            oam_data_[registers_->oamaddr++] = byte;
+        }
+    } else if (addr == kPpuScroll) {
+        if (registers_->write_toggle) { // Second write, Y scroll
+            uint16_t y_scroll = (byte >> 3);
+            uint16_t fine_y_scroll = (byte & 7);
+            registers_->temp_vram_addr &= 0b1000'1100'0001'1111;
+            registers_->temp_vram_addr |= (y_scroll << 5);
+            registers_->temp_vram_addr |= (fine_y_scroll << 12);
+            registers_->write_toggle = false;
+        } else { // First write, X Scroll
+            uint16_t x_scroll = (byte >> 3);
+            registers_->temp_vram_addr &= 0b1111'1111'1110'0000;
+            registers_->temp_vram_addr |= x_scroll;
+            registers_->fine_x_scroll = (byte & 7);
+            registers_->write_toggle = true;
+        }
+    } else if (addr == kPpuAddr) {
+        if (registers_->write_toggle) { // Second write, lower address byte
+            registers_->temp_vram_addr |= byte;
+            registers_->vram_addr = registers_->temp_vram_addr;
+            registers_->write_toggle = false;
+        } else { // First write, upper address byte
+            uint16_t upper_addr_byte = byte;
+            registers_->temp_vram_addr = (upper_addr_byte << 8);
+            registers_->write_toggle = true;
+        }
+    } else if (addr == kPpuData) {
+        if (registers_->vram_addr < VRAM_SIZE) {
+            ppu_vram_[registers_->vram_addr] = byte;
+            registers_->vram_addr += get_vram_address_increment();
+        } else {
+            throw InvalidAddress(registers_->vram_addr);
+        }
+    } else {
+        throw InvalidAddress(addr);
+    }
+} // namespace n_e_s::core
 
 void Ppu::execute() {
     if (is_pre_render_scanline()) {
@@ -75,6 +134,25 @@ bool Ppu::is_post_render_scanline() const {
 
 bool Ppu::is_vblank_scanline() const {
     return scanline_ >= kVBlankScanlineStart && scanline_ <= kVBlankScanlineEnd;
+}
+
+bool Ppu::is_rendering_enabled() const {
+    return (registers_->mask & (1 << 3)) || (registers_->mask & (1 << 4));
+}
+
+bool Ppu::is_rendering_active() const {
+    return is_rendering_enabled() &&
+           (is_pre_render_scanline() || is_visible_scanline());
+}
+
+uint8_t Ppu::get_vram_address_increment() const {
+    uint8_t addr_increment = 1;
+
+    if (registers_->ctrl & (1 << 2)) {
+        addr_increment = 32;
+    }
+
+    return addr_increment;
 }
 
 void Ppu::execute_pre_render_scanline() {
