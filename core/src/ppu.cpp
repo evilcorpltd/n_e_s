@@ -34,6 +34,9 @@ uint8_t Ppu::read_byte(uint16_t addr) {
         clear_vblank_flag();
         return status;
     }
+    else if (addr == kOamData) {
+        return oam_data_[registers_->oamaddr];
+    }
 
     throw InvalidAddress(addr);
 }
