@@ -212,6 +212,27 @@ void Mos6502::execute() {
                 set_negative(registers_->x);
             });
             return;
+        case Instruction::DEX:
+            pipeline_.push([=]() {
+                --registers_->x;
+                set_zero(registers_->x);
+                set_negative(registers_->x);
+            });
+            return;
+        case Instruction::INY:
+            pipeline_.push([=]() {
+                ++registers_->y;
+                set_zero(registers_->y);
+                set_negative(registers_->y);
+            });
+            return;
+        case Instruction::DEY:
+            pipeline_.push([=]() {
+                --registers_->y;
+                set_zero(registers_->y);
+                set_negative(registers_->y);
+            });
+            return;
         case Instruction::BEQ:
             pipeline_.push(branch_on([=]() { return registers_->p & Z_FLAG; }));
             return;
