@@ -45,6 +45,7 @@ enum class Instruction {
     CLD,
     NOP,
     INX,
+    INY,
     BEQ,
     SED,
     TYA,
@@ -52,6 +53,8 @@ enum class Instruction {
     TAX,
     TSX,
     TXA,
+    DEY,
+    DEX,
 };
 
 struct Opcode {
