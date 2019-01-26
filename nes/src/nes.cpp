@@ -4,9 +4,11 @@
 #include "core/icpu.h"
 #include "core/immu.h"
 #include "core/ippu.h"
+#include "core/irom.h"
 #include "core/membank_factory.h"
 #include "core/mmu_factory.h"
 #include "core/ppu_factory.h"
+#include "core/rom_factory.h"
 
 using namespace n_e_s::core;
 
@@ -32,6 +34,18 @@ public:
         cpu_->reset();
     }
 
+    void load_rom(const std::string &filepath) {
+        MemBankList membanks{MemBankFactory::create_nes_mem_banks(ppu_.get())};
+
+        std::unique_ptr<IRom> rom{RomFactory::from_file(filepath)};
+        membanks.push_back(std::move(rom));
+
+        mmu_ = MmuFactory::create(std::move(membanks));
+        cpu_ = CpuFactory::create(&cpu_registers_, mmu_.get());
+
+        reset();
+    }
+
 private:
     IPpu::Registers ppu_registers_{};
     std::unique_ptr<IPpu> ppu_;
@@ -54,6 +68,10 @@ void Nes::execute() {
 
 void Nes::reset() {
     impl_->reset();
+}
+
+void Nes::load_rom(const std::string &filepath) {
+    impl_->load_rom(filepath);
 }
 
 } // namespace n_e_s::nes

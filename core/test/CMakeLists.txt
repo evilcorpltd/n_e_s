@@ -26,6 +26,7 @@ add_executable(${PROJECT_NAME}
     src/test_invalid_address.cpp
     src/test_mmu.cpp
     src/test_ppu.cpp
+    src/test_rom.cpp
 )
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")

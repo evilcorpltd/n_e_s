@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 namespace n_e_s::nes {
 
@@ -11,6 +12,7 @@ public:
 
     void execute();
     void reset();
+    void load_rom(const std::string &filepath);
 
 private:
     class Impl;
