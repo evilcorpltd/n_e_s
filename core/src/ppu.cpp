@@ -29,13 +29,18 @@ Ppu::Ppu(IPpu::Registers *registers)
         : registers_(registers), scanline_(0), cycle_(0) {}
 
 uint8_t Ppu::read_byte(uint16_t addr) {
+    uint8_t byte = 0;
+
     if (addr == kPpuStatus) {
-        const uint8_t status = registers_->status;
+        byte = registers_->status;
         clear_vblank_flag();
-        return status;
+    } else if (addr == kOamData) {
+        byte = oam_data_[registers_->oamaddr];
+    } else {
+        throw InvalidAddress(addr);
     }
 
-    throw InvalidAddress(addr);
+    return byte;
 }
 
 void Ppu::write_byte(uint16_t addr, uint8_t byte) {

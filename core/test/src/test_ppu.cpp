@@ -159,6 +159,17 @@ TEST_F(PpuTest, write_to_oamdata_register_during_vertical_blanking) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(PpuTest, write_and_read_oamdata_register) {
+    registers.oamaddr = expected.oamaddr = 0x11;
+
+    ppu->write_byte(0x2004, 0x35);
+    ppu->write_byte(0x2003, 0x11);
+    const uint8_t byte = ppu->read_byte(0x2004);
+
+    EXPECT_EQ(expected, registers);
+    EXPECT_EQ(0x35, byte);
+}
+
 TEST_F(PpuTest, write_ppu_scroll_one_time) {
     expected.fine_x_scroll = 0b110;
     expected.temp_vram_addr = 0b0000'0000'0001'1101;
