@@ -73,6 +73,7 @@ matrix:
         - git diff --exit-code
 
 before_script:
+  - source flags.sh
   - mkdir _build && cd _build
   - eval "${MATRIX_EVAL}"
 
