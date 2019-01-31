@@ -59,6 +59,7 @@ enum Opcode : uint8_t {
     JMP = 0x4C,
     BVC = 0x50,
     CLI = 0x58,
+    RTS = 0x60,
     BVS = 0x70,
     SEI = 0x78,
     TXA = 0x8A,
@@ -594,6 +595,18 @@ TEST_F(CpuTest, cli) {
     registers.p |= I_FLAG;
 
     step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, rts) {
+    stage_instruction(RTS);
+    registers.sp = 0x0A;
+    expected.sp = 0x0C;
+    expected.pc = 0xDEAD + 1;
+
+    EXPECT_CALL(mmu, read_word(kStackOffset + 0x0B)).WillOnce(Return(0xDEAD));
+
+    step_execution(6);
     EXPECT_EQ(expected, registers);
 }
 
