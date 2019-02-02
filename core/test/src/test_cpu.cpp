@@ -59,6 +59,9 @@ enum Opcode : uint8_t {
     JMP = 0x4C,
     BVC = 0x50,
     CLI = 0x58,
+    ADC_ZERO = 0x65,
+    ADC_IMM = 0x69,
+    ADC_ABS = 0x6D,
     BVS = 0x70,
     SEI = 0x78,
     TXA = 0x8A,
@@ -587,6 +590,95 @@ TEST_F(CpuTest, bvc_negative_operand) {
     stage_instruction(BVC);
 
     branch_test(0, -128 + 10, 3);
+}
+
+TEST_F(CpuTest, adc_imm_no_carry_or_overflow) {
+    stage_instruction(ADC_IMM);
+
+    registers.a = 0x50;
+    registers.p = V_FLAG;
+    expected.a = 0x60;
+    ++expected.pc;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x10));
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, adc_imm_carry_but_no_overflow) {
+    stage_instruction(ADC_IMM);
+
+    registers.a = 0xD0;
+    registers.p = V_FLAG;
+    expected.p = C_FLAG;
+    expected.a = 0x20;
+    ++expected.pc;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x50));
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, adc_imm_no_carry_but_overflow) {
+    stage_instruction(ADC_IMM);
+
+    registers.a = 0x50;
+    expected.p = V_FLAG | N_FLAG;
+    expected.a = 0xA0;
+    ++expected.pc;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x50));
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, adc_imm_carry_and_overflow) {
+    stage_instruction(ADC_IMM);
+
+    registers.a = 0xD0;
+    expected.p = V_FLAG | C_FLAG;
+    expected.a = 0x60;
+    ++expected.pc;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x90));
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, adc_abs_no_carry_or_overflow) {
+    stage_instruction(ADC_ABS);
+
+    registers.a = 0x50;
+    registers.p = V_FLAG;
+    expected.a = 0x60;
+    expected.pc += 2;
+
+    ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x4567));
+    ON_CALL(mmu, read_byte(0x4567)).WillByDefault(Return(0x10));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, adc_zero_no_carry_or_overflow) {
+    registers.pc = expected.pc = 0x4321;
+
+    stage_instruction(ADC_ZERO);
+
+    registers.a = 0x50;
+    registers.p = V_FLAG;
+    expected.a = 0x60;
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x45));
+    ON_CALL(mmu, read_byte(0x45)).WillByDefault(Return(0x10));
+
+    step_execution(3);
+    EXPECT_EQ(expected, registers);
 }
 
 TEST_F(CpuTest, cli) {

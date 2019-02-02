@@ -62,9 +62,16 @@ private:
     // sets the N flag if bit 7 of the byte is set
     void set_negative(uint8_t byte);
 
+    // sets the V flag based on the original value in the register,
+    // the operand, and temporary resulting value.
+    void set_overflow(uint8_t reg_value,
+            uint8_t operand,
+            uint16_t resulting_value);
+
     // Returns an atom for the cpu pipeline for branching on a condition.
     std::function<void()> branch_on(const std::function<bool()> &condition);
 
+    Pipeline create_add_instruction(Opcode opcode);
     Pipeline create_store_instruction(Opcode opcode);
     Pipeline create_load_instruction(Opcode opcode);
     Pipeline create_zeropage_addressing_steps();

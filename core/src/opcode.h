@@ -29,6 +29,7 @@ enum class Instruction {
     JMP,
     BVC,
     CLI,
+    ADC,
     BVS,
     SEI,
     STY,

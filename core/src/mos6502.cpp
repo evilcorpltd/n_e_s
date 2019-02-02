@@ -131,6 +131,9 @@ void Mos6502::execute() {
         case Instruction::CLI:
             pipeline_.push([=]() { clear_flag(I_FLAG); });
             return;
+        case Instruction::ADC:
+            pipeline_.append(create_add_instruction(opcode));
+            return;
         case Instruction::BVS:
             pipeline_.push(branch_on([=]() { return registers_->p & V_FLAG; }));
             return;
@@ -288,6 +291,19 @@ void Mos6502::set_negative(uint8_t byte) {
     }
 }
 
+void Mos6502::set_overflow(uint8_t reg_value,
+        uint8_t operand,
+        uint16_t resulting_value) {
+    // See: http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
+    const bool overflow = ((reg_value ^ resulting_value) &
+                                  (operand ^ resulting_value) & 0x80) != 0;
+    if (overflow) {
+        set_flag(V_FLAG);
+    } else {
+        clear_flag(V_FLAG);
+    }
+}
+
 std::function<void()> Mos6502::branch_on(
         const std::function<bool()> &condition) {
     return [=]() {
@@ -308,6 +324,30 @@ std::function<void()> Mos6502::branch_on(
             }
         });
     };
+}
+
+Pipeline Mos6502::create_add_instruction(Opcode opcode) {
+    Pipeline result;
+    if (opcode.addressMode == AddressMode::Absolute) {
+        result.append(create_absolute_addressing_steps());
+    } else if (opcode.addressMode == AddressMode::Zeropage) {
+        result.append(create_zeropage_addressing_steps());
+    }
+
+    result.push([=]() {
+        const uint8_t a_before = registers_->a;
+        const uint8_t addend = mmu_->read_byte(effective_address_);
+        const uint8_t carry = registers_->p & C_FLAG ? 1u : 0u;
+        const uint16_t temp_result = registers_->a + addend + carry;
+        registers_->a = static_cast<uint8_t>(temp_result);
+
+        set_carry(temp_result > 0xFF);
+        set_zero(registers_->a);
+        set_negative(registers_->a);
+        set_overflow(a_before, addend, temp_result);
+    });
+
+    return result;
 }
 
 Pipeline Mos6502::create_store_instruction(Opcode opcode) {
