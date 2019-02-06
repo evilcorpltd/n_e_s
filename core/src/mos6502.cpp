@@ -93,6 +93,25 @@ void Mos6502::execute() {
             pipeline_.push(
                     branch_on([=]() { return !(registers_->p & N_FLAG); }));
             return;
+        case Instruction::BIT:
+            if (opcode.addressMode == AddressMode::Absolute) {
+                pipeline_.append(create_absolute_addressing_steps());
+            } else if (opcode.addressMode == AddressMode::Zeropage) {
+                pipeline_.append(create_zeropage_addressing_steps());
+            } else {
+                break;
+            }
+            pipeline_.push([=]() {
+                const uint8_t value = mmu_->read_byte(effective_address_);
+                set_zero(value & registers_->a);
+                set_negative(value);
+                if (value & (1u << 6)) {
+                    set_flag(V_FLAG);
+                } else {
+                    clear_flag(V_FLAG);
+                }
+            });
+            return;
         case Instruction::CLC:
             pipeline_.push([=]() { clear_flag(C_FLAG); });
             return;

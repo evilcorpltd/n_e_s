@@ -22,6 +22,7 @@ enum class Instruction {
     PHP,
     BPL,
     CLC,
+    BIT,
     BMI,
     SEC,
     LSR,

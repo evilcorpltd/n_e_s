@@ -51,6 +51,8 @@ enum Opcode : uint8_t {
     BRK = 0x00,
     PHP = 0x08,
     BPL = 0x10,
+    BIT_ZERO = 0x24,
+    BIT_ABS = 0x2C,
     CLC = 0x18,
     BMI = 0x30,
     SEC = 0x38,
@@ -437,6 +439,70 @@ TEST_F(CpuTest, bpl_negative_operand) {
     stage_instruction(BPL);
 
     branch_test(0, -128 + 5, 3);
+}
+
+TEST_F(CpuTest, bit_zero_sets_zero) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = expected.a = 0x00;
+
+    stage_instruction(BIT_ZERO);
+
+    expected.pc += 1;
+    expected.p = Z_FLAG;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+    ON_CALL(mmu, read_byte(0x44)).WillByDefault(Return(0x12));
+
+    step_execution(3);
+    EXPECT_EQ(expected, registers);
+}
+TEST_F(CpuTest, bit_zero_sets_negative) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = expected.a = 0x02;
+    registers.p = Z_FLAG;
+
+    stage_instruction(BIT_ZERO);
+
+    expected.pc += 1;
+    expected.p = N_FLAG;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+    ON_CALL(mmu, read_byte(0x44)).WillByDefault(Return(0xA3));
+
+    step_execution(3);
+    EXPECT_EQ(expected, registers);
+}
+TEST_F(CpuTest, bit_zero_sets_overflow) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = expected.a = 0x02;
+    registers.p = Z_FLAG;
+
+    stage_instruction(BIT_ZERO);
+
+    expected.pc += 1;
+    expected.p = V_FLAG;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+    ON_CALL(mmu, read_byte(0x44)).WillByDefault(Return(0x53));
+
+    step_execution(3);
+    EXPECT_EQ(expected, registers);
+}
+TEST_F(CpuTest, bit_abs_sets_negative_and_overflow) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = expected.a = 0x02;
+    registers.p = Z_FLAG;
+
+    stage_instruction(BIT_ABS);
+
+    expected.pc += 2;
+    expected.p = V_FLAG | N_FLAG;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x5678));
+    ON_CALL(mmu, read_byte(0x5678)).WillByDefault(Return(0xC3));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
 }
 
 TEST_F(CpuTest, clc) {
