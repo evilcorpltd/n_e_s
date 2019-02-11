@@ -23,6 +23,7 @@ enum class Instruction {
     BPL,
     CLC,
     BIT,
+    JSR,
     BMI,
     SEC,
     LSR,

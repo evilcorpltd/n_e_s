@@ -54,6 +54,7 @@ enum Opcode : uint8_t {
     BIT_ZERO = 0x24,
     BIT_ABS = 0x2C,
     CLC = 0x18,
+    JSR = 0x20,
     BMI = 0x30,
     SEC = 0x38,
     LSR_ACC = 0x4A,
@@ -515,6 +516,23 @@ TEST_F(CpuTest, clc) {
     expected.p &= ~C_FLAG;
 
     step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, jsr) {
+    stage_instruction(JSR);
+    expected.pc = 0xDEAD;
+
+    const uint8_t expected_pc_stack_addr = expected.sp - 1;
+    expected.sp -= 2; // 1 word
+
+    EXPECT_CALL(mmu, read_word(registers.pc + 1)).WillOnce(Return(0xDEAD));
+
+    EXPECT_CALL(mmu,
+            write_word(
+                    kStackOffset + expected_pc_stack_addr, registers.pc + 2));
+
+    step_execution(6);
     EXPECT_EQ(expected, registers);
 }
 

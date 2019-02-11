@@ -12,6 +12,8 @@ Opcode decode(const uint8_t op) {
         return {Instruction::BPL, AddressMode::Relative};
     case 0x18:
         return {Instruction::CLC, AddressMode::Implied};
+    case 0x20:
+        return {Instruction::JSR, AddressMode::Absolute};
     case 0x24:
         return {Instruction::BIT, AddressMode::Zeropage};
     case 0x2C:

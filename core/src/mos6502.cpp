@@ -115,6 +115,14 @@ void Mos6502::execute() {
         case Instruction::CLC:
             pipeline_.push([=]() { clear_flag(C_FLAG); });
             return;
+        case Instruction::JSR:
+            pipeline_.append(create_absolute_addressing_steps());
+            pipeline_.push([=]() {
+                /* Do nothing. */
+            });
+            pipeline_.push([=]() { stack_.push_word(--registers_->pc); });
+            pipeline_.push([=]() { registers_->pc = effective_address_; });
+            return;
         case Instruction::BMI:
             pipeline_.push(branch_on([=]() { return registers_->p & N_FLAG; }));
             return;
