@@ -161,6 +161,19 @@ void Mos6502::execute() {
         case Instruction::ADC:
             pipeline_.append(create_add_instruction(opcode));
             return;
+        case Instruction::RTS:
+            pipeline_.push([=]() {
+                /* Do nothing. */
+            });
+            pipeline_.push([=]() {
+                /* Do nothing. */
+            });
+            pipeline_.push([=]() {
+                /* Do nothing. */
+            });
+            pipeline_.push([=]() { registers_->pc = stack_.pop_word(); });
+            pipeline_.push([=]() { ++registers_->pc; });
+            return;
         case Instruction::BVS:
             pipeline_.push(branch_on([=]() { return registers_->p & V_FLAG; }));
             return;

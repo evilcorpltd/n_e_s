@@ -32,6 +32,7 @@ enum class Instruction {
     BVC,
     CLI,
     ADC,
+    RTS,
     BVS,
     SEI,
     STY,
