@@ -337,7 +337,7 @@ public:
         expected.pc += 1;
 
         ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
-        ON_CALL(mmu, read_byte(static_cast<uint8_t>(0x44 + 0xED)))
+        ON_CALL(mmu, read_byte((0x44 + 0xED) % 0x100))
                 .WillByDefault(Return(0x42));
 
         step_execution(4);
@@ -1249,7 +1249,7 @@ TEST_F(CpuTest, sta_zero_x_indexed) {
     expected.pc += 1;
 
     ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
-    EXPECT_CALL(mmu, write_byte(static_cast<uint8_t>(0x44 + 0xED), 0x07));
+    EXPECT_CALL(mmu, write_byte((0x44 + 0xED) % 0x100, 0x07));
 
     step_execution(4);
 
@@ -1298,7 +1298,7 @@ TEST_F(CpuTest, stx_zero_y_indexed) {
     expected.pc += 1;
 
     ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
-    EXPECT_CALL(mmu, write_byte(static_cast<uint8_t>(0x44 + 0xED), 0x07));
+    EXPECT_CALL(mmu, write_byte((0x44 + 0xED) % 0x100, 0x07));
 
     step_execution(4);
 
@@ -1358,7 +1358,7 @@ TEST_F(CpuTest, sty_zero_x_indexed) {
     expected.pc += 1;
 
     ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
-    EXPECT_CALL(mmu, write_byte(static_cast<uint8_t>(0x44 + 0xED), 0x07));
+    EXPECT_CALL(mmu, write_byte((0x44 + 0xED) % 0x100, 0x07));
 
     step_execution(4);
 
