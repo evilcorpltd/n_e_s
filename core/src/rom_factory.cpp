@@ -18,7 +18,8 @@ size_t streamsize(std::istream &stream) {
     std::istream::pos_type size = stream.tellg();
     stream.seekg(0, std::ios::beg);
 
-    assert(size <= std::numeric_limits<std::size_t>::max());
+    assert(size >= 0);
+    assert(static_cast<uint64_t>(size) <= std::numeric_limits<size_t>::max());
     return static_cast<size_t>(size);
 }
 
