@@ -254,6 +254,10 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::CLD:
         result.push([=]() { clear_flag(D_FLAG); });
         break;
+    case Instruction::CPX:
+    case Instruction::CPY:
+        result.append(create_compare_instruction(opcode));
+        break;
     case Instruction::NOP:
         result.push([]() { /* Do nothing. */ });
         break;
@@ -462,6 +466,35 @@ Pipeline Mos6502::create_load_instruction(Opcode opcode) {
         set_negative(*reg);
     });
 
+    return result;
+}
+
+Pipeline Mos6502::create_compare_instruction(Opcode opcode) {
+    uint8_t *reg{};
+    if (opcode.instruction == Instruction::CPX) {
+        reg = &registers_->x;
+    } else if (opcode.instruction == Instruction::CPY) {
+        reg = &registers_->y;
+    }
+
+    Pipeline result;
+    if (opcode.addressMode == AddressMode::Immediate) {
+        // Empty
+    } else if (opcode.addressMode == AddressMode::Absolute) {
+        result.append(create_absolute_addressing_steps());
+    } else if (opcode.addressMode == AddressMode::Zeropage) {
+        result.append(create_zeropage_addressing_steps());
+    }
+
+    result.push([=]() {
+        const uint8_t value = mmu_->read_byte(effective_address_);
+        // Compare instructions are not affected be the
+        // carry flag when executing the subtraction.
+        const int16_t temp_result = *reg - value;
+        set_carry(temp_result <= 0);
+        set_zero(static_cast<uint8_t>(temp_result));
+        set_negative(static_cast<uint8_t>(temp_result));
+    });
     return result;
 }
 

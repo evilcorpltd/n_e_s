@@ -74,6 +74,7 @@ private:
     Pipeline create_add_instruction(Opcode opcode);
     Pipeline create_store_instruction(Opcode opcode);
     Pipeline create_load_instruction(Opcode opcode);
+    Pipeline create_compare_instruction(Opcode opcode);
     Pipeline create_zeropage_addressing_steps();
     Pipeline create_zeropage_indexed_addressing_steps(const uint8_t *index_reg);
     Pipeline create_absolute_addressing_steps();

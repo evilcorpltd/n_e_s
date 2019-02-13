@@ -108,16 +108,28 @@ Opcode decode(const uint8_t op) {
         return {Instruction::TSX, AddressMode::Implied};
     case 0xC8:
         return {Instruction::INY, AddressMode::Implied};
+    case 0xC0:
+        return {Instruction::CPY, AddressMode::Immediate};
+    case 0xC4:
+        return {Instruction::CPY, AddressMode::Zeropage};
     case 0xCA:
         return {Instruction::DEX, AddressMode::Implied};
+    case 0xCC:
+        return {Instruction::CPY, AddressMode::Absolute};
     case 0xD0:
         return {Instruction::BNE, AddressMode::Relative};
     case 0xD8:
         return {Instruction::CLD, AddressMode::Implied};
-    case 0xEA:
-        return {Instruction::NOP, AddressMode::Implied};
+    case 0xE0:
+        return {Instruction::CPX, AddressMode::Immediate};
+    case 0xE4:
+        return {Instruction::CPX, AddressMode::Zeropage};
     case 0xE8:
         return {Instruction::INX, AddressMode::Implied};
+    case 0xEA:
+        return {Instruction::NOP, AddressMode::Implied};
+    case 0xEC:
+        return {Instruction::CPX, AddressMode::Absolute};
     case 0xF0:
         return {Instruction::BEQ, AddressMode::Relative};
     case 0xF8:
