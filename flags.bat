@@ -1,0 +1,1 @@
+set CXXFLAGS="%CXXFLAGS% /WX"

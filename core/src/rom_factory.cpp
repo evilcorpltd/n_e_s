@@ -2,6 +2,7 @@
 
 #include "rom/nrom.h"
 
+#include <cassert>
 #include <cstring>
 #include <fstream>
 #include <sstream>
@@ -12,11 +13,14 @@ static_assert(sizeof(n_e_s::core::INesHeader) == 16);
 
 namespace {
 
-std::istream::pos_type streamsize(std::istream &stream) {
+size_t streamsize(std::istream &stream) {
     stream.seekg(0, std::ios::end);
     std::istream::pos_type size = stream.tellg();
     stream.seekg(0, std::ios::beg);
-    return size;
+
+    assert(size >= 0);
+    assert(static_cast<uint64_t>(size) <= std::numeric_limits<size_t>::max());
+    return static_cast<size_t>(size);
 }
 
 } // namespace

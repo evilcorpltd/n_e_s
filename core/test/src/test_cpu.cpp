@@ -41,6 +41,10 @@ static void PrintTo(const ICpu::Registers &r, std::ostream *os) {
 
 namespace {
 
+constexpr uint8_t u16_to_u8(uint16_t u16) {
+    return u16 % 0x100;
+}
+
 const uint16_t kStackOffset = 0x0100;
 const uint16_t kResetAddress = 0xFFFC;
 const uint16_t kBrkAddress = 0xFFFE;
@@ -337,7 +341,7 @@ public:
         expected.pc += 1;
 
         ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
-        ON_CALL(mmu, read_byte(static_cast<uint8_t>(0x44 + 0xED)))
+        ON_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED)))
                 .WillByDefault(Return(0x42));
 
         step_execution(4);
@@ -1249,7 +1253,7 @@ TEST_F(CpuTest, sta_zero_x_indexed) {
     expected.pc += 1;
 
     ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
-    EXPECT_CALL(mmu, write_byte(static_cast<uint8_t>(0x44 + 0xED), 0x07));
+    EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x07));
 
     step_execution(4);
 
@@ -1298,7 +1302,7 @@ TEST_F(CpuTest, stx_zero_y_indexed) {
     expected.pc += 1;
 
     ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
-    EXPECT_CALL(mmu, write_byte(static_cast<uint8_t>(0x44 + 0xED), 0x07));
+    EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x07));
 
     step_execution(4);
 
@@ -1358,7 +1362,7 @@ TEST_F(CpuTest, sty_zero_x_indexed) {
     expected.pc += 1;
 
     ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
-    EXPECT_CALL(mmu, write_byte(static_cast<uint8_t>(0x44 + 0xED), 0x07));
+    EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x07));
 
     step_execution(4);
 
