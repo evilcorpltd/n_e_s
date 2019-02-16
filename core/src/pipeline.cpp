@@ -2,7 +2,14 @@
 
 namespace n_e_s::core {
 
-void Pipeline::push(StepT step) {
+void Pipeline::push(const StepT &step) {
+    steps_.emplace_back([=]() {
+        step();
+        return true;
+    });
+}
+
+void Pipeline::push_conditional(ConditionalStepT step) {
     steps_.push_back(std::move(step));
 }
 
@@ -12,18 +19,19 @@ void Pipeline::append(const Pipeline &pipeline) {
             std::back_inserter(steps_));
 }
 
-bool Pipeline::empty() const {
-    return steps_.empty();
+bool Pipeline::done() const {
+    return steps_.empty() || !continue_;
 }
 
 void Pipeline::clear() {
     while (!steps_.empty()) {
         steps_.pop_front();
     }
+    continue_ = true;
 }
 
 void Pipeline::execute_step() {
-    steps_.front()();
+    continue_ = steps_.front()();
     steps_.pop_front();
 }
 

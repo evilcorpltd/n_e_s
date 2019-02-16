@@ -65,7 +65,9 @@ Mos6502::Mos6502(Registers *const registers, IMmu *const mmu)
 
 // Most instruction timings are from https://robinli.eu/f/6502_cpu.txt
 void Mos6502::execute() {
-    if (pipeline_.empty()) {
+    if (pipeline_.done()) {
+        pipeline_.clear();
+
         const uint8_t raw_opcode{mmu_->read_byte(registers_->pc++)};
         const Opcode opcode = decode(raw_opcode);
 
@@ -90,8 +92,8 @@ void Mos6502::execute() {
             pipeline_.push([=]() { stack_.push_byte(registers_->p); });
             return;
         case Instruction::BPL:
-            pipeline_.push(
-                    branch_on([=]() { return !(registers_->p & N_FLAG); }));
+            pipeline_.append(create_branch_instruction(
+                    [=]() { return !(registers_->p & N_FLAG); }));
             return;
         case Instruction::BIT:
             if (opcode.addressMode == AddressMode::Absolute) {
@@ -124,7 +126,8 @@ void Mos6502::execute() {
             pipeline_.push([=]() { registers_->pc = effective_address_; });
             return;
         case Instruction::BMI:
-            pipeline_.push(branch_on([=]() { return registers_->p & N_FLAG; }));
+            pipeline_.append(create_branch_instruction(
+                    [=]() { return registers_->p & N_FLAG; }));
             return;
         case Instruction::SEC:
             pipeline_.push([=]() { set_flag(C_FLAG); });
@@ -152,8 +155,8 @@ void Mos6502::execute() {
             });
             return;
         case Instruction::BVC:
-            pipeline_.push(
-                    branch_on([=]() { return !(registers_->p & V_FLAG); }));
+            pipeline_.append(create_branch_instruction(
+                    [=]() { return !(registers_->p & V_FLAG); }));
             return;
         case Instruction::CLI:
             pipeline_.push([=]() { clear_flag(I_FLAG); });
@@ -175,7 +178,8 @@ void Mos6502::execute() {
             pipeline_.push([=]() { ++registers_->pc; });
             return;
         case Instruction::BVS:
-            pipeline_.push(branch_on([=]() { return registers_->p & V_FLAG; }));
+            pipeline_.append(create_branch_instruction(
+                    [=]() { return registers_->p & V_FLAG; }));
             return;
         case Instruction::SEI:
             pipeline_.push([=]() { set_flag(I_FLAG); });
@@ -224,8 +228,8 @@ void Mos6502::execute() {
             });
             return;
         case Instruction::BCC:
-            pipeline_.push(
-                    branch_on([=]() { return !(registers_->p & C_FLAG); }));
+            pipeline_.append(create_branch_instruction(
+                    [=]() { return !(registers_->p & C_FLAG); }));
             return;
         case Instruction::LDA:
         case Instruction::LDX:
@@ -233,14 +237,15 @@ void Mos6502::execute() {
             pipeline_.append(create_load_instruction(opcode));
             return;
         case Instruction::BCS:
-            pipeline_.push(branch_on([=]() { return registers_->p & C_FLAG; }));
+            pipeline_.append(create_branch_instruction(
+                    [=]() { return registers_->p & C_FLAG; }));
             return;
         case Instruction::CLV:
             pipeline_.push([=]() { clear_flag(V_FLAG); });
             return;
         case Instruction::BNE:
-            pipeline_.push(
-                    branch_on([=]() { return !(registers_->p & Z_FLAG); }));
+            pipeline_.append(create_branch_instruction(
+                    [=]() { return !(registers_->p & Z_FLAG); }));
             return;
         case Instruction::CLD:
             pipeline_.push([=]() { clear_flag(D_FLAG); });
@@ -277,7 +282,8 @@ void Mos6502::execute() {
             });
             return;
         case Instruction::BEQ:
-            pipeline_.push(branch_on([=]() { return registers_->p & Z_FLAG; }));
+            pipeline_.append(create_branch_instruction(
+                    [=]() { return registers_->p & Z_FLAG; }));
             return;
         case Instruction::SED:
             pipeline_.push([=]() { set_flag(D_FLAG); });
@@ -344,26 +350,34 @@ void Mos6502::set_overflow(uint8_t reg_value,
     }
 }
 
-std::function<void()> Mos6502::branch_on(
+Pipeline Mos6502::create_branch_instruction(
         const std::function<bool()> &condition) {
-    return [=]() {
+    Pipeline result;
+
+    result.push_conditional([=]() {
         if (!condition()) {
             ++registers_->pc;
-            return;
+            return false;
         }
+        return true;
+    });
 
-        pipeline_.push([=]() {
-            const uint8_t offset = mmu_->read_byte(registers_->pc++);
-            const uint16_t page = high_byte(registers_->pc);
+    result.push_conditional([=]() {
+        const uint8_t offset = mmu_->read_byte(registers_->pc++);
+        const uint16_t page = high_byte(registers_->pc);
 
-            registers_->pc += to_signed(offset);
+        registers_->pc += to_signed(offset);
 
-            if (page != high_byte(registers_->pc)) {
-                // We crossed a page boundary so we spend 1 more cycle.
-                pipeline_.push([=]() { /* Do nothing. */ });
-            }
-        });
-    };
+        if (page != high_byte(registers_->pc)) {
+            return true;
+            // We crossed a page boundary so we spend 1 more cycle.
+        }
+        return false;
+    });
+
+    result.push([=]() { /* Do nothing. */ });
+
+    return result;
 }
 
 Pipeline Mos6502::create_add_instruction(Opcode opcode) {
