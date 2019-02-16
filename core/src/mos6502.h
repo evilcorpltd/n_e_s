@@ -68,6 +68,8 @@ private:
             uint8_t operand,
             uint16_t resulting_value);
 
+    Pipeline parse_next_instruction();
+
     Pipeline create_branch_instruction(const std::function<bool()> &condition);
     Pipeline create_add_instruction(Opcode opcode);
     Pipeline create_store_instruction(Opcode opcode);

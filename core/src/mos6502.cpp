@@ -63,241 +63,244 @@ Mos6502::Mos6502(Registers *const registers, IMmu *const mmu)
           stack_(registers_, mmu_),
           pipeline_() {}
 
-// Most instruction timings are from https://robinli.eu/f/6502_cpu.txt
 void Mos6502::execute() {
     if (pipeline_.done()) {
-        pipeline_.clear();
+        pipeline_ = parse_next_instruction();
+    } else {
+        pipeline_.execute_step();
+    }
+}
 
-        const uint8_t raw_opcode{mmu_->read_byte(registers_->pc++)};
-        const Opcode opcode = decode(raw_opcode);
+// Most instruction timings are from https://robinli.eu/f/6502_cpu.txt
+Pipeline Mos6502::parse_next_instruction() {
+    Pipeline result;
+    const uint8_t raw_opcode{mmu_->read_byte(registers_->pc++)};
+    const Opcode opcode = decode(raw_opcode);
 
-        if (opcode.addressMode == AddressMode::Immediate) {
-            effective_address_ = registers_->pc++;
+    if (opcode.addressMode == AddressMode::Immediate) {
+        effective_address_ = registers_->pc++;
+    }
+
+    switch (opcode.instruction) {
+    case Instruction::BRK:
+        result.push([=]() { ++registers_->pc; });
+        result.push([=]() {
+            /* Do nothing. */
+        });
+        result.push([=]() { stack_.push_word(registers_->pc); });
+        result.push([=]() { stack_.push_byte(registers_->p | B_FLAG); });
+        result.push([=]() { ++registers_->pc; });
+        result.push([=]() { registers_->pc = mmu_->read_word(kBrkAddress); });
+        break;
+    case Instruction::PHP:
+        result.push([=]() { ++registers_->pc; });
+        result.push([=]() { stack_.push_byte(registers_->p); });
+        break;
+    case Instruction::BPL:
+        result.append(create_branch_instruction(
+                [=]() { return !(registers_->p & N_FLAG); }));
+        break;
+    case Instruction::BIT:
+        if (opcode.addressMode == AddressMode::Absolute) {
+            result.append(create_absolute_addressing_steps());
+        } else if (opcode.addressMode == AddressMode::Zeropage) {
+            result.append(create_zeropage_addressing_steps());
+        } else {
+            break;
         }
-
-        switch (opcode.instruction) {
-        case Instruction::BRK:
-            pipeline_.push([=]() { ++registers_->pc; });
-            pipeline_.push([=]() {
-                /* Do nothing. */
-            });
-            pipeline_.push([=]() { stack_.push_word(registers_->pc); });
-            pipeline_.push([=]() { stack_.push_byte(registers_->p | B_FLAG); });
-            pipeline_.push([=]() { ++registers_->pc; });
-            pipeline_.push(
-                    [=]() { registers_->pc = mmu_->read_word(kBrkAddress); });
-            return;
-        case Instruction::PHP:
-            pipeline_.push([=]() { ++registers_->pc; });
-            pipeline_.push([=]() { stack_.push_byte(registers_->p); });
-            return;
-        case Instruction::BPL:
-            pipeline_.append(create_branch_instruction(
-                    [=]() { return !(registers_->p & N_FLAG); }));
-            return;
-        case Instruction::BIT:
-            if (opcode.addressMode == AddressMode::Absolute) {
-                pipeline_.append(create_absolute_addressing_steps());
-            } else if (opcode.addressMode == AddressMode::Zeropage) {
-                pipeline_.append(create_zeropage_addressing_steps());
+        result.push([=]() {
+            const uint8_t value = mmu_->read_byte(effective_address_);
+            set_zero(value & registers_->a);
+            set_negative(value);
+            if (value & (1u << 6)) {
+                set_flag(V_FLAG);
             } else {
-                break;
+                clear_flag(V_FLAG);
             }
-            pipeline_.push([=]() {
-                const uint8_t value = mmu_->read_byte(effective_address_);
-                set_zero(value & registers_->a);
-                set_negative(value);
-                if (value & (1u << 6)) {
-                    set_flag(V_FLAG);
-                } else {
-                    clear_flag(V_FLAG);
-                }
-            });
-            return;
-        case Instruction::CLC:
-            pipeline_.push([=]() { clear_flag(C_FLAG); });
-            return;
-        case Instruction::JSR:
-            pipeline_.append(create_absolute_addressing_steps());
-            pipeline_.push([=]() {
-                /* Do nothing. */
-            });
-            pipeline_.push([=]() { stack_.push_word(--registers_->pc); });
-            pipeline_.push([=]() { registers_->pc = effective_address_; });
-            return;
-        case Instruction::BMI:
-            pipeline_.append(create_branch_instruction(
-                    [=]() { return registers_->p & N_FLAG; }));
-            return;
-        case Instruction::SEC:
-            pipeline_.push([=]() { set_flag(C_FLAG); });
-            return;
-        case Instruction::LSR:
-            if (opcode.addressMode == AddressMode::Accumulator) {
-                pipeline_.push([=]() {
-                    set_carry(registers_->a & 1);
-                    registers_->a &= ~1;
-                    registers_->a >>= 1;
-                    set_zero(registers_->a);
-                    clear_flag(N_FLAG);
-                });
-                return;
-            }
-            break;
-        case Instruction::PHA:
-            pipeline_.push([=]() { ++registers_->pc; });
-            pipeline_.push([=]() { stack_.push_byte(registers_->a); });
-            return;
-        case Instruction::JMP:
-            pipeline_.push([=]() { ++registers_->pc; });
-            pipeline_.push([=]() {
-                registers_->pc = mmu_->read_word(registers_->pc - 1);
-            });
-            return;
-        case Instruction::BVC:
-            pipeline_.append(create_branch_instruction(
-                    [=]() { return !(registers_->p & V_FLAG); }));
-            return;
-        case Instruction::CLI:
-            pipeline_.push([=]() { clear_flag(I_FLAG); });
-            return;
-        case Instruction::ADC:
-            pipeline_.append(create_add_instruction(opcode));
-            return;
-        case Instruction::RTS:
-            pipeline_.push([=]() {
-                /* Do nothing. */
-            });
-            pipeline_.push([=]() {
-                /* Do nothing. */
-            });
-            pipeline_.push([=]() {
-                /* Do nothing. */
-            });
-            pipeline_.push([=]() { registers_->pc = stack_.pop_word(); });
-            pipeline_.push([=]() { ++registers_->pc; });
-            return;
-        case Instruction::BVS:
-            pipeline_.append(create_branch_instruction(
-                    [=]() { return registers_->p & V_FLAG; }));
-            return;
-        case Instruction::SEI:
-            pipeline_.push([=]() { set_flag(I_FLAG); });
-            return;
-        case Instruction::STA:
-        case Instruction::STX:
-        case Instruction::STY:
-            pipeline_.append(create_store_instruction(opcode));
-            return;
-        case Instruction::TXS:
-            pipeline_.push([=]() { registers_->sp = registers_->x; });
-            return;
-        case Instruction::TYA:
-            pipeline_.push([=]() {
-                registers_->a = registers_->y;
+        });
+        break;
+    case Instruction::CLC:
+        result.push([=]() { clear_flag(C_FLAG); });
+        break;
+    case Instruction::JSR:
+        result.append(create_absolute_addressing_steps());
+        result.push([=]() {
+            /* Do nothing. */
+        });
+        result.push([=]() { stack_.push_word(--registers_->pc); });
+        result.push([=]() { registers_->pc = effective_address_; });
+        break;
+    case Instruction::BMI:
+        result.append(create_branch_instruction(
+                [=]() { return registers_->p & N_FLAG; }));
+        break;
+    case Instruction::SEC:
+        result.push([=]() { set_flag(C_FLAG); });
+        break;
+    case Instruction::LSR:
+        if (opcode.addressMode == AddressMode::Accumulator) {
+            result.push([=]() {
+                set_carry(registers_->a & 1);
+                registers_->a &= ~1;
+                registers_->a >>= 1;
                 set_zero(registers_->a);
-                set_negative(registers_->a);
+                clear_flag(N_FLAG);
             });
-            return;
-        case Instruction::TAY:
-            pipeline_.push([=]() {
-                registers_->y = registers_->a;
-                set_zero(registers_->y);
-                set_negative(registers_->y);
-            });
-            return;
-        case Instruction::TAX:
-            pipeline_.push([=]() {
-                registers_->x = registers_->a;
-                set_zero(registers_->x);
-                set_negative(registers_->x);
-            });
-            return;
-        case Instruction::TSX:
-            pipeline_.push([=]() {
-                registers_->x = registers_->sp;
-                set_zero(registers_->x);
-                set_negative(registers_->x);
-            });
-            return;
-        case Instruction::TXA:
-            pipeline_.push([=]() {
-                registers_->a = registers_->x;
-                set_zero(registers_->a);
-                set_negative(registers_->a);
-            });
-            return;
-        case Instruction::BCC:
-            pipeline_.append(create_branch_instruction(
-                    [=]() { return !(registers_->p & C_FLAG); }));
-            return;
-        case Instruction::LDA:
-        case Instruction::LDX:
-        case Instruction::LDY:
-            pipeline_.append(create_load_instruction(opcode));
-            return;
-        case Instruction::BCS:
-            pipeline_.append(create_branch_instruction(
-                    [=]() { return registers_->p & C_FLAG; }));
-            return;
-        case Instruction::CLV:
-            pipeline_.push([=]() { clear_flag(V_FLAG); });
-            return;
-        case Instruction::BNE:
-            pipeline_.append(create_branch_instruction(
-                    [=]() { return !(registers_->p & Z_FLAG); }));
-            return;
-        case Instruction::CLD:
-            pipeline_.push([=]() { clear_flag(D_FLAG); });
-            return;
-        case Instruction::NOP:
-            pipeline_.push([]() { /* Do nothing. */ });
-            return;
-        case Instruction::INX:
-            pipeline_.push([=]() {
-                ++registers_->x;
-                set_zero(registers_->x);
-                set_negative(registers_->x);
-            });
-            return;
-        case Instruction::DEX:
-            pipeline_.push([=]() {
-                --registers_->x;
-                set_zero(registers_->x);
-                set_negative(registers_->x);
-            });
-            return;
-        case Instruction::INY:
-            pipeline_.push([=]() {
-                ++registers_->y;
-                set_zero(registers_->y);
-                set_negative(registers_->y);
-            });
-            return;
-        case Instruction::DEY:
-            pipeline_.push([=]() {
-                --registers_->y;
-                set_zero(registers_->y);
-                set_negative(registers_->y);
-            });
-            return;
-        case Instruction::BEQ:
-            pipeline_.append(create_branch_instruction(
-                    [=]() { return registers_->p & Z_FLAG; }));
-            return;
-        case Instruction::SED:
-            pipeline_.push([=]() { set_flag(D_FLAG); });
-            return;
-        case Instruction::Invalid:
-            break;
         }
+        break;
+    case Instruction::PHA:
+        result.push([=]() { ++registers_->pc; });
+        result.push([=]() { stack_.push_byte(registers_->a); });
+        break;
+    case Instruction::JMP:
+        result.push([=]() { ++registers_->pc; });
+        result.push([=]() {
+            registers_->pc = mmu_->read_word(registers_->pc - 1);
+        });
+        break;
+    case Instruction::BVC:
+        result.append(create_branch_instruction(
+                [=]() { return !(registers_->p & V_FLAG); }));
+        break;
+    case Instruction::CLI:
+        result.push([=]() { clear_flag(I_FLAG); });
+        break;
+    case Instruction::ADC:
+        result.append(create_add_instruction(opcode));
+        break;
+    case Instruction::RTS:
+        result.push([=]() {
+            /* Do nothing. */
+        });
+        result.push([=]() {
+            /* Do nothing. */
+        });
+        result.push([=]() {
+            /* Do nothing. */
+        });
+        result.push([=]() { registers_->pc = stack_.pop_word(); });
+        result.push([=]() { ++registers_->pc; });
+        break;
+    case Instruction::BVS:
+        result.append(create_branch_instruction(
+                [=]() { return registers_->p & V_FLAG; }));
+        break;
+    case Instruction::SEI:
+        result.push([=]() { set_flag(I_FLAG); });
+        break;
+    case Instruction::STA:
+    case Instruction::STX:
+    case Instruction::STY:
+        result.append(create_store_instruction(opcode));
+        break;
+    case Instruction::TXS:
+        result.push([=]() { registers_->sp = registers_->x; });
+        break;
+    case Instruction::TYA:
+        result.push([=]() {
+            registers_->a = registers_->y;
+            set_zero(registers_->a);
+            set_negative(registers_->a);
+        });
+        break;
+    case Instruction::TAY:
+        result.push([=]() {
+            registers_->y = registers_->a;
+            set_zero(registers_->y);
+            set_negative(registers_->y);
+        });
+        break;
+    case Instruction::TAX:
+        result.push([=]() {
+            registers_->x = registers_->a;
+            set_zero(registers_->x);
+            set_negative(registers_->x);
+        });
+        break;
+    case Instruction::TSX:
+        result.push([=]() {
+            registers_->x = registers_->sp;
+            set_zero(registers_->x);
+            set_negative(registers_->x);
+        });
+        break;
+    case Instruction::TXA:
+        result.push([=]() {
+            registers_->a = registers_->x;
+            set_zero(registers_->a);
+            set_negative(registers_->a);
+        });
+        break;
+    case Instruction::BCC:
+        result.append(create_branch_instruction(
+                [=]() { return !(registers_->p & C_FLAG); }));
+        break;
+    case Instruction::LDA:
+    case Instruction::LDX:
+    case Instruction::LDY:
+        result.append(create_load_instruction(opcode));
+        break;
+    case Instruction::BCS:
+        result.append(create_branch_instruction(
+                [=]() { return registers_->p & C_FLAG; }));
+        break;
+    case Instruction::CLV:
+        result.push([=]() { clear_flag(V_FLAG); });
+        break;
+    case Instruction::BNE:
+        result.append(create_branch_instruction(
+                [=]() { return !(registers_->p & Z_FLAG); }));
+        break;
+    case Instruction::CLD:
+        result.push([=]() { clear_flag(D_FLAG); });
+        break;
+    case Instruction::NOP:
+        result.push([]() { /* Do nothing. */ });
+        break;
+    case Instruction::INX:
+        result.push([=]() {
+            ++registers_->x;
+            set_zero(registers_->x);
+            set_negative(registers_->x);
+        });
+        break;
+    case Instruction::DEX:
+        result.push([=]() {
+            --registers_->x;
+            set_zero(registers_->x);
+            set_negative(registers_->x);
+        });
+        break;
+    case Instruction::INY:
+        result.push([=]() {
+            ++registers_->y;
+            set_zero(registers_->y);
+            set_negative(registers_->y);
+        });
+        break;
+    case Instruction::DEY:
+        result.push([=]() {
+            --registers_->y;
+            set_zero(registers_->y);
+            set_negative(registers_->y);
+        });
+        break;
+    case Instruction::BEQ:
+        result.append(create_branch_instruction(
+                [=]() { return registers_->p & Z_FLAG; }));
+        break;
+    case Instruction::SED:
+        result.push([=]() { set_flag(D_FLAG); });
+        break;
+    case Instruction::Invalid:
+    default:
         std::stringstream err;
         err << "Bad instruction: " << std::showbase << std::hex << +raw_opcode;
         throw std::logic_error(err.str());
+        break;
     }
-
-    pipeline_.execute_step();
-}
+    return result;
+} // namespace n_e_s::core
 
 void Mos6502::reset() {
     pipeline_.clear();
