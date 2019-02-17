@@ -103,11 +103,17 @@ enum Opcode : uint8_t {
     LDX_ZEROY = 0xB6,
     CLV = 0xB8,
     TSX = 0xBA,
+    CPY_IMM = 0xC0,
+    CPY_ZERO = 0xC4,
     INY = 0xC8,
     DEX = 0xCA,
+    CPY_ABS = 0xCC,
     BNE = 0xD0,
     CLD = 0xD8,
+    CPX_IMM = 0xE0,
+    CPX_ZERO = 0xE4,
     NOP = 0xEA,
+    CPX_ABS = 0xEC,
     BEQ = 0xF0,
     INX = 0xE8,
     SED = 0xF8,
@@ -345,6 +351,84 @@ public:
                 .WillByDefault(Return(0x42));
 
         step_execution(4);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void compare_immediate_sets_n_clears_z_c(uint8_t *reg,
+            uint8_t *expected_reg) {
+        *expected_reg = *reg = 0b10001111;
+        expected.p |= N_FLAG;
+        registers.p |= Z_FLAG | C_FLAG;
+        ++expected.pc;
+
+        ON_CALL(mmu, read_byte(registers.pc + 1))
+                .WillByDefault(Return(0b00001000));
+
+        step_execution(2);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void compare_immediate_sets_c_clears_n_z(uint8_t *reg,
+            uint8_t *expected_reg) {
+        *expected_reg = *reg = 0x02;
+        expected.p |= C_FLAG;
+        registers.p |= Z_FLAG | N_FLAG;
+        ++expected.pc;
+
+        ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0xFA));
+
+        step_execution(2);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void compare_immediate_sets_z_c_clears_n(uint8_t *reg,
+            uint8_t *expected_reg) {
+        *expected_reg = *reg = 42;
+        expected.p |= Z_FLAG | C_FLAG;
+        registers.p |= N_FLAG;
+        ++expected.pc;
+
+        ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(42));
+
+        step_execution(2);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void compare_immediate_sets_n_c(uint8_t *reg, uint8_t *expected_reg) {
+        *expected_reg = *reg = 0;
+        expected.p |= N_FLAG | C_FLAG;
+        registers.p |= Z_FLAG;
+        ++expected.pc;
+
+        ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(127));
+
+        step_execution(2);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void compare_abs_sets_n_c(uint8_t *reg, uint8_t *expected_reg) {
+        *expected_reg = *reg = 0;
+        expected.p |= N_FLAG | C_FLAG;
+        registers.p |= Z_FLAG;
+        expected.pc += 2;
+
+        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x4567));
+        ON_CALL(mmu, read_byte(0x4567)).WillByDefault(Return(127));
+
+        step_execution(4);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void compare_zeropage_sets_n_c(uint8_t *reg, uint8_t *expected_reg) {
+        *expected_reg = *reg = 0;
+        expected.p |= N_FLAG | C_FLAG;
+        registers.p |= Z_FLAG;
+        expected.pc += 1;
+
+        ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x44));
+        ON_CALL(mmu, read_byte(0x44)).WillByDefault(Return(127));
+
+        step_execution(3);
         EXPECT_EQ(expected, registers);
     }
 
@@ -1075,6 +1159,63 @@ TEST_F(CpuTest, cld) {
     EXPECT_EQ(expected, registers);
 }
 
+// CPX Immediate mode
+TEST_F(CpuTest, cpx_imm_sets_n_and_clears_z_c) {
+    stage_instruction(CPX_IMM);
+    compare_immediate_sets_n_clears_z_c(&registers.x, &expected.x);
+}
+TEST_F(CpuTest, cpx_imm_sets_c_and_clears_n_z) {
+    stage_instruction(CPX_IMM);
+    compare_immediate_sets_c_clears_n_z(&registers.x, &expected.x);
+}
+TEST_F(CpuTest, cpx_imm_sets_z_c_clears_n) {
+    stage_instruction(CPX_IMM);
+    compare_immediate_sets_z_c_clears_n(&registers.x, &expected.x);
+}
+TEST_F(CpuTest, cpx_imm_sets_nc) {
+    stage_instruction(CPX_IMM);
+    compare_immediate_sets_n_c(&registers.x, &expected.x);
+}
+
+// CPY Immediate mode
+TEST_F(CpuTest, cpy_imm_sets_n_and_clears_z_c) {
+    stage_instruction(CPY_IMM);
+    compare_immediate_sets_n_clears_z_c(&registers.y, &expected.y);
+}
+TEST_F(CpuTest, cpy_imm_sets_c_and_clears_n_z) {
+    stage_instruction(CPY_IMM);
+    compare_immediate_sets_c_clears_n_z(&registers.y, &expected.y);
+}
+TEST_F(CpuTest, cpy_imm_sets_z_c_clears_n) {
+    stage_instruction(CPY_IMM);
+    compare_immediate_sets_z_c_clears_n(&registers.y, &expected.y);
+}
+TEST_F(CpuTest, cpy_imm_sets_nc) {
+    stage_instruction(CPY_IMM);
+    compare_immediate_sets_n_c(&registers.y, &expected.y);
+}
+
+// CPX, CPY Absolute mode
+TEST_F(CpuTest, cpx_abs_sets_nc) {
+    stage_instruction(CPX_ABS);
+    compare_abs_sets_n_c(&registers.x, &expected.x);
+}
+TEST_F(CpuTest, cpy_abs_sets_nc) {
+    stage_instruction(CPY_ABS);
+    compare_abs_sets_n_c(&registers.y, &expected.y);
+}
+
+// CPX, CPY Zeropage mode
+TEST_F(CpuTest, cpx_zeropage_sets_nc) {
+    stage_instruction(CPX_ZERO);
+    compare_zeropage_sets_n_c(&registers.x, &expected.x);
+}
+TEST_F(CpuTest, cpy_zeropage_sets_nc) {
+    stage_instruction(CPY_ZERO);
+    compare_zeropage_sets_n_c(&registers.y, &expected.y);
+}
+
+// NOP
 TEST_F(CpuTest, nop) {
     stage_instruction(NOP);
 
