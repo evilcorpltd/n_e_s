@@ -21,7 +21,9 @@ public:
             : registers(),
               mmu(),
               cpu{CpuFactory::create(&registers, &mmu)},
-              expected() {}
+              expected() {
+        registers.sp = expected.sp = 0xFF;
+    }
 
     void step_execution(uint8_t cycles) {
         for (uint8_t i = 0; i < cycles; i++) {
@@ -96,7 +98,7 @@ TEST_F(CpuIntegrationTest, simple_program) {
     expected.a = 0x01;
     expected.x = 0x05;
     expected.y = 0x08;
-    expected.sp = kStackOffset - 3;
+    expected.sp = registers.sp - 3; // PC (2 bytes) + P (1 byte)
     expected.pc = 0xDEAD;
 
     const int expected_cycles = 2 + 4 + 2 + 4 + 2 + 4 + 7;
@@ -140,7 +142,7 @@ TEST_F(CpuIntegrationTest, branch) {
     expected.a = 0x00;
     expected.x = 0x03;
     expected.y = 0x00;
-    expected.sp = kStackOffset - 3;
+    expected.sp = registers.sp - 3; // PC (2 bytes) + P (1 byte)
     expected.pc = 0xDEAD;
     expected.p = C_FLAG | Z_FLAG;
 
@@ -150,6 +152,98 @@ TEST_F(CpuIntegrationTest, branch) {
 
     EXPECT_EQ(expected_cycles, run_until_brk());
     EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuIntegrationTest, stack) {
+    // Address  Hexdump   Dissassembly
+    // -------------------------------
+    // $0600    a2 00     LDX #$00
+    // $0602    a0 00     LDY #$00
+    // $0604    8a        TXA
+    // $0605    99 00 02  STA $0200,Y
+    // $0608    48        PHA
+    // $0609    e8        INX
+    // $060a    c8        INY
+    // $060b    c0 10     CPY #$10
+    // $060d    d0 f5     BNE $0604
+    // $060f    68        PLA
+    // $0610    99 00 02  STA $0200,Y
+    // $0613    c8        INY
+    // $0614    c0 20     CPY #$20
+    // $0616    d0 f7     BNE $060f
+    // $0618    00        BRK
+    load_hex_dump(0x0600,
+            {0xa2,
+                    0x00,
+                    0xa0,
+                    0x00,
+                    0x8a,
+                    0x99,
+                    0x00,
+                    0x02,
+                    0x48,
+                    0xe8,
+                    0xc8,
+                    0xc0,
+                    0x10,
+                    0xd0,
+                    0xf5,
+                    0x68});
+    load_hex_dump(0x0600,
+            {0xa2,
+                    0x00,
+                    0xa0,
+                    0x00,
+                    0x8a,
+                    0x99,
+                    0x00,
+                    0x02,
+                    0x48,
+                    0xe8,
+                    0xc8,
+                    0xc0,
+                    0x10,
+                    0xd0,
+                    0xf5,
+                    0x68});
+    load_hex_dump(
+            0x0610, {0x99, 0x00, 0x02, 0xc8, 0xc0, 0x20, 0xd0, 0xf7, 0x00});
+
+    set_reset_address(0x0600);
+    set_break_address(0xDEAD);
+
+    expected.x = 0x10;
+    expected.y = 0x20;
+    expected.sp = registers.sp - 3; // PC (2 bytes) + P (1 byte)
+    expected.pc = 0xDEAD;
+    expected.p = C_FLAG | Z_FLAG;
+
+    const int pre_loop = 2 + 2;
+    const int first_loop = (2 + 5 + 3 + 2 + 2 + 2) * 16 + 15 * 3 + 2;
+    const int second_loop = (4 + 5 + 2 + 2) * 16 + 15 * 3 + 2;
+    const int total_cycles = pre_loop + first_loop + second_loop + 7;
+
+    EXPECT_EQ(total_cycles, run_until_brk());
+    EXPECT_EQ(expected, registers);
+
+    // Written in first loop
+    for (uint8_t i = 0; i < 0x10; ++i) {
+        EXPECT_EQ(i, mmu.read_byte(0x0200 + i));
+    }
+    // Written in second loop
+    for (uint8_t i = 0; i < 0x10; ++i) {
+        EXPECT_EQ(0x0F - i, mmu.read_byte(0x0210 + i));
+    }
+    // Verify stack content
+    // BRK pushes three bytes (PC + 2 and P) and overwrites what the first loop
+    // wrote.
+    EXPECT_EQ(0x06, mmu.read_byte(kStackOffset + 0xFF));
+    EXPECT_EQ(0x18 + 2, mmu.read_byte(kStackOffset + 0xFE));
+    EXPECT_EQ(expected.p | B_FLAG, mmu.read_byte(kStackOffset + 0xFD));
+
+    for (uint8_t i = 3; i < 0x10; ++i) {
+        EXPECT_EQ(i, mmu.read_byte(kStackOffset + 0xFF - i));
+    }
 }
 
 } // namespace
