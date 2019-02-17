@@ -23,6 +23,7 @@ add_executable(${PROJECT_NAME}
     src/mock_mmu.h
     src/mock_ppu.h
     src/test_cpu.cpp
+    src/test_cpuintegration.cpp
     src/test_invalid_address.cpp
     src/test_mmu.cpp
     src/test_ppu.cpp
