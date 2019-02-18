@@ -18,6 +18,8 @@ if(NOT googletest_POPULATED)
 endif()
 
 add_executable(${PROJECT_NAME}
+    src/fake_mmu.h
+    src/hexprinter.h
     src/main.cpp
     src/mock_membank.h
     src/mock_mmu.h
