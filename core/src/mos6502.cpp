@@ -415,6 +415,10 @@ Pipeline Mos6502::create_store_instruction(Opcode opcode) {
     Pipeline result;
     if (opcode.addressMode == AddressMode::Absolute) {
         result.append(create_absolute_addressing_steps());
+    } else if (opcode.addressMode == AddressMode::AbsoluteX) {
+        result.append(create_absolute_indexed_addressing_steps(&registers_->x));
+    } else if (opcode.addressMode == AddressMode::AbsoluteY) {
+        result.append(create_absolute_indexed_addressing_steps(&registers_->y));
     } else if (opcode.addressMode == AddressMode::Zeropage) {
         result.append(create_zeropage_addressing_steps());
     } else if (opcode.addressMode == AddressMode::ZeropageX) {
@@ -526,6 +530,21 @@ Pipeline Mos6502::create_absolute_addressing_steps() {
     result.push([=]() {
         ++registers_->pc;
         effective_address_ = mmu_->read_word(registers_->pc - 2);
+    });
+    return result;
+}
+
+Pipeline Mos6502::create_absolute_indexed_addressing_steps(
+        const uint8_t *index_reg) {
+    Pipeline result;
+    result.push([=]() { ++registers_->pc; });
+    result.push([=]() {
+        ++registers_->pc;
+        effective_address_ = mmu_->read_word(registers_->pc - 2);
+    });
+    result.push([=]() {
+        const uint8_t offset = *index_reg;
+        effective_address_ += offset;
     });
     return result;
 }

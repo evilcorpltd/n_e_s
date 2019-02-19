@@ -13,6 +13,8 @@ enum class AddressMode {
     ZeropageY,
     Relative,
     Absolute,
+    AbsoluteX,
+    AbsoluteY,
     Accumulator
 };
 

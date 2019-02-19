@@ -57,7 +57,9 @@ enum Opcode : uint8_t {
     STA_ZEROX = 0x95,
     STX_ZEROY = 0x96,
     TYA = 0x98,
+    STA_ABSY = 0x99,
     TXS = 0x9A,
+    STA_ABSX = 0x9D,
     LDY_IMM = 0xA0,
     LDX_IMM = 0xA2,
     LDY_ZERO = 0xA4,
@@ -1418,6 +1420,40 @@ TEST_F(CpuTest, stx_zero_y_indexed) {
     EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x07));
 
     step_execution(4);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sta_abs_x_indexed) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0xED;
+    registers.a = expected.a = 0x07;
+
+    stage_instruction(STA_ABSX);
+
+    expected.pc += 2;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x1234));
+    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
+
+    step_execution(5);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sta_abs_y_indexed) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0xED;
+    registers.a = expected.a = 0x07;
+
+    stage_instruction(STA_ABSY);
+
+    expected.pc += 2;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x1234));
+    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
+
+    step_execution(5);
 
     EXPECT_EQ(expected, registers);
 }

@@ -78,6 +78,7 @@ private:
     Pipeline create_zeropage_addressing_steps();
     Pipeline create_zeropage_indexed_addressing_steps(const uint8_t *index_reg);
     Pipeline create_absolute_addressing_steps();
+    Pipeline create_absolute_indexed_addressing_steps(const uint8_t *index_reg);
 };
 
 } // namespace n_e_s::core
