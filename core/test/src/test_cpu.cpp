@@ -1479,6 +1479,25 @@ TEST_F(CpuTest, sta_indexed_indirect) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(CpuTest, sta_indexed_indirect_handles_wraparound) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0x00;
+    registers.a = expected.a = 0x07;
+
+    stage_instruction(STA_INXIND);
+
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0xFF));
+    ON_CALL(mmu, read_byte(0xFF)).WillByDefault(Return(0x34));
+    ON_CALL(mmu, read_byte(0x00)).WillByDefault(Return(0x12));
+    EXPECT_CALL(mmu, write_byte(0x1234, 0x07));
+
+    step_execution(6);
+
+    EXPECT_EQ(expected, registers);
+}
+
 TEST_F(CpuTest, sta_indirect_indexed) {
     registers.pc = expected.pc = 0x4321;
     registers.y = expected.y = 0xED;

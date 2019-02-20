@@ -562,7 +562,15 @@ Pipeline Mos6502::create_indexed_indirect_addressing_steps() {
         const uint8_t ptr_address = mmu_->read_byte(registers_->pc++);
         // Effective address is always fetched from zero page
         const uint8_t address = ptr_address + registers_->x;
-        effective_address_ = mmu_->read_word(address);
+        if (address == 0xFF) {
+            // Special case where the effective address should come from
+            // 0x00 and 0xFF, not 0x0100 and 0x00FF.
+            const uint8_t lower = mmu_->read_byte(address);
+            const uint16_t upper = mmu_->read_byte(0x00) << 8;
+            effective_address_ = upper | lower;
+        } else {
+            effective_address_ = mmu_->read_word(address);
+        }
     });
     return result;
 }
