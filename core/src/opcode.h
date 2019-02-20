@@ -15,7 +15,9 @@ enum class AddressMode {
     Absolute,
     AbsoluteX,
     AbsoluteY,
-    Accumulator
+    Accumulator,
+    IndexedIndirect,
+    IndirectIndexed
 };
 
 enum class Instruction {

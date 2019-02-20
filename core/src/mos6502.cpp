@@ -425,6 +425,10 @@ Pipeline Mos6502::create_store_instruction(Opcode opcode) {
         result.append(create_zeropage_indexed_addressing_steps(&registers_->x));
     } else if (opcode.addressMode == AddressMode::ZeropageY) {
         result.append(create_zeropage_indexed_addressing_steps(&registers_->y));
+    } else if (opcode.addressMode == AddressMode::IndexedIndirect) {
+        result.append(create_indexed_indirect_addressing_steps());
+    } else if (opcode.addressMode == AddressMode::IndirectIndexed) {
+        result.append(create_indirect_indexed_addressing_steps());
     }
 
     uint8_t *reg{};
@@ -545,6 +549,34 @@ Pipeline Mos6502::create_absolute_indexed_addressing_steps(
     result.push([=]() {
         const uint8_t offset = *index_reg;
         effective_address_ += offset;
+    });
+    return result;
+}
+
+Pipeline Mos6502::create_indexed_indirect_addressing_steps() {
+    Pipeline result;
+    result.push([=]() { /* Empty */ });
+    result.push([=]() { /* Empty */ });
+    result.push([=]() { /* Empty */ });
+    result.push([=]() {
+        const uint8_t ptr_address = mmu_->read_byte(registers_->pc++);
+        // Effective address is always fetched from zero page
+        const uint8_t address = ptr_address + registers_->x;
+        effective_address_ = mmu_->read_word(address);
+    });
+    return result;
+}
+
+Pipeline Mos6502::create_indirect_indexed_addressing_steps() {
+    Pipeline result;
+    result.push([=]() { /* Empty */ });
+    result.push([=]() { /* Empty */ });
+    result.push([=]() { /* Empty */ });
+    result.push([=]() {
+        const uint8_t ptr_address = mmu_->read_byte(registers_->pc++);
+        const uint16_t address = mmu_->read_word(ptr_address);
+
+        effective_address_ = address + registers_->y;
     });
     return result;
 }

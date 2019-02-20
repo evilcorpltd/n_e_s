@@ -44,6 +44,8 @@ Opcode decode(const uint8_t op) {
         return {Instruction::BVS, AddressMode::Relative};
     case 0x78:
         return {Instruction::SEI, AddressMode::Implied};
+    case 0x81:
+        return {Instruction::STA, AddressMode::IndexedIndirect};
     case 0x84:
         return {Instruction::STY, AddressMode::Zeropage};
     case 0x85:
@@ -62,6 +64,8 @@ Opcode decode(const uint8_t op) {
         return {Instruction::STX, AddressMode::Absolute};
     case 0x90:
         return {Instruction::BCC, AddressMode::Relative};
+    case 0x91:
+        return {Instruction::STA, AddressMode::IndirectIndexed};
     case 0x94:
         return {Instruction::STY, AddressMode::ZeropageX};
     case 0x95:
