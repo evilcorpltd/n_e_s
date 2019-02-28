@@ -22,23 +22,23 @@ Nrom::Nrom(const INesHeader &h,
 
 // The cartridge owns all space from 0x6000 to 0xFFFF.
 bool Nrom::is_address_in_range(uint16_t addr) const {
-    return addr >= prg_ram_start_;
+    return addr >= kPrgRamStart;
 }
 
 uint8_t Nrom::read_byte(uint16_t addr) const {
-    assert(addr >= prg_ram_start_);
+    assert(addr >= kPrgRamStart);
 
     const std::vector<uint8_t> &memory = translate_address(addr);
-    addr -= addr <= prg_ram_end_ ? prg_ram_start_ : prg_rom_start_;
+    addr -= addr <= kPrgRamEnd ? kPrgRamStart : kPrgRomStart;
 
     return memory[addr % memory.size()];
 }
 
 void Nrom::write_byte(uint16_t addr, uint8_t byte) {
-    assert(addr >= prg_ram_start_);
+    assert(addr >= kPrgRamStart);
 
     std::vector<uint8_t> &memory = translate_address(addr);
-    addr -= addr <= prg_ram_end_ ? prg_ram_start_ : prg_rom_start_;
+    addr -= addr <= kPrgRamEnd ? kPrgRamStart : kPrgRomStart;
 
     memory[addr % memory.size()] = byte;
 }
@@ -49,7 +49,7 @@ std::vector<uint8_t> &Nrom::translate_address(uint16_t addr) {
 }
 
 const std::vector<uint8_t> &Nrom::translate_address(uint16_t addr) const {
-    if (addr <= prg_ram_end_) {
+    if (addr <= kPrgRamEnd) {
         return prg_ram_;
     }
 

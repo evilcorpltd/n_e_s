@@ -37,6 +37,7 @@ public:
         write_byte(addr + 1, upper);
     }
 
+private:
     std::map<uint16_t, uint8_t> memory_;
 };
 
