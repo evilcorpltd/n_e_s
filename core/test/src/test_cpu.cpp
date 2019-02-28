@@ -44,6 +44,7 @@ enum Opcode : uint8_t {
     ADC_ABS = 0x6D,
     BVS = 0x70,
     SEI = 0x78,
+    STA_INXIND = 0x81,
     TXA = 0x8A,
     STY_ABS = 0x8C,
     STA_ABS = 0x8D,
@@ -53,11 +54,14 @@ enum Opcode : uint8_t {
     STX_ZERO = 0x86,
     DEY = 0x88,
     BCC = 0x90,
+    STA_INDINX = 0x91,
     STY_ZEROX = 0x94,
     STA_ZEROX = 0x95,
     STX_ZEROY = 0x96,
     TYA = 0x98,
+    STA_ABSY = 0x99,
     TXS = 0x9A,
+    STA_ABSX = 0x9D,
     LDY_IMM = 0xA0,
     LDX_IMM = 0xA2,
     LDY_ZERO = 0xA4,
@@ -1418,6 +1422,96 @@ TEST_F(CpuTest, stx_zero_y_indexed) {
     EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x07));
 
     step_execution(4);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sta_abs_x_indexed) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0xED;
+    registers.a = expected.a = 0x07;
+
+    stage_instruction(STA_ABSX);
+
+    expected.pc += 2;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x1234));
+    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
+
+    step_execution(5);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sta_abs_y_indexed) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0xED;
+    registers.a = expected.a = 0x07;
+
+    stage_instruction(STA_ABSY);
+
+    expected.pc += 2;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x1234));
+    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
+
+    step_execution(5);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sta_indexed_indirect) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0xED;
+    registers.a = expected.a = 0x07;
+
+    stage_instruction(STA_INXIND);
+
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0xAB));
+    ON_CALL(mmu, read_word(u16_to_u8(0xAB + 0xED)))
+            .WillByDefault(Return(0x1234));
+    EXPECT_CALL(mmu, write_byte(0x1234, 0x07));
+
+    step_execution(6);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sta_indexed_indirect_handles_wraparound) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0x00;
+    registers.a = expected.a = 0x07;
+
+    stage_instruction(STA_INXIND);
+
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0xFF));
+    ON_CALL(mmu, read_byte(0xFF)).WillByDefault(Return(0x34));
+    ON_CALL(mmu, read_byte(0x00)).WillByDefault(Return(0x12));
+    EXPECT_CALL(mmu, write_byte(0x1234, 0x07));
+
+    step_execution(6);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sta_indirect_indexed) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0xED;
+    registers.a = expected.a = 0x07;
+
+    stage_instruction(STA_INDINX);
+
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x42));
+    ON_CALL(mmu, read_word(0x42)).WillByDefault(Return(0x1234));
+    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
+
+    step_execution(6);
 
     EXPECT_EQ(expected, registers);
 }

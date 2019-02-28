@@ -13,7 +13,11 @@ enum class AddressMode {
     ZeropageY,
     Relative,
     Absolute,
-    Accumulator
+    AbsoluteX,
+    AbsoluteY,
+    Accumulator,
+    IndexedIndirect,
+    IndirectIndexed
 };
 
 enum class Instruction {
@@ -65,7 +69,7 @@ enum class Instruction {
 
 struct Opcode {
     Instruction instruction;
-    AddressMode addressMode;
+    AddressMode address_mode;
 };
 
 Opcode decode(const uint8_t op);
