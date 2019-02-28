@@ -65,7 +65,7 @@ enum class Instruction {
 
 struct Opcode {
     Instruction instruction;
-    AddressMode addressMode;
+    AddressMode address_mode;
 };
 
 Opcode decode(const uint8_t op);

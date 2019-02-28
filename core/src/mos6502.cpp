@@ -77,7 +77,7 @@ Pipeline Mos6502::parse_next_instruction() {
     const uint8_t raw_opcode{mmu_->read_byte(registers_->pc++)};
     const Opcode opcode = decode(raw_opcode);
 
-    if (opcode.addressMode == AddressMode::Immediate) {
+    if (opcode.address_mode == AddressMode::Immediate) {
         effective_address_ = registers_->pc++;
     }
 
@@ -101,9 +101,9 @@ Pipeline Mos6502::parse_next_instruction() {
                 [=]() { return !(registers_->p & N_FLAG); }));
         break;
     case Instruction::BIT:
-        if (opcode.addressMode == AddressMode::Absolute) {
+        if (opcode.address_mode == AddressMode::Absolute) {
             result.append(create_absolute_addressing_steps());
-        } else if (opcode.addressMode == AddressMode::Zeropage) {
+        } else if (opcode.address_mode == AddressMode::Zeropage) {
             result.append(create_zeropage_addressing_steps());
         } else {
             break;
@@ -138,7 +138,7 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() { set_flag(C_FLAG); });
         break;
     case Instruction::LSR:
-        if (opcode.addressMode == AddressMode::Accumulator) {
+        if (opcode.address_mode == AddressMode::Accumulator) {
             result.push([=]() {
                 set_carry(registers_->a & 1);
                 registers_->a &= ~1;
@@ -389,9 +389,9 @@ Pipeline Mos6502::create_branch_instruction(
 
 Pipeline Mos6502::create_add_instruction(Opcode opcode) {
     Pipeline result;
-    if (opcode.addressMode == AddressMode::Absolute) {
+    if (opcode.address_mode == AddressMode::Absolute) {
         result.append(create_absolute_addressing_steps());
-    } else if (opcode.addressMode == AddressMode::Zeropage) {
+    } else if (opcode.address_mode == AddressMode::Zeropage) {
         result.append(create_zeropage_addressing_steps());
     }
 
@@ -413,13 +413,13 @@ Pipeline Mos6502::create_add_instruction(Opcode opcode) {
 
 Pipeline Mos6502::create_store_instruction(Opcode opcode) {
     Pipeline result;
-    if (opcode.addressMode == AddressMode::Absolute) {
+    if (opcode.address_mode == AddressMode::Absolute) {
         result.append(create_absolute_addressing_steps());
-    } else if (opcode.addressMode == AddressMode::Zeropage) {
+    } else if (opcode.address_mode == AddressMode::Zeropage) {
         result.append(create_zeropage_addressing_steps());
-    } else if (opcode.addressMode == AddressMode::ZeropageX) {
+    } else if (opcode.address_mode == AddressMode::ZeropageX) {
         result.append(create_zeropage_indexed_addressing_steps(&registers_->x));
-    } else if (opcode.addressMode == AddressMode::ZeropageY) {
+    } else if (opcode.address_mode == AddressMode::ZeropageY) {
         result.append(create_zeropage_indexed_addressing_steps(&registers_->y));
     }
 
@@ -448,15 +448,15 @@ Pipeline Mos6502::create_load_instruction(Opcode opcode) {
 
     Pipeline result;
 
-    if (opcode.addressMode == AddressMode::Immediate) {
+    if (opcode.address_mode == AddressMode::Immediate) {
         // Empty
-    } else if (opcode.addressMode == AddressMode::Absolute) {
+    } else if (opcode.address_mode == AddressMode::Absolute) {
         result.append(create_absolute_addressing_steps());
-    } else if (opcode.addressMode == AddressMode::Zeropage) {
+    } else if (opcode.address_mode == AddressMode::Zeropage) {
         result.append(create_zeropage_addressing_steps());
-    } else if (opcode.addressMode == AddressMode::ZeropageX) {
+    } else if (opcode.address_mode == AddressMode::ZeropageX) {
         result.append(create_zeropage_indexed_addressing_steps(&registers_->x));
-    } else if (opcode.addressMode == AddressMode::ZeropageY) {
+    } else if (opcode.address_mode == AddressMode::ZeropageY) {
         result.append(create_zeropage_indexed_addressing_steps(&registers_->y));
     }
 
@@ -478,11 +478,11 @@ Pipeline Mos6502::create_compare_instruction(Opcode opcode) {
     }
 
     Pipeline result;
-    if (opcode.addressMode == AddressMode::Immediate) {
+    if (opcode.address_mode == AddressMode::Immediate) {
         // Empty
-    } else if (opcode.addressMode == AddressMode::Absolute) {
+    } else if (opcode.address_mode == AddressMode::Absolute) {
         result.append(create_absolute_addressing_steps());
-    } else if (opcode.addressMode == AddressMode::Zeropage) {
+    } else if (opcode.address_mode == AddressMode::Zeropage) {
         result.append(create_zeropage_addressing_steps());
     }
 
