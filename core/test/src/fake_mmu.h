@@ -11,27 +11,26 @@ namespace n_e_s::core::test {
 
 class FakeMmu : public IMmu {
 public:
-    virtual uint8_t read_byte(uint16_t addr) const override {
+    uint8_t read_byte(uint16_t addr) const override {
         if (const auto iter = memory_.find(addr); iter != memory_.end()) {
             return iter->second;
-        } else {
-            std::stringstream err;
-            err << "Bad address: " << std::showbase << std::hex << +addr;
-            throw std::logic_error(err.str());
         }
+        std::stringstream err;
+        err << "Bad address: " << std::showbase << std::hex << +addr;
+        throw std::logic_error(err.str());
     }
 
-    virtual uint16_t read_word(uint16_t addr) const override {
+    uint16_t read_word(uint16_t addr) const override {
         const uint8_t low = read_byte(addr);
         const uint16_t upper = read_byte(addr + 1) << 8;
         return low | upper;
     }
 
-    virtual void write_byte(uint16_t addr, uint8_t byte) override {
+    void write_byte(uint16_t addr, uint8_t byte) override {
         memory_[addr] = byte;
     }
 
-    virtual void write_word(uint16_t addr, uint16_t word) override {
+    void write_word(uint16_t addr, uint16_t word) override {
         const uint8_t low = word & 0xFF;
         const uint8_t upper = word >> 8;
         write_byte(addr, low);
