@@ -22,10 +22,10 @@ Opcode decode(const uint8_t op) {
         return {Instruction::BMI, AddressMode::Relative};
     case 0x38:
         return {Instruction::SEC, AddressMode::Implied};
-    case 0x4A:
-        return {Instruction::LSR, AddressMode::Accumulator};
     case 0x48:
         return {Instruction::PHA, AddressMode::Implied};
+    case 0x4A:
+        return {Instruction::LSR, AddressMode::Accumulator};
     case 0x4C:
         return {Instruction::JMP, AddressMode::Absolute};
     case 0x50:
@@ -82,8 +82,6 @@ Opcode decode(const uint8_t op) {
         return {Instruction::STA, AddressMode::AbsoluteX};
     case 0xA0:
         return {Instruction::LDY, AddressMode::Immediate};
-    case 0xA8:
-        return {Instruction::TAY, AddressMode::Implied};
     case 0xA2:
         return {Instruction::LDX, AddressMode::Immediate};
     case 0xA4:
@@ -92,6 +90,8 @@ Opcode decode(const uint8_t op) {
         return {Instruction::LDA, AddressMode::Zeropage};
     case 0xA6:
         return {Instruction::LDX, AddressMode::Zeropage};
+    case 0xA8:
+        return {Instruction::TAY, AddressMode::Implied};
     case 0xA9:
         return {Instruction::LDA, AddressMode::Immediate};
     case 0xAA:
@@ -114,12 +114,12 @@ Opcode decode(const uint8_t op) {
         return {Instruction::CLV, AddressMode::Implied};
     case 0xBA:
         return {Instruction::TSX, AddressMode::Implied};
-    case 0xC8:
-        return {Instruction::INY, AddressMode::Implied};
     case 0xC0:
         return {Instruction::CPY, AddressMode::Immediate};
     case 0xC4:
         return {Instruction::CPY, AddressMode::Zeropage};
+    case 0xC8:
+        return {Instruction::INY, AddressMode::Implied};
     case 0xCA:
         return {Instruction::DEX, AddressMode::Implied};
     case 0xCC:
