@@ -20,8 +20,7 @@ struct INesHeader {
 
 class IRom : public IMemBank {
 public:
-    IRom(const INesHeader &h) : header(h) {}
-    virtual ~IRom() = default;
+    explicit IRom(const INesHeader &h) : header(h) {}
 
     INesHeader header;
 };

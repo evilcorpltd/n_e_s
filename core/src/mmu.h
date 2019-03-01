@@ -12,7 +12,6 @@ namespace n_e_s::core {
 class Mmu : public IMmu {
 public:
     Mmu();
-    ~Mmu() = default;
 
     void add_mem_bank(std::unique_ptr<IMemBank> mem_bank);
 
