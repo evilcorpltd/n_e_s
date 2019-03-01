@@ -4,23 +4,79 @@
 
 namespace n_e_s::core {
 
-enum class AddressMode {
-    Invalid,
-    Implied,
-    Immediate,
-    Zeropage,
-    ZeropageX,
-    ZeropageY,
-    Relative,
-    Absolute,
-    AbsoluteX,
-    AbsoluteY,
-    Accumulator,
-    IndexedIndirect,
-    IndirectIndexed
+enum Instruction : uint8_t {
+    BRK_implied = 0x00,
+    PHP_implied = 0x08,
+    BPL_relative = 0x10,
+    CLC_implied = 0x18,
+    JSR_absolute = 0x20,
+    BIT_zeropage = 0x24,
+    BIT_absolute = 0x2C,
+    BMI_relative = 0x30,
+    SEC_implied = 0x38,
+    PHA_implied = 0x48,
+    LSR_accumulator = 0x4A,
+    JMP_absolute = 0x4C,
+    BVC_relative = 0x50,
+    CLI_implied = 0x58,
+    RTS_implied = 0x60,
+    ADC_zeropage = 0x65,
+    ADC_immediate = 0x69,
+    ADC_absolute = 0x6D,
+    BVS_relative = 0x70,
+    SEI_implied = 0x78,
+    STA_indexed_indirect = 0x81,
+    STY_zeropage = 0x84,
+    STA_zeropage = 0x85,
+    STX_zeropage = 0x86,
+    DEY_implied = 0x88,
+    TXA_implied = 0x8A,
+    STY_absolute = 0x8C,
+    STA_absolute = 0x8D,
+    STX_absolute = 0x8E,
+    BCC_relative = 0x90,
+    STA_indirect_indexed = 0x91,
+    STY_zeropageX = 0x94,
+    STA_zeropageX = 0x95,
+    STX_zeropageY = 0x96,
+    TYA_implied = 0x98,
+    STA_absoluteY = 0x99,
+    TXS_implied = 0x9A,
+    STA_absoluteX = 0x9D,
+    LDY_immediate = 0xA0,
+    LDX_immediate = 0xA2,
+    LDY_zeropage = 0xA4,
+    LDA_zeropage = 0xA5,
+    LDX_zeropage = 0xA6,
+    TAY_implied = 0xA8,
+    LDA_immediate = 0xA9,
+    TAX_implied = 0xAA,
+    LDY_absolute = 0xAC,
+    LDA_absolute = 0xAD,
+    LDX_absolute = 0xAE,
+    BCS_relative = 0xB0,
+    LDY_zeropageX = 0xB4,
+    LDA_zeropageX = 0xB5,
+    LDX_zeropageY = 0xB6,
+    CLV_implied = 0xB8,
+    TSX_implied = 0xBA,
+    CPY_immediate = 0xC0,
+    CPY_zeropage = 0xC4,
+    INY_implied = 0xC8,
+    DEX_implied = 0xCA,
+    CPY_absolute = 0xCC,
+    BNE_relative = 0xD0,
+    CLD_implied = 0xD8,
+    CPX_immediate = 0xE0,
+    CPX_zeropage = 0xE4,
+    INX_implied = 0xE8,
+    NOP_implied = 0xEA,
+    CPX_absolute = 0xEC,
+    BEQ_relative = 0xF0,
+    SED_implied = 0xF8,
 };
 
-enum class Instruction {
+enum class Family {
     Invalid,
     BRK,
     PHP,
@@ -67,7 +123,23 @@ enum class Instruction {
     DEX,
 };
 
+enum class AddressMode {
+    Implied,
+    Immediate,
+    Zeropage,
+    ZeropageX,
+    ZeropageY,
+    Relative,
+    Absolute,
+    AbsoluteX,
+    AbsoluteY,
+    Accumulator,
+    IndexedIndirect,
+    IndirectIndexed
+};
+
 struct Opcode {
+    Family family;
     Instruction instruction;
     AddressMode address_mode;
 };

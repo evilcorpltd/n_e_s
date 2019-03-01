@@ -4,147 +4,153 @@ namespace n_e_s::core {
 
 Opcode decode(const uint8_t op) {
     switch (op) {
-    case 0x00:
-        return {Instruction::BRK, AddressMode::Implied};
-    case 0x08:
-        return {Instruction::PHP, AddressMode::Implied};
-    case 0x10:
-        return {Instruction::BPL, AddressMode::Relative};
-    case 0x18:
-        return {Instruction::CLC, AddressMode::Implied};
-    case 0x20:
-        return {Instruction::JSR, AddressMode::Absolute};
-    case 0x24:
-        return {Instruction::BIT, AddressMode::Zeropage};
-    case 0x2C:
-        return {Instruction::BIT, AddressMode::Absolute};
-    case 0x30:
-        return {Instruction::BMI, AddressMode::Relative};
-    case 0x38:
-        return {Instruction::SEC, AddressMode::Implied};
-    case 0x4A:
-        return {Instruction::LSR, AddressMode::Accumulator};
-    case 0x48:
-        return {Instruction::PHA, AddressMode::Implied};
-    case 0x4C:
-        return {Instruction::JMP, AddressMode::Absolute};
-    case 0x50:
-        return {Instruction::BVC, AddressMode::Relative};
-    case 0x58:
-        return {Instruction::CLI, AddressMode::Implied};
-    case 0x60:
-        return {Instruction::RTS, AddressMode::Implied};
-    case 0x65:
-        return {Instruction::ADC, AddressMode::Zeropage};
-    case 0x69:
-        return {Instruction::ADC, AddressMode::Immediate};
-    case 0x6D:
-        return {Instruction::ADC, AddressMode::Absolute};
-    case 0x70:
-        return {Instruction::BVS, AddressMode::Relative};
-    case 0x78:
-        return {Instruction::SEI, AddressMode::Implied};
-    case 0x81:
-        return {Instruction::STA, AddressMode::IndexedIndirect};
-    case 0x84:
-        return {Instruction::STY, AddressMode::Zeropage};
-    case 0x85:
-        return {Instruction::STA, AddressMode::Zeropage};
-    case 0x86:
-        return {Instruction::STX, AddressMode::Zeropage};
-    case 0x88:
-        return {Instruction::DEY, AddressMode::Implied};
-    case 0x8A:
-        return {Instruction::TXA, AddressMode::Implied};
-    case 0x8C:
-        return {Instruction::STY, AddressMode::Absolute};
-    case 0x8D:
-        return {Instruction::STA, AddressMode::Absolute};
-    case 0x8E:
-        return {Instruction::STX, AddressMode::Absolute};
-    case 0x90:
-        return {Instruction::BCC, AddressMode::Relative};
-    case 0x91:
-        return {Instruction::STA, AddressMode::IndirectIndexed};
-    case 0x94:
-        return {Instruction::STY, AddressMode::ZeropageX};
-    case 0x95:
-        return {Instruction::STA, AddressMode::ZeropageX};
-    case 0x96:
-        return {Instruction::STX, AddressMode::ZeropageY};
-    case 0x98:
-        return {Instruction::TYA, AddressMode::Implied};
-    case 0x99:
-        return {Instruction::STA, AddressMode::AbsoluteY};
-    case 0x9A:
-        return {Instruction::TXS, AddressMode::Implied};
-    case 0x9D:
-        return {Instruction::STA, AddressMode::AbsoluteX};
-    case 0xA0:
-        return {Instruction::LDY, AddressMode::Immediate};
-    case 0xA8:
-        return {Instruction::TAY, AddressMode::Implied};
-    case 0xA2:
-        return {Instruction::LDX, AddressMode::Immediate};
-    case 0xA4:
-        return {Instruction::LDY, AddressMode::Zeropage};
-    case 0xA5:
-        return {Instruction::LDA, AddressMode::Zeropage};
-    case 0xA6:
-        return {Instruction::LDX, AddressMode::Zeropage};
-    case 0xA9:
-        return {Instruction::LDA, AddressMode::Immediate};
-    case 0xAA:
-        return {Instruction::TAX, AddressMode::Implied};
-    case 0xAC:
-        return {Instruction::LDY, AddressMode::Absolute};
-    case 0xAD:
-        return {Instruction::LDA, AddressMode::Absolute};
-    case 0xAE:
-        return {Instruction::LDX, AddressMode::Absolute};
-    case 0xB0:
-        return {Instruction::BCS, AddressMode::Relative};
-    case 0xB4:
-        return {Instruction::LDY, AddressMode::ZeropageX};
-    case 0xB5:
-        return {Instruction::LDA, AddressMode::ZeropageX};
-    case 0xB6:
-        return {Instruction::LDX, AddressMode::ZeropageY};
-    case 0xB8:
-        return {Instruction::CLV, AddressMode::Implied};
-    case 0xBA:
-        return {Instruction::TSX, AddressMode::Implied};
-    case 0xC8:
-        return {Instruction::INY, AddressMode::Implied};
-    case 0xC0:
-        return {Instruction::CPY, AddressMode::Immediate};
-    case 0xC4:
-        return {Instruction::CPY, AddressMode::Zeropage};
-    case 0xCA:
-        return {Instruction::DEX, AddressMode::Implied};
-    case 0xCC:
-        return {Instruction::CPY, AddressMode::Absolute};
-    case 0xD0:
-        return {Instruction::BNE, AddressMode::Relative};
-    case 0xD8:
-        return {Instruction::CLD, AddressMode::Implied};
-    case 0xE0:
-        return {Instruction::CPX, AddressMode::Immediate};
-    case 0xE4:
-        return {Instruction::CPX, AddressMode::Zeropage};
-    case 0xE8:
-        return {Instruction::INX, AddressMode::Implied};
-    case 0xEA:
-        return {Instruction::NOP, AddressMode::Implied};
-    case 0xEC:
-        return {Instruction::CPX, AddressMode::Absolute};
-    case 0xF0:
-        return {Instruction::BEQ, AddressMode::Relative};
-    case 0xF8:
-        return {Instruction::SED, AddressMode::Implied};
+    case BRK_implied:
+        return {Family::BRK, BRK_implied, AddressMode::Implied};
+    case PHP_implied:
+        return {Family::PHP, PHP_implied, AddressMode::Implied};
+    case BPL_relative:
+        return {Family::BPL, BPL_relative, AddressMode::Relative};
+    case CLC_implied:
+        return {Family::CLC, CLC_implied, AddressMode::Implied};
+    case JSR_absolute:
+        return {Family::JSR, JSR_absolute, AddressMode::Absolute};
+    case BIT_zeropage:
+        return {Family::BIT, BIT_zeropage, AddressMode::Zeropage};
+    case BIT_absolute:
+        return {Family::BIT, BIT_absolute, AddressMode::Absolute};
+    case BMI_relative:
+        return {Family::BMI, BMI_relative, AddressMode::Relative};
+    case SEC_implied:
+        return {Family::SEC, SEC_implied, AddressMode::Implied};
+    case PHA_implied:
+        return {Family::PHA, PHA_implied, AddressMode::Implied};
+    case LSR_accumulator:
+        return {Family::LSR, LSR_accumulator, AddressMode::Accumulator};
+    case JMP_absolute:
+        return {Family::JMP, JMP_absolute, AddressMode::Absolute};
+    case BVC_relative:
+        return {Family::BVC, BVC_relative, AddressMode::Relative};
+    case CLI_implied:
+        return {Family::CLI, CLI_implied, AddressMode::Implied};
+    case RTS_implied:
+        return {Family::RTS, RTS_implied, AddressMode::Implied};
+    case ADC_zeropage:
+        return {Family::ADC, ADC_zeropage, AddressMode::Zeropage};
+    case ADC_immediate:
+        return {Family::ADC, ADC_immediate, AddressMode::Immediate};
+    case ADC_absolute:
+        return {Family::ADC, ADC_absolute, AddressMode::Absolute};
+    case BVS_relative:
+        return {Family::BVS, BVS_relative, AddressMode::Relative};
+    case SEI_implied:
+        return {Family::SEI, SEI_implied, AddressMode::Implied};
+    case STA_indexed_indirect:
+        return {Family::STA,
+                STA_indexed_indirect,
+                AddressMode::IndexedIndirect};
+    case STY_zeropage:
+        return {Family::STY, STY_zeropage, AddressMode::Zeropage};
+    case STA_zeropage:
+        return {Family::STA, STA_zeropage, AddressMode::Zeropage};
+    case STX_zeropage:
+        return {Family::STX, STX_zeropage, AddressMode::Zeropage};
+    case DEY_implied:
+        return {Family::DEY, DEY_implied, AddressMode::Implied};
+    case TXA_implied:
+        return {Family::TXA, TXA_implied, AddressMode::Implied};
+    case STY_absolute:
+        return {Family::STY, STY_absolute, AddressMode::Absolute};
+    case STA_absolute:
+        return {Family::STA, STA_absolute, AddressMode::Absolute};
+    case STX_absolute:
+        return {Family::STX, STX_absolute, AddressMode::Absolute};
+    case BCC_relative:
+        return {Family::BCC, BCC_relative, AddressMode::Relative};
+    case STA_indirect_indexed:
+        return {Family::STA,
+                STA_indirect_indexed,
+                AddressMode::IndirectIndexed};
+    case STY_zeropageX:
+        return {Family::STY, STY_zeropageX, AddressMode::ZeropageX};
+    case STA_zeropageX:
+        return {Family::STA, STA_zeropageX, AddressMode::ZeropageX};
+    case STX_zeropageY:
+        return {Family::STX, STX_zeropageY, AddressMode::ZeropageY};
+    case TYA_implied:
+        return {Family::TYA, TYA_implied, AddressMode::Implied};
+    case STA_absoluteY:
+        return {Family::STA, STA_absoluteY, AddressMode::AbsoluteY};
+    case TXS_implied:
+        return {Family::TXS, TXS_implied, AddressMode::Implied};
+    case STA_absoluteX:
+        return {Family::STA, STA_absoluteX, AddressMode::AbsoluteX};
+    case LDY_immediate:
+        return {Family::LDY, LDY_immediate, AddressMode::Immediate};
+    case LDX_immediate:
+        return {Family::LDX, LDX_immediate, AddressMode::Immediate};
+    case LDY_zeropage:
+        return {Family::LDY, LDY_zeropage, AddressMode::Zeropage};
+    case LDA_zeropage:
+        return {Family::LDA, LDA_zeropage, AddressMode::Zeropage};
+    case LDX_zeropage:
+        return {Family::LDX, LDX_zeropage, AddressMode::Zeropage};
+    case TAY_implied:
+        return {Family::TAY, TAY_implied, AddressMode::Implied};
+    case LDA_immediate:
+        return {Family::LDA, LDA_immediate, AddressMode::Immediate};
+    case TAX_implied:
+        return {Family::TAX, TAX_implied, AddressMode::Implied};
+    case LDY_absolute:
+        return {Family::LDY, LDY_absolute, AddressMode::Absolute};
+    case LDA_absolute:
+        return {Family::LDA, LDA_absolute, AddressMode::Absolute};
+    case LDX_absolute:
+        return {Family::LDX, LDX_absolute, AddressMode::Absolute};
+    case BCS_relative:
+        return {Family::BCS, BCS_relative, AddressMode::Relative};
+    case LDY_zeropageX:
+        return {Family::LDY, LDY_zeropageX, AddressMode::ZeropageX};
+    case LDA_zeropageX:
+        return {Family::LDA, LDA_zeropageX, AddressMode::ZeropageX};
+    case LDX_zeropageY:
+        return {Family::LDX, LDX_zeropageY, AddressMode::ZeropageY};
+    case CLV_implied:
+        return {Family::CLV, CLV_implied, AddressMode::Implied};
+    case TSX_implied:
+        return {Family::TSX, TSX_implied, AddressMode::Implied};
+    case CPY_immediate:
+        return {Family::CPY, CPY_immediate, AddressMode::Immediate};
+    case CPY_zeropage:
+        return {Family::CPY, CPY_zeropage, AddressMode::Zeropage};
+    case INY_implied:
+        return {Family::INY, INY_implied, AddressMode::Implied};
+    case DEX_implied:
+        return {Family::DEX, DEX_implied, AddressMode::Implied};
+    case CPY_absolute:
+        return {Family::CPY, CPY_absolute, AddressMode::Absolute};
+    case BNE_relative:
+        return {Family::BNE, BNE_relative, AddressMode::Relative};
+    case CLD_implied:
+        return {Family::CLD, CLD_implied, AddressMode::Implied};
+    case CPX_immediate:
+        return {Family::CPX, CPX_immediate, AddressMode::Immediate};
+    case CPX_zeropage:
+        return {Family::CPX, CPX_zeropage, AddressMode::Zeropage};
+    case INX_implied:
+        return {Family::INX, INX_implied, AddressMode::Implied};
+    case NOP_implied:
+        return {Family::NOP, NOP_implied, AddressMode::Implied};
+    case CPX_absolute:
+        return {Family::CPX, CPX_absolute, AddressMode::Absolute};
+    case BEQ_relative:
+        return {Family::BEQ, BEQ_relative, AddressMode::Relative};
+    case SED_implied:
+        return {Family::SED, SED_implied, AddressMode::Implied};
+    default:
+        // Since this is an invalid opcode the instruction and address mode
+        // have no real meaning, so we just use 0, 0 for them.
+        return {Family::Invalid, BRK_implied, AddressMode::Implied};
     }
-
-    return {Instruction::Invalid, AddressMode::Invalid};
 }
 
 } // namespace n_e_s::core

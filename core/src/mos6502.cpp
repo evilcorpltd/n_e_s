@@ -77,12 +77,18 @@ Pipeline Mos6502::parse_next_instruction() {
     const uint8_t raw_opcode{mmu_->read_byte(registers_->pc++)};
     const Opcode opcode = decode(raw_opcode);
 
+    if (opcode.family == Family::Invalid) {
+        std::stringstream err;
+        err << "Bad instruction: " << std::showbase << std::hex << +raw_opcode;
+        throw std::logic_error(err.str());
+    }
+
     if (opcode.address_mode == AddressMode::Immediate) {
         effective_address_ = registers_->pc++;
     }
 
     switch (opcode.instruction) {
-    case Instruction::BRK:
+    case Instruction::BRK_implied:
         result.push([=]() { ++registers_->pc; });
         result.push([=]() {
             /* Do nothing. */
@@ -92,22 +98,22 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() { ++registers_->pc; });
         result.push([=]() { registers_->pc = mmu_->read_word(kBrkAddress); });
         break;
-    case Instruction::PHP:
+    case Instruction::PHP_implied:
         result.push([=]() { ++registers_->pc; });
         result.push([=]() { stack_.push_byte(registers_->p); });
         break;
-    case Instruction::BPL:
+    case Instruction::BPL_relative:
         result.append(create_branch_instruction(
                 [=]() { return !(registers_->p & N_FLAG); }));
         break;
-    case Instruction::BIT:
+    case Instruction::BIT_zeropage:
+    case Instruction::BIT_absolute:
         if (opcode.address_mode == AddressMode::Absolute) {
             result.append(create_absolute_addressing_steps());
         } else if (opcode.address_mode == AddressMode::Zeropage) {
             result.append(create_zeropage_addressing_steps());
-        } else {
-            break;
         }
+
         result.push([=]() {
             const uint8_t value = mmu_->read_byte(effective_address_);
             set_zero(value & registers_->a);
@@ -119,10 +125,10 @@ Pipeline Mos6502::parse_next_instruction() {
             }
         });
         break;
-    case Instruction::CLC:
+    case Instruction::CLC_implied:
         result.push([=]() { clear_flag(C_FLAG); });
         break;
-    case Instruction::JSR:
+    case Instruction::JSR_absolute:
         result.append(create_absolute_addressing_steps());
         result.push([=]() {
             /* Do nothing. */
@@ -130,14 +136,14 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() { stack_.push_word(--registers_->pc); });
         result.push([=]() { registers_->pc = effective_address_; });
         break;
-    case Instruction::BMI:
+    case Instruction::BMI_relative:
         result.append(create_branch_instruction(
                 [=]() { return registers_->p & N_FLAG; }));
         break;
-    case Instruction::SEC:
+    case Instruction::SEC_implied:
         result.push([=]() { set_flag(C_FLAG); });
         break;
-    case Instruction::LSR:
+    case Instruction::LSR_accumulator:
         if (opcode.address_mode == AddressMode::Accumulator) {
             result.push([=]() {
                 set_carry(registers_->a & 1);
@@ -148,27 +154,29 @@ Pipeline Mos6502::parse_next_instruction() {
             });
         }
         break;
-    case Instruction::PHA:
+    case Instruction::PHA_implied:
         result.push([=]() { ++registers_->pc; });
         result.push([=]() { stack_.push_byte(registers_->a); });
         break;
-    case Instruction::JMP:
+    case Instruction::JMP_absolute:
         result.push([=]() { ++registers_->pc; });
         result.push([=]() {
             registers_->pc = mmu_->read_word(registers_->pc - 1);
         });
         break;
-    case Instruction::BVC:
+    case Instruction::BVC_relative:
         result.append(create_branch_instruction(
                 [=]() { return !(registers_->p & V_FLAG); }));
         break;
-    case Instruction::CLI:
+    case Instruction::CLI_implied:
         result.push([=]() { clear_flag(I_FLAG); });
         break;
-    case Instruction::ADC:
+    case Instruction::ADC_zeropage:
+    case Instruction::ADC_immediate:
+    case Instruction::ADC_absolute:
         result.append(create_add_instruction(opcode));
         break;
-    case Instruction::RTS:
+    case Instruction::RTS_implied:
         result.push([=]() {
             /* Do nothing. */
         });
@@ -181,126 +189,143 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() { registers_->pc = stack_.pop_word(); });
         result.push([=]() { ++registers_->pc; });
         break;
-    case Instruction::BVS:
+    case Instruction::BVS_relative:
         result.append(create_branch_instruction(
                 [=]() { return registers_->p & V_FLAG; }));
         break;
-    case Instruction::SEI:
+    case Instruction::SEI_implied:
         result.push([=]() { set_flag(I_FLAG); });
         break;
-    case Instruction::STA:
-    case Instruction::STX:
-    case Instruction::STY:
+    case Instruction::STA_indexed_indirect:
+    case Instruction::STA_zeropage:
+    case Instruction::STA_absolute:
+    case Instruction::STA_indirect_indexed:
+    case Instruction::STA_zeropageX:
+    case Instruction::STA_absoluteY:
+    case Instruction::STA_absoluteX:
+    case Instruction::STX_zeropage:
+    case Instruction::STX_absolute:
+    case Instruction::STX_zeropageY:
+    case Instruction::STY_zeropage:
+    case Instruction::STY_absolute:
+    case Instruction::STY_zeropageX:
         result.append(create_store_instruction(opcode));
         break;
-    case Instruction::TXS:
+    case Instruction::TXS_implied:
         result.push([=]() { registers_->sp = registers_->x; });
         break;
-    case Instruction::TYA:
+    case Instruction::TYA_implied:
         result.push([=]() {
             registers_->a = registers_->y;
             set_zero(registers_->a);
             set_negative(registers_->a);
         });
         break;
-    case Instruction::TAY:
+    case Instruction::TAY_implied:
         result.push([=]() {
             registers_->y = registers_->a;
             set_zero(registers_->y);
             set_negative(registers_->y);
         });
         break;
-    case Instruction::TAX:
+    case Instruction::TAX_implied:
         result.push([=]() {
             registers_->x = registers_->a;
             set_zero(registers_->x);
             set_negative(registers_->x);
         });
         break;
-    case Instruction::TSX:
+    case Instruction::TSX_implied:
         result.push([=]() {
             registers_->x = registers_->sp;
             set_zero(registers_->x);
             set_negative(registers_->x);
         });
         break;
-    case Instruction::TXA:
+    case Instruction::TXA_implied:
         result.push([=]() {
             registers_->a = registers_->x;
             set_zero(registers_->a);
             set_negative(registers_->a);
         });
         break;
-    case Instruction::BCC:
+    case Instruction::BCC_relative:
         result.append(create_branch_instruction(
                 [=]() { return !(registers_->p & C_FLAG); }));
         break;
-    case Instruction::LDA:
-    case Instruction::LDX:
-    case Instruction::LDY:
+    case Instruction::LDA_zeropage:
+    case Instruction::LDA_immediate:
+    case Instruction::LDA_absolute:
+    case Instruction::LDA_zeropageX:
+    case Instruction::LDX_immediate:
+    case Instruction::LDX_zeropage:
+    case Instruction::LDX_absolute:
+    case Instruction::LDX_zeropageY:
+    case Instruction::LDY_immediate:
+    case Instruction::LDY_zeropage:
+    case Instruction::LDY_absolute:
+    case Instruction::LDY_zeropageX:
         result.append(create_load_instruction(opcode));
         break;
-    case Instruction::BCS:
+    case Instruction::BCS_relative:
         result.append(create_branch_instruction(
                 [=]() { return registers_->p & C_FLAG; }));
         break;
-    case Instruction::CLV:
+    case Instruction::CLV_implied:
         result.push([=]() { clear_flag(V_FLAG); });
         break;
-    case Instruction::BNE:
+    case Instruction::BNE_relative:
         result.append(create_branch_instruction(
                 [=]() { return !(registers_->p & Z_FLAG); }));
         break;
-    case Instruction::CLD:
+    case Instruction::CLD_implied:
         result.push([=]() { clear_flag(D_FLAG); });
         break;
-    case Instruction::CPX:
-    case Instruction::CPY:
+    case Instruction::CPX_immediate:
+    case Instruction::CPX_zeropage:
+    case Instruction::CPX_absolute:
+    case Instruction::CPY_immediate:
+    case Instruction::CPY_zeropage:
+    case Instruction::CPY_absolute:
         result.append(create_compare_instruction(opcode));
         break;
-    case Instruction::NOP:
+    case Instruction::NOP_implied:
         result.push([]() { /* Do nothing. */ });
         break;
-    case Instruction::INX:
+    case Instruction::INX_implied:
         result.push([=]() {
             ++registers_->x;
             set_zero(registers_->x);
             set_negative(registers_->x);
         });
         break;
-    case Instruction::DEX:
+    case Instruction::DEX_implied:
         result.push([=]() {
             --registers_->x;
             set_zero(registers_->x);
             set_negative(registers_->x);
         });
         break;
-    case Instruction::INY:
+    case Instruction::INY_implied:
         result.push([=]() {
             ++registers_->y;
             set_zero(registers_->y);
             set_negative(registers_->y);
         });
         break;
-    case Instruction::DEY:
+    case Instruction::DEY_implied:
         result.push([=]() {
             --registers_->y;
             set_zero(registers_->y);
             set_negative(registers_->y);
         });
         break;
-    case Instruction::BEQ:
+    case Instruction::BEQ_relative:
         result.append(create_branch_instruction(
                 [=]() { return registers_->p & Z_FLAG; }));
         break;
-    case Instruction::SED:
+    case Instruction::SED_implied:
         result.push([=]() { set_flag(D_FLAG); });
-        break;
-    case Instruction::Invalid:
-    default:
-        std::stringstream err;
-        err << "Bad instruction: " << std::showbase << std::hex << +raw_opcode;
-        throw std::logic_error(err.str());
         break;
     }
     return result;
@@ -432,11 +457,11 @@ Pipeline Mos6502::create_store_instruction(Opcode opcode) {
     }
 
     uint8_t *reg{};
-    if (opcode.instruction == Instruction::STX) {
+    if (opcode.family == Family::STX) {
         reg = &registers_->x;
-    } else if (opcode.instruction == Instruction::STY) {
+    } else if (opcode.family == Family::STY) {
         reg = &registers_->y;
-    } else if (opcode.instruction == Instruction::STA) {
+    } else if (opcode.family == Family::STA) {
         reg = &registers_->a;
     }
     result.push([=]() { mmu_->write_byte(effective_address_, *reg); });
@@ -446,11 +471,11 @@ Pipeline Mos6502::create_store_instruction(Opcode opcode) {
 
 Pipeline Mos6502::create_load_instruction(Opcode opcode) {
     uint8_t *reg{};
-    if (opcode.instruction == Instruction::LDX) {
+    if (opcode.family == Family::LDX) {
         reg = &registers_->x;
-    } else if (opcode.instruction == Instruction::LDY) {
+    } else if (opcode.family == Family::LDY) {
         reg = &registers_->y;
-    } else if (opcode.instruction == Instruction::LDA) {
+    } else if (opcode.family == Family::LDA) {
         reg = &registers_->a;
     }
 
@@ -479,9 +504,9 @@ Pipeline Mos6502::create_load_instruction(Opcode opcode) {
 
 Pipeline Mos6502::create_compare_instruction(Opcode opcode) {
     uint8_t *reg{};
-    if (opcode.instruction == Instruction::CPX) {
+    if (opcode.family == Family::CPX) {
         reg = &registers_->x;
-    } else if (opcode.instruction == Instruction::CPY) {
+    } else if (opcode.family == Family::CPY) {
         reg = &registers_->y;
     }
 
