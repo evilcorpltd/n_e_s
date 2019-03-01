@@ -297,7 +297,6 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() { set_flag(D_FLAG); });
         break;
     case Instruction::Invalid:
-    default:
         std::stringstream err;
         err << "Bad instruction: " << std::showbase << std::hex << +raw_opcode;
         throw std::logic_error(err.str());
