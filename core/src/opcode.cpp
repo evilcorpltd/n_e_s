@@ -16,6 +16,8 @@ Opcode decode(const uint8_t op) {
         return {Family::JSR, JsrAbsolute, AddressMode::Absolute};
     case BitZeropage:
         return {Family::BIT, BitZeropage, AddressMode::Zeropage};
+    case PlpImplied:
+        return {Family::BIT, PlpImplied, AddressMode::Implied};
     case BitAbsolute:
         return {Family::BIT, BitAbsolute, AddressMode::Absolute};
     case BmiRelative:
@@ -36,6 +38,8 @@ Opcode decode(const uint8_t op) {
         return {Family::RTS, RtsImplied, AddressMode::Implied};
     case AdcZeropage:
         return {Family::ADC, AdcZeropage, AddressMode::Zeropage};
+    case PlaImplied:
+        return {Family::PLA, PlaImplied, AddressMode::Implied};
     case AdcImmediate:
         return {Family::ADC, AdcImmediate, AddressMode::Immediate};
     case AdcAbsolute:

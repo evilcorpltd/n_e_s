@@ -27,10 +27,11 @@ enum Opcode : uint8_t {
     BRK = 0x00,
     PHP = 0x08,
     BPL = 0x10,
-    BIT_ZERO = 0x24,
-    BIT_ABS = 0x2C,
     CLC = 0x18,
     JSR = 0x20,
+    BIT_ZERO = 0x24,
+    BIT_ABS = 0x2C,
+    PLP = 0x28,
     BMI = 0x30,
     SEC = 0x38,
     LSR_ACC = 0x4A,
@@ -40,6 +41,7 @@ enum Opcode : uint8_t {
     CLI = 0x58,
     RTS = 0x60,
     ADC_ZERO = 0x65,
+    PLA = 0x68,
     ADC_IMM = 0x69,
     ADC_ABS = 0x6D,
     BVS = 0x70,
@@ -573,6 +575,21 @@ TEST_F(CpuTest, bit_abs_sets_negative_and_overflow) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(CpuTest, plp) {
+    stage_instruction(PLP);
+    registers.sp = 0x0A;
+    registers.p = 0xBB;
+
+    expected.sp = registers.sp + 1u;
+    expected.p = 0x12;
+
+    ON_CALL(mmu, read_byte(kStackOffset + expected.sp))
+            .WillByDefault(Return(0x12));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
+
 TEST_F(CpuTest, clc) {
     expected.p = registers.p = 0xFF;
 
@@ -825,6 +842,21 @@ TEST_F(CpuTest, adc_zero_no_carry_or_overflow) {
     ON_CALL(mmu, read_byte(0x45)).WillByDefault(Return(0x10));
 
     step_execution(3);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, pla) {
+    stage_instruction(PLA);
+    registers.sp = 0x0A;
+    registers.a = 0xBB;
+
+    expected.sp = registers.sp + 1u;
+    expected.a = 0x12;
+
+    ON_CALL(mmu, read_byte(kStackOffset + expected.sp))
+            .WillByDefault(Return(0x12));
+
+    step_execution(4);
     EXPECT_EQ(expected, registers);
 }
 
