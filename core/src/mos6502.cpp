@@ -88,7 +88,7 @@ Pipeline Mos6502::parse_next_instruction() {
     }
 
     switch (opcode.instruction) {
-    case Instruction::BRK_implied:
+    case Instruction::BrkImplied:
         result.push([=]() { ++registers_->pc; });
         result.push([=]() {
             /* Do nothing. */
@@ -98,18 +98,18 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() { ++registers_->pc; });
         result.push([=]() { registers_->pc = mmu_->read_word(kBrkAddress); });
         break;
-    case Instruction::PHP_implied:
+    case Instruction::PhpImplied:
         result.push([=]() {
             /* Do nothing. */
         });
         result.push([=]() { stack_.push_byte(registers_->p); });
         break;
-    case Instruction::BPL_relative:
+    case Instruction::BplRelative:
         result.append(create_branch_instruction(
                 [=]() { return !(registers_->p & N_FLAG); }));
         break;
-    case Instruction::BIT_zeropage:
-    case Instruction::BIT_absolute:
+    case Instruction::BitZeropage:
+    case Instruction::BitAbsolute:
         if (opcode.address_mode == AddressMode::Absolute) {
             result.append(create_absolute_addressing_steps());
         } else if (opcode.address_mode == AddressMode::Zeropage) {
@@ -127,10 +127,10 @@ Pipeline Mos6502::parse_next_instruction() {
             }
         });
         break;
-    case Instruction::CLC_implied:
+    case Instruction::ClcImplied:
         result.push([=]() { clear_flag(C_FLAG); });
         break;
-    case Instruction::JSR_absolute:
+    case Instruction::JsrAbsolute:
         result.append(create_absolute_addressing_steps());
         result.push([=]() {
             /* Do nothing. */
@@ -138,14 +138,14 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() { stack_.push_word(--registers_->pc); });
         result.push([=]() { registers_->pc = effective_address_; });
         break;
-    case Instruction::BMI_relative:
+    case Instruction::BmiRelative:
         result.append(create_branch_instruction(
                 [=]() { return registers_->p & N_FLAG; }));
         break;
-    case Instruction::SEC_implied:
+    case Instruction::SecImplied:
         result.push([=]() { set_flag(C_FLAG); });
         break;
-    case Instruction::LSR_accumulator:
+    case Instruction::LsrAccumulator:
         if (opcode.address_mode == AddressMode::Accumulator) {
             result.push([=]() {
                 set_carry(registers_->a & 1);
@@ -156,31 +156,31 @@ Pipeline Mos6502::parse_next_instruction() {
             });
         }
         break;
-    case Instruction::PHA_implied:
+    case Instruction::PhaImplied:
         result.push([=]() {
             /* Do nothing. */
         });
         result.push([=]() { stack_.push_byte(registers_->a); });
         break;
-    case Instruction::JMP_absolute:
+    case Instruction::JmpAbsolute:
         result.push([=]() { ++registers_->pc; });
         result.push([=]() {
             registers_->pc = mmu_->read_word(registers_->pc - 1);
         });
         break;
-    case Instruction::BVC_relative:
+    case Instruction::BvcRelative:
         result.append(create_branch_instruction(
                 [=]() { return !(registers_->p & V_FLAG); }));
         break;
-    case Instruction::CLI_implied:
+    case Instruction::CliImplied:
         result.push([=]() { clear_flag(I_FLAG); });
         break;
-    case Instruction::ADC_zeropage:
-    case Instruction::ADC_immediate:
-    case Instruction::ADC_absolute:
+    case Instruction::AdcZeropage:
+    case Instruction::AdcImmediate:
+    case Instruction::AdcAbsolute:
         result.append(create_add_instruction(opcode));
         break;
-    case Instruction::RTS_implied:
+    case Instruction::RtsImplied:
         result.push([=]() {
             /* Do nothing. */
         });
@@ -193,142 +193,142 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() { registers_->pc = stack_.pop_word(); });
         result.push([=]() { ++registers_->pc; });
         break;
-    case Instruction::BVS_relative:
+    case Instruction::BvsRelative:
         result.append(create_branch_instruction(
                 [=]() { return registers_->p & V_FLAG; }));
         break;
-    case Instruction::SEI_implied:
+    case Instruction::SeiImplied:
         result.push([=]() { set_flag(I_FLAG); });
         break;
-    case Instruction::STA_indexed_indirect:
-    case Instruction::STA_zeropage:
-    case Instruction::STA_absolute:
-    case Instruction::STA_indirect_indexed:
-    case Instruction::STA_zeropageX:
-    case Instruction::STA_absoluteY:
-    case Instruction::STA_absoluteX:
-    case Instruction::STX_zeropage:
-    case Instruction::STX_absolute:
-    case Instruction::STX_zeropageY:
-    case Instruction::STY_zeropage:
-    case Instruction::STY_absolute:
-    case Instruction::STY_zeropageX:
+    case Instruction::StaIndexedIndirect:
+    case Instruction::StaZeropage:
+    case Instruction::StaAbsolute:
+    case Instruction::StaIndirectIndexed:
+    case Instruction::StaZeropageX:
+    case Instruction::StaAbsoluteY:
+    case Instruction::StaAbsoluteX:
+    case Instruction::StxZeropage:
+    case Instruction::StxAbsolute:
+    case Instruction::StxZeropageY:
+    case Instruction::StyZeropage:
+    case Instruction::StyAbsolute:
+    case Instruction::StyZeropageX:
         result.append(create_store_instruction(opcode));
         break;
-    case Instruction::TXS_implied:
+    case Instruction::TxsImplied:
         result.push([=]() { registers_->sp = registers_->x; });
         break;
-    case Instruction::TYA_implied:
+    case Instruction::TyaImplied:
         result.push([=]() {
             registers_->a = registers_->y;
             set_zero(registers_->a);
             set_negative(registers_->a);
         });
         break;
-    case Instruction::TAY_implied:
+    case Instruction::TayImplied:
         result.push([=]() {
             registers_->y = registers_->a;
             set_zero(registers_->y);
             set_negative(registers_->y);
         });
         break;
-    case Instruction::TAX_implied:
+    case Instruction::TaxImplied:
         result.push([=]() {
             registers_->x = registers_->a;
             set_zero(registers_->x);
             set_negative(registers_->x);
         });
         break;
-    case Instruction::TSX_implied:
+    case Instruction::TsxImplied:
         result.push([=]() {
             registers_->x = registers_->sp;
             set_zero(registers_->x);
             set_negative(registers_->x);
         });
         break;
-    case Instruction::TXA_implied:
+    case Instruction::TxaImplied:
         result.push([=]() {
             registers_->a = registers_->x;
             set_zero(registers_->a);
             set_negative(registers_->a);
         });
         break;
-    case Instruction::BCC_relative:
+    case Instruction::BccRelative:
         result.append(create_branch_instruction(
                 [=]() { return !(registers_->p & C_FLAG); }));
         break;
-    case Instruction::LDA_zeropage:
-    case Instruction::LDA_immediate:
-    case Instruction::LDA_absolute:
-    case Instruction::LDA_zeropageX:
-    case Instruction::LDX_immediate:
-    case Instruction::LDX_zeropage:
-    case Instruction::LDX_absolute:
-    case Instruction::LDX_zeropageY:
-    case Instruction::LDY_immediate:
-    case Instruction::LDY_zeropage:
-    case Instruction::LDY_absolute:
-    case Instruction::LDY_zeropageX:
+    case Instruction::LdaZeropage:
+    case Instruction::LdaImmediate:
+    case Instruction::LdaAbsolute:
+    case Instruction::LdaZeropageX:
+    case Instruction::LdxImmediate:
+    case Instruction::LdxZeropage:
+    case Instruction::LdxAbsolute:
+    case Instruction::LdxZeropageY:
+    case Instruction::LdyImmediate:
+    case Instruction::LdyZeropage:
+    case Instruction::LdyAbsolute:
+    case Instruction::LdyZeropageX:
         result.append(create_load_instruction(opcode));
         break;
-    case Instruction::BCS_relative:
+    case Instruction::BcsRelative:
         result.append(create_branch_instruction(
                 [=]() { return registers_->p & C_FLAG; }));
         break;
-    case Instruction::CLV_implied:
+    case Instruction::ClvImplied:
         result.push([=]() { clear_flag(V_FLAG); });
         break;
-    case Instruction::BNE_relative:
+    case Instruction::BneRelative:
         result.append(create_branch_instruction(
                 [=]() { return !(registers_->p & Z_FLAG); }));
         break;
-    case Instruction::CLD_implied:
+    case Instruction::CldImplied:
         result.push([=]() { clear_flag(D_FLAG); });
         break;
-    case Instruction::CPX_immediate:
-    case Instruction::CPX_zeropage:
-    case Instruction::CPX_absolute:
-    case Instruction::CPY_immediate:
-    case Instruction::CPY_zeropage:
-    case Instruction::CPY_absolute:
+    case Instruction::CpxImmediate:
+    case Instruction::CpxZeropage:
+    case Instruction::CpxAbsolute:
+    case Instruction::CpyImmediate:
+    case Instruction::CpyZeropage:
+    case Instruction::CpyAbsolute:
         result.append(create_compare_instruction(opcode));
         break;
-    case Instruction::NOP_implied:
+    case Instruction::NopImplied:
         result.push([]() { /* Do nothing. */ });
         break;
-    case Instruction::INX_implied:
+    case Instruction::InxImplied:
         result.push([=]() {
             ++registers_->x;
             set_zero(registers_->x);
             set_negative(registers_->x);
         });
         break;
-    case Instruction::DEX_implied:
+    case Instruction::DexImplied:
         result.push([=]() {
             --registers_->x;
             set_zero(registers_->x);
             set_negative(registers_->x);
         });
         break;
-    case Instruction::INY_implied:
+    case Instruction::InyImplied:
         result.push([=]() {
             ++registers_->y;
             set_zero(registers_->y);
             set_negative(registers_->y);
         });
         break;
-    case Instruction::DEY_implied:
+    case Instruction::DeyImplied:
         result.push([=]() {
             --registers_->y;
             set_zero(registers_->y);
             set_negative(registers_->y);
         });
         break;
-    case Instruction::BEQ_relative:
+    case Instruction::BeqRelative:
         result.append(create_branch_instruction(
                 [=]() { return registers_->p & Z_FLAG; }));
         break;
-    case Instruction::SED_implied:
+    case Instruction::SedImplied:
         result.push([=]() { set_flag(D_FLAG); });
         break;
     }
