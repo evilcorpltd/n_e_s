@@ -473,7 +473,6 @@ TEST_F(CpuTest, php) {
 
     expected.sp = 0x09;
     expected.p = registers.p;
-    ++expected.pc;
 
     EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp, registers.p));
 
@@ -692,11 +691,10 @@ TEST_F(CpuTest, pha) {
 
     EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp, registers.a));
 
-    step_execution(3);
-
-    ++expected.pc;
     expected.sp = 0x04;
     expected.a = registers.a;
+
+    step_execution(3);
 
     EXPECT_EQ(expected, registers);
 }

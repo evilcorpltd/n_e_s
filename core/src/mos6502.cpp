@@ -99,7 +99,9 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() { registers_->pc = mmu_->read_word(kBrkAddress); });
         break;
     case Instruction::PHP_implied:
-        result.push([=]() { ++registers_->pc; });
+        result.push([=]() {
+            /* Do nothing. */
+        });
         result.push([=]() { stack_.push_byte(registers_->p); });
         break;
     case Instruction::BPL_relative:
@@ -155,7 +157,9 @@ Pipeline Mos6502::parse_next_instruction() {
         }
         break;
     case Instruction::PHA_implied:
-        result.push([=]() { ++registers_->pc; });
+        result.push([=]() {
+            /* Do nothing. */
+        });
         result.push([=]() { stack_.push_byte(registers_->a); });
         break;
     case Instruction::JMP_absolute:
