@@ -8,6 +8,7 @@
 using namespace n_e_s::core;
 using namespace n_e_s::core::test;
 
+using testing::InSequence;
 using testing::NiceMock;
 using testing::Return;
 
@@ -88,10 +89,11 @@ enum Opcode : uint8_t {
     CLD = 0xD8,
     CPX_IMM = 0xE0,
     CPX_ZERO = 0xE4,
+    INC_ZERO = 0xE6,
+    INX = 0xE8,
     NOP = 0xEA,
     CPX_ABS = 0xEC,
     BEQ = 0xF0,
-    INX = 0xE8,
     SED = 0xF8,
 };
 
@@ -1225,6 +1227,58 @@ TEST_F(CpuTest, beq_negative_operand) {
     stage_instruction(BEQ);
 
     branch_test(Z_FLAG, -128, 3);
+}
+
+// INC
+TEST_F(CpuTest, inc_zero_increments) {
+    registers.pc = 0x1234;
+    stage_instruction(INC_ZERO);
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x44));
+    ON_CALL(mmu, read_byte(0x44)).WillByDefault(Return(0x05));
+
+    {
+        InSequence s;
+        EXPECT_CALL(mmu, write_byte(0x44, 0x05));
+        EXPECT_CALL(mmu, write_byte(0x44, 0x06));
+        step_execution(5);
+    }
+}
+TEST_F(CpuTest, inc_zero_sets_z_flag) {
+    registers.pc = 0x1234;
+    expected.p |= Z_FLAG;
+    stage_instruction(INC_ZERO);
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x44));
+    ON_CALL(mmu, read_byte(0x44)).WillByDefault(Return(0xFF));
+    step_execution(5);
+}
+TEST_F(CpuTest, inc_zero_clears_z_flag) {
+    registers.pc = 0x1234;
+    registers.p |= Z_FLAG;
+    stage_instruction(INC_ZERO);
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x44));
+    ON_CALL(mmu, read_byte(0x44)).WillByDefault(Return(0xFD));
+    step_execution(5);
+}
+TEST_F(CpuTest, inc_zero_sets_n_flag) {
+    registers.pc = 0x1234;
+    expected.p |= N_FLAG;
+    stage_instruction(INC_ZERO);
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x44));
+    ON_CALL(mmu, read_byte(0x44)).WillByDefault(Return(127));
+    step_execution(5);
+}
+TEST_F(CpuTest, inc_zero_clears_n_flag) {
+    registers.pc = 0x1234;
+    registers.p |= N_FLAG;
+    stage_instruction(INC_ZERO);
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0x44));
+    ON_CALL(mmu, read_byte(0x44)).WillByDefault(Return(125));
+    step_execution(5);
 }
 
 // INX

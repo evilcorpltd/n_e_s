@@ -261,6 +261,23 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::NOP:
         result.push([]() { /* Do nothing. */ });
         break;
+    case Instruction::INC: {
+        if (opcode.address_mode == AddressMode::Zeropage) {
+            result.append(create_zeropage_addressing_steps());
+            result.push([=]() { tmp_ = mmu_->read_byte(effective_address_); });
+            result.push(
+                    [=]() { mmu_->write_byte(effective_address_, tmp_++); });
+            result.push([=]() {
+                set_zero(tmp_);
+                set_negative(tmp_);
+                mmu_->write_byte(effective_address_, tmp_);
+            });
+            break;
+        }
+        std::stringstream err;
+        err << "Bad instruction: " << std::showbase << std::hex << +raw_opcode;
+        throw std::logic_error(err.str());
+    }
     case Instruction::INX:
         result.push([=]() {
             ++registers_->x;

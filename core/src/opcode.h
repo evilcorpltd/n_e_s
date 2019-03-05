@@ -23,6 +23,7 @@ enum class AddressMode {
 enum class Instruction {
     Invalid,
     BRK,
+    INC,
     PHP,
     BPL,
     CLC,

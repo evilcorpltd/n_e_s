@@ -132,6 +132,8 @@ Opcode decode(const uint8_t op) {
         return {Instruction::CPX, AddressMode::Immediate};
     case 0xE4:
         return {Instruction::CPX, AddressMode::Zeropage};
+    case 0xE6:
+        return {Instruction::INC, AddressMode::Zeropage};
     case 0xE8:
         return {Instruction::INX, AddressMode::Implied};
     case 0xEA:
