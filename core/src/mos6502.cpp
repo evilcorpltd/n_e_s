@@ -197,10 +197,13 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() { clear_flag(I_FLAG); });
         break;
     case Instruction::AdcZeropage:
+    case Instruction::AdcZeropageX:
     case Instruction::AdcImmediate:
     case Instruction::AdcAbsolute:
     case Instruction::AdcAbsoluteX:
     case Instruction::AdcAbsoluteY:
+    case Instruction::AdcIndirectX:
+    case Instruction::AdcIndirectY:
         result.append(create_add_instruction(*current_opcode_));
         break;
     case Instruction::PlaImplied:
