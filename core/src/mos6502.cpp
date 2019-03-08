@@ -196,7 +196,11 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() {
             /* Do nothing. */
         });
-        result.push([=]() { registers_->a = stack_.pop_byte(); });
+        result.push([=]() {
+            registers_->a = stack_.pop_byte();
+            set_zero(registers_->a);
+            set_negative(registers_->a);
+        });
         break;
     case Instruction::RtsImplied:
         result.push([=]() {

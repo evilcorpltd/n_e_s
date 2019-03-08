@@ -845,16 +845,35 @@ TEST_F(CpuTest, adc_zero_no_carry_or_overflow) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, pla) {
+TEST_F(CpuTest, pla_sets_z_clears_n) {
     stage_instruction(PLA);
     registers.sp = 0x0A;
     registers.a = 0xBB;
+    registers.p = N_FLAG;
 
     expected.sp = registers.sp + 1u;
-    expected.a = 0x12;
+    expected.a = 0x00;
+    expected.p = Z_FLAG;
 
     ON_CALL(mmu, read_byte(kStackOffset + expected.sp))
-            .WillByDefault(Return(0x12));
+            .WillByDefault(Return(0x00));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, pla_sets_n_clears_z) {
+    stage_instruction(PLA);
+    registers.sp = 0x0A;
+    registers.a = 0xBB;
+    registers.p = Z_FLAG;
+
+    expected.sp = registers.sp + 1u;
+    expected.a = 0x92;
+    expected.p = N_FLAG;
+
+    ON_CALL(mmu, read_byte(kStackOffset + expected.sp))
+            .WillByDefault(Return(0x92));
 
     step_execution(4);
     EXPECT_EQ(expected, registers);
