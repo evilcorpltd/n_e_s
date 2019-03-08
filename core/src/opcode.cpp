@@ -18,8 +18,12 @@ Opcode decode(const uint8_t op) {
         return {Family::BIT, BitZeropage, AddressMode::Zeropage};
     case PlpImplied:
         return {Family::BIT, PlpImplied, AddressMode::Implied};
+    case AndImmediate:
+        return {Family::AND, AndImmediate, AddressMode::Immediate};
     case BitAbsolute:
         return {Family::BIT, BitAbsolute, AddressMode::Absolute};
+    case AndAbsolute:
+        return {Family::AND, AndAbsolute, AddressMode::Absolute};
     case BmiRelative:
         return {Family::BMI, BmiRelative, AddressMode::Relative};
     case SecImplied:

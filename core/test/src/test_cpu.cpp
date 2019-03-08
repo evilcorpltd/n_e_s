@@ -31,8 +31,10 @@ enum Opcode : uint8_t {
     CLC = 0x18,
     JSR = 0x20,
     BIT_ZERO = 0x24,
-    BIT_ABS = 0x2C,
     PLP = 0x28,
+    AND_IMM = 0x29,
+    BIT_ABS = 0x2C,
+    AND_ABS = 0x2D,
     BMI = 0x30,
     SEC = 0x38,
     LSR_ACC = 0x4A,
@@ -511,6 +513,58 @@ TEST_F(CpuTest, bpl_negative_operand) {
     stage_instruction(BPL);
 
     branch_test(0, -128 + 5, 3);
+}
+
+TEST_F(CpuTest, and_imm) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = 0b10101010;
+    registers.p = Z_FLAG | N_FLAG;
+
+    stage_instruction(AND_IMM);
+
+    ++expected.pc;
+    expected.a = 0b00001010;
+
+    ON_CALL(mmu, read_byte(registers.pc + 1)).WillByDefault(Return(0b00001111));
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, and_abs_sets_zero_clears_neg) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = 0b10101010;
+    registers.p = N_FLAG;
+
+    stage_instruction(AND_ABS);
+
+    expected.pc += 2;
+    expected.a = 0b00000000;
+    expected.p = Z_FLAG;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x5678));
+    ON_CALL(mmu, read_byte(0x5678)).WillByDefault(Return(0b01010101));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, and_abs_sets_neg_clears_zero) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = 0b11000011;
+    registers.p = Z_FLAG;
+
+    stage_instruction(AND_ABS);
+
+    expected.pc += 2;
+    expected.a = 0b11000001;
+    expected.p = N_FLAG;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x5678));
+    ON_CALL(mmu, read_byte(0x5678)).WillByDefault(Return(0b11110001));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
 }
 
 TEST_F(CpuTest, bit_zero_sets_zero) {
