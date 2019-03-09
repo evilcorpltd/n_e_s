@@ -49,6 +49,15 @@ matrix:
         - ctest --output-on-failure
         - gcovr -p --root .. --fail-under-line=95 --exclude '_deps/' --exclude '(.+/)?test/'
 
+    - name: "gcc 8"
+      addons: &gcc8
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-8
+      env: MATRIX_EVAL="CXX=g++-8 BUILD_TYPE=Debug"
+
     - name: "clang 7"
       addons: &clang7
         apt:
