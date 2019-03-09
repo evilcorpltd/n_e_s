@@ -72,6 +72,17 @@ matrix:
         - UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=1"
         - LLVM_SYMBOLIZER_PATH="$(which llvm-symbolizer)"
 
+    - name: "clang 8"
+      addons: &clang8
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-xenial-8
+          packages:
+            - clang-8
+            - libstdc++-8-dev
+      env: MATRIX_EVAL="CXX=clang++-8 BUILD_TYPE=Debug"
+
 before_script:
   - source flags.sh
   - mkdir _build && cd _build
