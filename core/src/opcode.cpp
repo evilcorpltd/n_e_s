@@ -28,6 +28,10 @@ Opcode decode(const uint8_t op) {
         return {Family::BMI, BmiRelative, AddressMode::Relative};
     case SecImplied:
         return {Family::SEC, SecImplied, AddressMode::Implied};
+    case AndAbsoluteY:
+        return {Family::AND, AndAbsoluteY, AddressMode::AbsoluteY};
+    case AndAbsoluteX:
+        return {Family::AND, AndAbsoluteX, AddressMode::AbsoluteX};
     case PhaImplied:
         return {Family::PHA, PhaImplied, AddressMode::Implied};
     case LsrAccumulator:

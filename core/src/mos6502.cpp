@@ -31,6 +31,12 @@ constexpr uint16_t high_byte(uint16_t word) {
     return word & 0xFF00;
 }
 
+// Returns true if accessing an index address will require the cpu to reach
+// across a page boundary.
+constexpr bool cross_page(uint16_t address, uint8_t index) {
+    return ((address + index) & 0xFF00) != (address & 0xFF00);
+}
+
 } // namespace
 
 namespace n_e_s::core {
@@ -135,6 +141,8 @@ Pipeline Mos6502::parse_next_instruction() {
         break;
     case Instruction::AndImmediate:
     case Instruction::AndAbsolute:
+    case Instruction::AndAbsoluteX:
+    case Instruction::AndAbsoluteY:
         result.append(create_and_instruction(opcode));
         break;
     case Instruction::ClcImplied:
@@ -437,8 +445,8 @@ Pipeline Mos6502::create_branch_instruction(
         registers_->pc += to_signed(offset);
 
         if (page != high_byte(registers_->pc)) {
-            return StepResult::Continue;
             // We crossed a page boundary so we spend 1 more cycle.
+            return StepResult::Continue;
         }
         return StepResult::Stop;
     });
@@ -484,7 +492,8 @@ Pipeline Mos6502::create_and_instruction(Opcode opcode) {
 }
 Pipeline Mos6502::create_store_instruction(Opcode opcode) {
     Pipeline result;
-    result.append(create_addressing_steps(opcode.address_mode));
+    const bool is_write = true;
+    result.append(create_addressing_steps(opcode.address_mode, is_write));
 
     uint8_t *reg{};
     if (opcode.family == Family::STX) {
@@ -544,7 +553,8 @@ Pipeline Mos6502::create_compare_instruction(Opcode opcode) {
     return result;
 }
 
-Pipeline Mos6502::create_addressing_steps(AddressMode address_mode) {
+Pipeline Mos6502::create_addressing_steps(AddressMode address_mode,
+        bool is_write) {
     Pipeline result;
 
     switch (address_mode) {
@@ -561,10 +571,12 @@ Pipeline Mos6502::create_addressing_steps(AddressMode address_mode) {
         result.append(create_absolute_addressing_steps());
         break;
     case AddressMode::AbsoluteX:
-        result.append(create_absolute_indexed_addressing_steps(&registers_->x));
+        result.append(create_absolute_indexed_addressing_steps(
+                &registers_->x, is_write));
         break;
     case AddressMode::AbsoluteY:
-        result.append(create_absolute_indexed_addressing_steps(&registers_->y));
+        result.append(create_absolute_indexed_addressing_steps(
+                &registers_->y, is_write));
         break;
     case AddressMode::IndexedIndirect:
         result.append(create_indexed_indirect_addressing_steps());
@@ -612,17 +624,43 @@ Pipeline Mos6502::create_absolute_addressing_steps() {
 }
 
 Pipeline Mos6502::create_absolute_indexed_addressing_steps(
-        const uint8_t *index_reg) {
+        const uint8_t *index_reg,
+        bool is_write) {
     Pipeline result;
     result.push([=]() { ++registers_->pc; });
     result.push([=]() {
         ++registers_->pc;
-        effective_address_ = mmu_->read_word(registers_->pc - 2);
-    });
-    result.push([=]() {
+        const uint16_t abs_address = mmu_->read_word(registers_->pc - 2);
         const uint8_t offset = *index_reg;
-        effective_address_ += offset;
+
+        is_crossing_page_boundary_ = cross_page(abs_address, offset);
+        effective_address_ = abs_address + offset;
     });
+
+    if (is_write) {
+        result.push([=]() {
+            if (is_crossing_page_boundary_) {
+                // The high byte of the effective address is invalid
+                // at this time (smaller by $100), but a read is still
+                // performed.
+                mmu_->read_word(effective_address_ - 0x0100);
+            } else {
+                // Extra read from effective address.
+                mmu_->read_word(effective_address_);
+            }
+        });
+    } else {
+        result.push_conditional([=]() {
+            if (is_crossing_page_boundary_) {
+                // The high byte of the effective address is invalid
+                // at this time (smaller by $100), but a read is still
+                // performed.
+                mmu_->read_word(effective_address_ - 0x0100);
+                return StepResult::Continue;
+            }
+            return StepResult::Skip;
+        });
+    }
     return result;
 }
 

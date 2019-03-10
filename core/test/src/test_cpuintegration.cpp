@@ -209,6 +209,13 @@ TEST_F(CpuIntegrationTest, stack) {
     load_hex_dump(
             0x0610, {0x99, 0x00, 0x02, 0xc8, 0xc0, 0x20, 0xd0, 0xf7, 0x00});
 
+    // STA with absolute indexed addressing will first read from the effective
+    // address before writing to it, so we need to initialize the fake mmu with
+    // some data at those addresses.
+    for (uint8_t i = 0; i <= 0x20; ++i) {
+        mmu.write_byte(0x0200 + i, 0xBA);
+    }
+
     set_reset_address(0x0600);
     set_break_address(0xDEAD);
 
