@@ -56,6 +56,10 @@ Opcode decode(const uint8_t op) {
         return {Family::BVS, BvsRelative, AddressMode::Relative};
     case SeiImplied:
         return {Family::SEI, SeiImplied, AddressMode::Implied};
+    case AdcAbsoluteY:
+        return {Family::ADC, AdcAbsoluteY, AddressMode::AbsoluteY};
+    case AdcAbsoluteX:
+        return {Family::ADC, AdcAbsoluteX, AddressMode::AbsoluteX};
     case StaIndexedIndirect:
         return {Family::STA, StaIndexedIndirect, AddressMode::IndexedIndirect};
     case StyZeropage:

@@ -51,6 +51,8 @@ enum Opcode : uint8_t {
     ADC_ABS = 0x6D,
     BVS = 0x70,
     SEI = 0x78,
+    ADC_ABSY = 0x79,
+    ADC_ABSX = 0x7D,
     STA_INXIND = 0x81,
     TXA = 0x8A,
     STY_ABS = 0x8C,
@@ -956,6 +958,44 @@ TEST_F(CpuTest, adc_zero_no_carry_or_overflow) {
     ON_CALL(mmu, read_byte(0x45)).WillByDefault(Return(0x10));
 
     step_execution(3);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, adc_absx_no_carry_or_overflow_no_pagecrossing) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0x10;
+
+    stage_instruction(ADC_ABSX);
+
+    registers.a = 0x50;
+    registers.p = V_FLAG;
+    expected.a = 0x71;
+    expected.pc += 2;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x5678));
+    ON_CALL(mmu, read_byte(0x5678 + 0x10)).WillByDefault(Return(0x21));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, adc_absy_no_carry_or_overflow_with_pagecrossing) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0xAB;
+
+    stage_instruction(ADC_ABSY);
+
+    registers.a = 0x50;
+    registers.p = V_FLAG;
+    expected.a = 0x71;
+    expected.pc += 2;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x5678));
+    ON_CALL(mmu, read_byte(0x5678 + 0xAB - 0x0100))
+            .WillByDefault(Return(0xDEAD));
+    ON_CALL(mmu, read_byte(0x5678 + 0xAB)).WillByDefault(Return(0x21));
+
+    step_execution(5);
     EXPECT_EQ(expected, registers);
 }
 
