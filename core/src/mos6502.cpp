@@ -127,6 +127,15 @@ Pipeline Mos6502::parse_next_instruction() {
             }
         });
         break;
+    case Instruction::PlpImplied:
+        result.push([=]() {
+            /* Do nothing. */
+        });
+        result.push([=]() {
+            /* Do nothing. */
+        });
+        result.push([=]() { registers_->p = stack_.pop_byte(); });
+        break;
     case Instruction::ClcImplied:
         result.push([=]() { clear_flag(C_FLAG); });
         break;
@@ -179,6 +188,19 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::AdcImmediate:
     case Instruction::AdcAbsolute:
         result.append(create_add_instruction(opcode));
+        break;
+    case Instruction::PlaImplied:
+        result.push([=]() {
+            /* Do nothing. */
+        });
+        result.push([=]() {
+            /* Do nothing. */
+        });
+        result.push([=]() {
+            registers_->a = stack_.pop_byte();
+            set_zero(registers_->a);
+            set_negative(registers_->a);
+        });
         break;
     case Instruction::RtsImplied:
         result.push([=]() {
