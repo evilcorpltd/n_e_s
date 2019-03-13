@@ -21,15 +21,15 @@ private:
     uint16_t cycle_;
 
     // Object Atribute Memory
-    constexpr static uint16_t OAM_SIZE{256};
-    uint8_t oam_data_[OAM_SIZE]{};
+    constexpr static uint16_t kOamSize{256};
+    uint8_t oam_data_[kOamSize]{};
 
     // PPU vram. The size of this memory bank shall only be 2kB, but for now
     // we let it fill the whole address space which the PPU has. This should be
     // changed once we have support for letting the cartridge map stuff in this
     // address space.
-    constexpr static uint16_t VRAM_SIZE{6 * 1024};
-    uint8_t ppu_vram_[VRAM_SIZE]{};
+    constexpr static uint16_t kVramSize{6 * 1024};
+    uint8_t ppu_vram_[kVramSize]{};
 
     // Updates cycle and scanline counters
     void update_counters();
