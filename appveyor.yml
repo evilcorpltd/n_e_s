@@ -5,15 +5,19 @@ configuration:
   - Release
 
 environment:
+  CXX_FLAGS: /WX
   matrix:
   - GENERATOR: Visual Studio 15 2017
   - GENERATOR: Visual Studio 15 2017 Win64
+  - GENERATOR: Ninja
+    VCVARS: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat
 
 image:
   - Visual Studio 2017
 
 cache:
   - C:\cmake-3.13.0-win32-x86
+  - C:\ninja
 
 install:
   - ps: |
@@ -22,15 +26,20 @@ install:
         7z x -y cmake-3.13.0-win32-x86.zip -oC:\
       }
       $env:PATH="C:\cmake-3.13.0-win32-x86\bin;$env:PATH"
+      if (![IO.File]::Exists("C:\ninja\ninja.exe")) {
+        Start-FileDownload 'https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-win.zip'
+        7z x -y ninja-win.zip -oC:\ninja
+      }
+      $env:PATH="C:\ninja;$env:PATH"
 
 before_build:
-  - cmd: flags.bat
+  - cmd: if defined VCVARS call "%VCVARS%"
   - ps: |
       mkdir build
       cd build
 
       echo generator="$env:GENERATOR"
-      cmake .. -G"$env:GENERATOR"
+  - cmd: cmake -G"%GENERATOR%" .. || (echo CMAKEERROR && type CMakeFiles\CMakeError.log && echo CMAKEOUTPUT && type CMakeFiles\CMakeOutput.log && exit 1)
 
 build_script:
   - cmake --build . --config %CONFIGURATION%
