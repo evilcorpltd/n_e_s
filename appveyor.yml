@@ -1,12 +1,13 @@
 shallow_clone: true
 
-platform:
-  - x86
-  - x64
-
 configuration:
   - Debug
   - Release
+
+environment:
+  matrix:
+  - GENERATOR: Visual Studio 15 2017
+  - GENERATOR: Visual Studio 15 2017 Win64
 
 image:
   - Visual Studio 2017
@@ -28,13 +29,8 @@ before_build:
       mkdir build
       cd build
 
-      $env:generator="Visual Studio 15 2017"
-
-      if ($env:PLATFORM -eq "x64") {
-          $env:generator="$env:generator Win64"
-      }
-      echo generator="$env:generator"
-      cmake .. -G "Visual Studio 15 2017"
+      echo generator="$env:GENERATOR"
+      cmake .. -G"$env:GENERATOR"
 
 build_script:
   - cmake --build . --config %CONFIGURATION%
