@@ -10,6 +10,7 @@ Checks: '
   modernize-*,
   performance-*,
   readability-else-after-return,
+  readability-identifier-naming,
   readability-non-const-parameter'
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
@@ -22,5 +23,58 @@ CheckOptions:
     value:           '16'
   - key:             modernize-loop-convert.NamingStyle
     value:           CamelCase
+
+# readability-identifier-naming
+# Classes, structs, ...
+  - key:    readability-identifier-naming.NamespaceCase
+    value:  lower_case
+  - key:    readability-identifier-naming.ClassCase
+    value:  CamelCase
+  - key:    readability-identifier-naming.StructCase
+    value:  CamelCase
+  - key:    readability-identifier-naming.EnumCase
+    value:  CamelCase
+
+# Variables, member variables, ...
+  - key:    readability-identifier-naming.ParameterCase
+    value:  lower_case
+  - key:    readability-identifier-naming.VariableCase
+    value:  lower_case
+  - key:    readability-identifier-naming.MemberCase
+    value:  lower_case
+  - key:    readability-identifier-naming.PrivateMemberCase
+    value:  lower_case
+  - key:    readability-identifier-naming.PrivateMemberSuffix
+    value:  _
+
+# Functions, methods, ...
+  - key:    readability-identifier-naming.FunctionCase
+    value:  lower_case
+  - key:    readability-identifier-naming.MethodCase
+    value:  lower_case
+
+# Constants
+  - key:    readability-identifier-naming.ConstantPrefix
+    value:  k
+  - key:    readability-identifier-naming.ConstantCase
+    value:  CamelCase
+  - key:    readability-identifier-naming.ConstantMemberSuffix
+    value:  _
+  - key:    readability-identifier-naming.ConstantMemberCase
+    value:  lower_case
+  - key:    readability-identifier-naming.ConstantParameterPrefix
+    value:  ''
+  - key:    readability-identifier-naming.ConstantParameterCase
+    value:  lower_case
+  - key:    readability-identifier-naming.EnumConstantCase
+    value:  aNy_CasE
+  - key:    readability-identifier-naming.LocalConstantParameterPrefix
+    value:  ''
+  - key:    readability-identifier-naming.LocalConstantCase
+    value:  lower_case
+  - key:    readability-identifier-naming.ConstexprVariablePrefix
+    value:  k
+  - key:    readability-identifier-naming.ConstexprVariableCase
+    value:  CamelCase
 ...
 

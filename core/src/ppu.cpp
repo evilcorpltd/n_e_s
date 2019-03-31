@@ -86,7 +86,7 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
             registers_->write_toggle = true;
         }
     } else if (addr == kPpuData) {
-        if (registers_->vram_addr < VRAM_SIZE) {
+        if (registers_->vram_addr < kVramSize) {
             ppu_vram_[registers_->vram_addr] = byte;
             registers_->vram_addr += get_vram_address_increment();
         } else {

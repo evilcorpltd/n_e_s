@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
     Nes nes;
     nes.load_rom(argv[1]);
 
-    for (uint32_t i = 0; i < 9000; ++i) {
+    for (uint32_t i = 0; i < 10'000'000; ++i) {
         nes.execute();
     }
 
