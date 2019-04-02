@@ -49,7 +49,8 @@ before_build:
       cd build
 
       echo generator="$env:GENERATOR"
-  - cmd: clang-cl -v
+      echo vcvars="$env:VCVARS"
+      echo cmake_args="$env:CMAKE_ARGS"
   - cmd: cmake %CMAKE_ARGS% -G"%GENERATOR%" .. || (echo CMAKEERROR && type CMakeFiles\CMakeError.log && echo CMAKEOUTPUT && type CMakeFiles\CMakeOutput.log && exit 1)
 
 build_script:
