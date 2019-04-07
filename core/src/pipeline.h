@@ -5,18 +5,24 @@
 
 namespace n_e_s::core {
 
+enum class StepResult { Continue, Skip, Stop };
+
 class Pipeline {
     using StepT = std::function<void()>;
-    using ConditionalStepT = std::function<bool()>;
+    using ConditionalStepT = std::function<StepResult()>;
 
 public:
     // Pushes a step to this pipeline. The step will always be executed as long
     // as the step before was executed.
     void push(const StepT &step);
 
-    // Pushes a step to this pipeline. If the step returns false, then this
-    // pipeline will be considered done and any remaining steps will not be
-    // exectued.
+    // Pushes a step to this pipeline.
+    // If the step returns Stop, then this pipeline will be considered
+    // done and any remaining steps will not be exectued.
+    // If the step returns Continue, then the following step will be run the
+    // next time this pipeline is executed.
+    // If the step returns Skip, then the followinge step will be run
+    // directly.
     void push_conditional(ConditionalStepT step);
 
     // Pushes all steps in another pipeline to this pipeline.

@@ -426,9 +426,9 @@ Pipeline Mos6502::create_branch_instruction(
     result.push_conditional([=]() {
         if (!condition()) {
             ++registers_->pc;
-            return false;
+            return StepResult::Stop;
         }
-        return true;
+        return StepResult::Continue;
     });
 
     result.push_conditional([=]() {
@@ -438,10 +438,10 @@ Pipeline Mos6502::create_branch_instruction(
         registers_->pc += to_signed(offset);
 
         if (page != high_byte(registers_->pc)) {
-            return true;
+            return StepResult::Continue;
             // We crossed a page boundary so we spend 1 more cycle.
         }
-        return false;
+        return StepResult::Stop;
     });
 
     result.push([=]() { /* Do nothing. */ });
