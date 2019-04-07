@@ -1,18 +1,32 @@
 shallow_clone: true
 
-platform:
-  - x86
-  - x64
-
 configuration:
   - Debug
   - Release
+
+environment:
+  matrix:
+  - TOOLCHAIN: Msvc 2017 x86
+    GENERATOR: Visual Studio 15 2017
+
+  - TOOLCHAIN: Msvc 2017 x64
+    GENERATOR: Visual Studio 15 2017 Win64
+
+  - TOOLCHAIN: Msvc 2017 x64/Ninja
+    GENERATOR: Ninja
+    VCVARS: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat
+
+  - TOOLCHAIN: Msvc 2017 x64 Clang/Ninja
+    GENERATOR: Ninja
+    VCVARS: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat
+    CMAKE_ARGS: -DCMAKE_C_COMPILER=clang-cl.exe -DCMAKE_CXX_COMPILER=clang-cl.exe
 
 image:
   - Visual Studio 2017
 
 cache:
   - C:\cmake-3.13.0-win32-x86
+  - C:\ninja
 
 install:
   - ps: |
@@ -21,20 +35,23 @@ install:
         7z x -y cmake-3.13.0-win32-x86.zip -oC:\
       }
       $env:PATH="C:\cmake-3.13.0-win32-x86\bin;$env:PATH"
+      if (![IO.File]::Exists("C:\ninja\ninja.exe")) {
+        Start-FileDownload 'https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-win.zip'
+        7z x -y ninja-win.zip -oC:\ninja
+      }
+      $env:PATH="C:\ninja;$env:PATH"
 
 before_build:
+  - cmd: if defined VCVARS call "%VCVARS%"
   - cmd: flags.bat
   - ps: |
       mkdir build
       cd build
 
-      $env:generator="Visual Studio 15 2017"
-
-      if ($env:PLATFORM -eq "x64") {
-          $env:generator="$env:generator Win64"
-      }
-      echo generator="$env:generator"
-      cmake .. -G "Visual Studio 15 2017"
+      echo generator="$env:GENERATOR"
+      echo vcvars="$env:VCVARS"
+      echo cmake_args="$env:CMAKE_ARGS"
+  - cmd: cmake %CMAKE_ARGS% -G"%GENERATOR%" .. || (echo CMAKEERROR && type CMakeFiles\CMakeError.log && echo CMAKEOUTPUT && type CMakeFiles\CMakeOutput.log && exit 1)
 
 build_script:
   - cmake --build . --config %CONFIGURATION%
