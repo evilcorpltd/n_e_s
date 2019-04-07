@@ -1,1 +1,2 @@
 set CXXFLAGS=%CXXFLAGS% /WX
+set CXXFLAGS=%CXXFLAGS% /permissive-
