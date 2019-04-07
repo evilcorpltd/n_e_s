@@ -318,6 +318,17 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::NopImplied:
         result.push([]() { /* Do nothing. */ });
         break;
+    case Instruction::IncZeropage: {
+        result.append(create_zeropage_addressing_steps());
+        result.push([=]() { tmp_ = mmu_->read_byte(effective_address_); });
+        result.push([=]() { mmu_->write_byte(effective_address_, tmp_++); });
+        result.push([=]() {
+            set_zero(tmp_);
+            set_negative(tmp_);
+            mmu_->write_byte(effective_address_, tmp_);
+        });
+        break;
+    }
     case Instruction::InxImplied:
         result.push([=]() {
             ++registers_->x;

@@ -50,6 +50,9 @@ private:
     // execution.
     uint16_t effective_address_{};
 
+    // Holds data for the CPU between pipeline steps.
+    uint8_t tmp_{};
+
     void clear_flag(uint8_t flag);
     void set_flag(uint8_t flag);
 

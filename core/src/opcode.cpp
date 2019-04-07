@@ -136,6 +136,8 @@ Opcode decode(const uint8_t op) {
         return {Family::CPX, CpxImmediate, AddressMode::Immediate};
     case CpxZeropage:
         return {Family::CPX, CpxZeropage, AddressMode::Zeropage};
+    case IncZeropage:
+        return {Family::INC, IncZeropage, AddressMode::Zeropage};
     case InxImplied:
         return {Family::INX, InxImplied, AddressMode::Implied};
     case NopImplied:

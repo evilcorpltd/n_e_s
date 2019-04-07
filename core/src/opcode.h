@@ -138,7 +138,7 @@ enum Instruction : uint8_t {
     // SbcIndirectX = 0xE1,
     CpxZeropage = 0xE4,
     // SbcZeropage = 0xE5,
-    // IncZeropage = 0xE6,
+    IncZeropage = 0xE6,
     InxImplied = 0xE8,
     // SbcImmediate = 0xE9,
     NopImplied = 0xEA,
@@ -158,6 +158,7 @@ enum Instruction : uint8_t {
 enum class Family {
     Invalid,
     BRK,
+    INC,
     PHP,
     BPL,
     CLC,
