@@ -75,6 +75,7 @@ private:
 
     Pipeline create_branch_instruction(const std::function<bool()> &condition);
     Pipeline create_add_instruction(Opcode opcode);
+    Pipeline create_and_instruction(Opcode opcode);
     Pipeline create_store_instruction(Opcode opcode);
     Pipeline create_load_instruction(Opcode opcode);
     Pipeline create_compare_instruction(Opcode opcode);

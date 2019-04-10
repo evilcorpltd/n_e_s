@@ -136,6 +136,10 @@ Pipeline Mos6502::parse_next_instruction() {
         });
         result.push([=]() { registers_->p = stack_.pop_byte(); });
         break;
+    case Instruction::AndImmediate:
+    case Instruction::AndAbsolute:
+        result.append(create_and_instruction(opcode));
+        break;
     case Instruction::ClcImplied:
         result.push([=]() { clear_flag(C_FLAG); });
         break;
@@ -473,6 +477,22 @@ Pipeline Mos6502::create_add_instruction(Opcode opcode) {
     return result;
 }
 
+Pipeline Mos6502::create_and_instruction(Opcode opcode) {
+    Pipeline result;
+    if (opcode.address_mode == AddressMode::Absolute) {
+        result.append(create_absolute_addressing_steps());
+    }
+
+    result.push([=]() {
+        const uint8_t operand = mmu_->read_byte(effective_address_);
+        registers_->a &= operand;
+
+        set_zero(registers_->a);
+        set_negative(registers_->a);
+    });
+
+    return result;
+}
 Pipeline Mos6502::create_store_instruction(Opcode opcode) {
     Pipeline result;
     if (opcode.address_mode == AddressMode::Absolute) {
