@@ -80,6 +80,7 @@ Pipeline Mos6502::parse_next_instruction() {
     if (opcode.family == Family::Invalid) {
         std::stringstream err;
         err << "Bad instruction: " << std::showbase << std::hex << +raw_opcode;
+        err << " @ " << registers_->pc - 1;
         throw std::logic_error(err.str());
     }
 
