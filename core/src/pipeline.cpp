@@ -5,7 +5,7 @@ namespace n_e_s::core {
 void Pipeline::push(const StepT &step) {
     steps_.emplace_back([=]() {
         step();
-        return true;
+        return StepResult::Continue;
     });
 }
 
@@ -31,8 +31,16 @@ void Pipeline::clear() {
 }
 
 void Pipeline::execute_step() {
-    continue_ = steps_.front()();
-    steps_.pop_front();
+    if (!steps_.empty()) {
+        const StepResult res = steps_.front()();
+        steps_.pop_front();
+
+        continue_ = res != StepResult::Stop;
+
+        if (res == StepResult::Skip) {
+            execute_step();
+        }
+    }
 }
 
 } // namespace n_e_s::core
