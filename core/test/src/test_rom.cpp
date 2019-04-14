@@ -57,7 +57,7 @@ TEST(RomFactory, doesnt_parse_bytes_without_a_nes_header) {
 }
 
 TEST(RomFactory, fails_if_mapper_not_supported) {
-    std::string bytes{ines_header_bytes(0xCD, 1, 1, 1)};
+    std::string bytes{ines_header_bytes(0xCD, 0, 0, 0)};
     std::stringstream ss(bytes);
     EXPECT_THROW(RomFactory::from_bytes(ss), std::logic_error);
 }
