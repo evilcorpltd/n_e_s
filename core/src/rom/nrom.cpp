@@ -1,6 +1,7 @@
 #include "rom/nrom.h"
 
 #include <cassert>
+#include <stdexcept>
 
 namespace n_e_s::core {
 
