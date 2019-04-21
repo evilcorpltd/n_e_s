@@ -8,33 +8,44 @@ environment:
   matrix:
   - TOOLCHAIN: Msvc 2017 x86
     GENERATOR: Visual Studio 15 2017
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
   - TOOLCHAIN: Msvc 2017 x64
     GENERATOR: Visual Studio 15 2017 Win64
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
+  - TOOLCHAIN: Msvc 2019 x86
+    GENERATOR: Visual Studio 16 2019
+    CMAKE_ARGS: -A Win32
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+
+  - TOOLCHAIN: Msvc 2019 x64
+    GENERATOR: Visual Studio 16 2019
+    CMAKE_ARGS: -A x64
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
   - TOOLCHAIN: Msvc 2017 x64/Ninja
     GENERATOR: Ninja
     VCVARS: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
   - TOOLCHAIN: Msvc 2017 x64 Clang/Ninja
     GENERATOR: Ninja
     VCVARS: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat
     CMAKE_ARGS: -DCMAKE_C_COMPILER=clang-cl.exe -DCMAKE_CXX_COMPILER=clang-cl.exe
-
-image:
-  - Visual Studio 2017
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
 cache:
-  - C:\cmake-3.13.0-win32-x86
+  - C:\cmake-3.14.2-win32-x86
   - C:\ninja
 
 install:
   - ps: |
-      if (![IO.File]::Exists("C:\cmake-3.13.0-win32-x86\bin\cmake.exe")) {
-        Start-FileDownload 'https://cmake.org/files/v3.13/cmake-3.13.0-win32-x86.zip'
-        7z x -y cmake-3.13.0-win32-x86.zip -oC:\
+      if (![IO.File]::Exists("C:\cmake-3.14.2-win32-x86\bin\cmake.exe")) {
+        Start-FileDownload 'https://github.com/Kitware/CMake/releases/download/v3.14.2/cmake-3.14.2-win32-x86.zip'
+        7z x -y cmake-3.14.2-win32-x86.zip -oC:\
       }
-      $env:PATH="C:\cmake-3.13.0-win32-x86\bin;$env:PATH"
+      $env:PATH="C:\cmake-3.14.2-win32-x86\bin;$env:PATH"
       if (![IO.File]::Exists("C:\ninja\ninja.exe")) {
         Start-FileDownload 'https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-win.zip'
         7z x -y ninja-win.zip -oC:\ninja
@@ -47,10 +58,10 @@ before_build:
   - ps: |
       mkdir build
       cd build
-
-      echo generator="$env:GENERATOR"
-      echo vcvars="$env:VCVARS"
-      echo cmake_args="$env:CMAKE_ARGS"
+      echo APPVEYOR_BUILD_WORKER_IMAGE="$env:APPVEYOR_BUILD_WORKER_IMAGE"
+      echo GENERATOR="$env:GENERATOR"
+      echo VCVARS="$env:VCVARS"
+      echo CMAKE_ARGS="$env:CMAKE_ARGS"
   - cmd: cmake %CMAKE_ARGS% -G"%GENERATOR%" .. || (echo CMAKEERROR && type CMakeFiles\CMakeError.log && echo CMAKEOUTPUT && type CMakeFiles\CMakeOutput.log && exit 1)
 
 build_script:
