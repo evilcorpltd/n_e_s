@@ -298,6 +298,10 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::LdyZeropage:
     case Instruction::LdyAbsolute:
     case Instruction::LdyZeropageX:
+    case Instruction::LdaAbsoluteY:
+    case Instruction::LdyAbsoluteX:
+    case Instruction::LdaAbsoluteX:
+    case Instruction::LdxAbsoluteY:
         result.append(create_load_instruction(opcode));
         break;
     case Instruction::BcsRelative:
