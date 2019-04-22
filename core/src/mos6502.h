@@ -53,6 +53,10 @@ private:
     // Holds data for the CPU between pipeline steps.
     uint8_t tmp_{};
 
+    // Set to true if accessing a memory location will require a page boundary
+    // crossing.
+    bool is_crossing_page_boundary_{false};
+
     void clear_flag(uint8_t flag);
     void set_flag(uint8_t flag);
 
@@ -80,12 +84,14 @@ private:
     Pipeline create_load_instruction(Opcode opcode);
     Pipeline create_compare_instruction(Opcode opcode);
 
-    Pipeline create_addressing_steps(AddressMode address_mode);
+    Pipeline create_addressing_steps(AddressMode address_mode,
+            bool is_write = false);
 
     Pipeline create_zeropage_addressing_steps();
     Pipeline create_zeropage_indexed_addressing_steps(const uint8_t *index_reg);
     Pipeline create_absolute_addressing_steps();
-    Pipeline create_absolute_indexed_addressing_steps(const uint8_t *index_reg);
+    Pipeline create_absolute_indexed_addressing_steps(const uint8_t *index_reg,
+            bool is_write);
     Pipeline create_indexed_indirect_addressing_steps();
     Pipeline create_indirect_indexed_addressing_steps();
 };
