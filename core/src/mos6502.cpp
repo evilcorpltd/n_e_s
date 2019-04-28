@@ -647,10 +647,10 @@ Pipeline Mos6502::create_absolute_indexed_addressing_steps(
                 // The high byte of the effective address is invalid
                 // at this time (smaller by $100), but a read is still
                 // performed.
-                mmu_->read_word(effective_address_ - 0x0100);
+                mmu_->read_byte(effective_address_ - 0x0100);
             } else {
                 // Extra read from effective address.
-                mmu_->read_word(effective_address_);
+                mmu_->read_byte(effective_address_);
             }
         });
     } else {
@@ -659,7 +659,7 @@ Pipeline Mos6502::create_absolute_indexed_addressing_steps(
                 // The high byte of the effective address is invalid
                 // at this time (smaller by $100), but a read is still
                 // performed.
-                mmu_->read_word(effective_address_ - 0x0100);
+                mmu_->read_byte(effective_address_ - 0x0100);
                 return StepResult::Continue;
             }
             return StepResult::Skip;
