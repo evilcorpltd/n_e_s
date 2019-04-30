@@ -194,6 +194,8 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::AdcZeropage:
     case Instruction::AdcImmediate:
     case Instruction::AdcAbsolute:
+    case Instruction::AdcAbsoluteX:
+    case Instruction::AdcAbsoluteY:
         result.append(create_add_instruction(opcode));
         break;
     case Instruction::PlaImplied:
@@ -298,6 +300,10 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::LdyZeropage:
     case Instruction::LdyAbsolute:
     case Instruction::LdyZeropageX:
+    case Instruction::LdaAbsoluteY:
+    case Instruction::LdyAbsoluteX:
+    case Instruction::LdaAbsoluteX:
+    case Instruction::LdxAbsoluteY:
         result.append(create_load_instruction(opcode));
         break;
     case Instruction::BcsRelative:

@@ -51,6 +51,8 @@ enum Opcode : uint8_t {
     ADC_ABS = 0x6D,
     BVS = 0x70,
     SEI = 0x78,
+    ADC_ABSY = 0x79,
+    ADC_ABSX = 0x7D,
     STA_INXIND = 0x81,
     TXA = 0x8A,
     STY_ABS = 0x8C,
@@ -85,7 +87,11 @@ enum Opcode : uint8_t {
     LDA_ZEROX = 0xB5,
     LDX_ZEROY = 0xB6,
     CLV = 0xB8,
+    LDA_ABSY = 0xB9,
     TSX = 0xBA,
+    LDY_ABSX = 0xBC,
+    LDA_ABSX = 0xBD,
+    LDX_ABSY = 0xBE,
     CPY_IMM = 0xC0,
     CPY_ZERO = 0xC4,
     INY = 0xC8,
@@ -413,6 +419,93 @@ public:
         ON_CALL(mmu, read_byte(0x44)).WillByDefault(Return(127));
 
         step_execution(3);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void absolute_indexed_load_sets_register(uint8_t instruction,
+            uint8_t *target_reg,
+            uint8_t *index_reg,
+            uint8_t *expected_index_reg) {
+        registers.pc = expected.pc = 0;
+        *index_reg = *expected_index_reg = 0x42;
+
+        stage_instruction(instruction);
+        expected.pc += 2;
+
+        *target_reg = 0x37;
+        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x0100));
+        ON_CALL(mmu, read_byte(0x0100 + *index_reg))
+                .WillByDefault(Return(*target_reg));
+
+        step_execution(4);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void absolute_indexed_load_sets_reg_crossing_page(uint8_t instruction,
+            uint8_t *target_reg,
+            uint8_t *index_reg,
+            uint8_t *expected_index_reg) {
+        registers.pc = expected.pc = 0;
+        *index_reg = *expected_index_reg = 0x01;
+
+        stage_instruction(instruction);
+        expected.pc += 2;
+
+        *target_reg = 0x37;
+        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x01FF));
+
+        EXPECT_CALL(mmu, read_byte(testing::_)).Times(testing::AnyNumber());
+
+        {
+            InSequence s;
+            EXPECT_CALL(mmu, read_byte(0x00FF + *index_reg));
+            EXPECT_CALL(mmu, read_byte(0x01FF + *index_reg))
+                    .WillRepeatedly(Return(*target_reg));
+            step_execution(5);
+        }
+
+        EXPECT_EQ(expected, registers);
+    }
+
+    void absolute_indexed_load_sets_z(uint8_t instruction,
+            uint8_t *target_reg,
+            uint8_t *index_reg,
+            uint8_t *expected_index_reg) {
+        expected.p |= Z_FLAG;
+        registers.p |= N_FLAG;
+        registers.pc = expected.pc = 0;
+        *index_reg = *expected_index_reg = 0x42;
+
+        stage_instruction(instruction);
+        expected.pc += 2;
+
+        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x0100));
+        ON_CALL(mmu, read_byte(0x0100 + 0x42)).WillByDefault(Return(0));
+
+        *target_reg = 0;
+
+        step_execution(4);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void absolute_indexed_load_sets_n(uint8_t instruction,
+            uint8_t *target_reg,
+            uint8_t *index_reg,
+            uint8_t *expected_index_reg) {
+        expected.p |= N_FLAG;
+        registers.p |= Z_FLAG;
+        registers.pc = expected.pc = 0;
+        *index_reg = *expected_index_reg = 0x42;
+
+        stage_instruction(instruction);
+        expected.pc += 2;
+
+        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x0100));
+        ON_CALL(mmu, read_byte(0x0100 + 0x42)).WillByDefault(Return(230));
+
+        *target_reg = 230;
+
+        step_execution(4);
         EXPECT_EQ(expected, registers);
     }
 
@@ -959,6 +1052,44 @@ TEST_F(CpuTest, adc_zero_no_carry_or_overflow) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(CpuTest, adc_absx_no_carry_or_overflow_no_pagecrossing) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0x10;
+
+    stage_instruction(ADC_ABSX);
+
+    registers.a = 0x50;
+    registers.p = V_FLAG;
+    expected.a = 0x71;
+    expected.pc += 2;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x5678));
+    ON_CALL(mmu, read_byte(0x5678 + 0x10)).WillByDefault(Return(0x21));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, adc_absy_no_carry_or_overflow_with_pagecrossing) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0xAB;
+
+    stage_instruction(ADC_ABSY);
+
+    registers.a = 0x50;
+    registers.p = V_FLAG;
+    expected.a = 0x71;
+    expected.pc += 2;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x5678));
+    ON_CALL(mmu, read_byte(0x5678 + 0xAB - 0x0100))
+            .WillByDefault(Return(0xDEAD));
+    ON_CALL(mmu, read_byte(0x5678 + 0xAB)).WillByDefault(Return(0x21));
+
+    step_execution(5);
+    EXPECT_EQ(expected, registers);
+}
+
 TEST_F(CpuTest, pla_sets_z_clears_n) {
     stage_instruction(PLA);
     registers.sp = 0x0A;
@@ -1230,6 +1361,77 @@ TEST_F(CpuTest, ldx_zeropagey_sets_reg) {
             LDX_ZEROY, &expected.x, &registers.y, &expected.y);
 }
 
+// LD absolute indexed
+// LDA_ABSY
+TEST_F(CpuTest, lda_abs_y_sets_reg) {
+    absolute_indexed_load_sets_register(
+            LDA_ABSY, &expected.a, &registers.y, &expected.y);
+}
+TEST_F(CpuTest, lda_abs_y_sets_reg_crossing_page) {
+    absolute_indexed_load_sets_reg_crossing_page(
+            LDA_ABSY, &expected.a, &registers.y, &expected.y);
+}
+TEST_F(CpuTest, lda_abs_y_sets_z_flag) {
+    absolute_indexed_load_sets_z(
+            LDA_ABSY, &expected.a, &registers.y, &expected.y);
+}
+TEST_F(CpuTest, lda_abs_y_sets_n) {
+    absolute_indexed_load_sets_register(
+            LDA_ABSY, &expected.a, &registers.y, &expected.y);
+}
+// LDY_ABSX
+TEST_F(CpuTest, ldy_abs_x_sets_reg) {
+    absolute_indexed_load_sets_register(
+            LDY_ABSX, &expected.y, &registers.x, &expected.x);
+}
+TEST_F(CpuTest, ldy_abs_x_sets_reg_crossing_page) {
+    absolute_indexed_load_sets_reg_crossing_page(
+            LDY_ABSX, &expected.y, &registers.x, &expected.x);
+}
+TEST_F(CpuTest, ldy_abs_x_sets_z_flag) {
+    absolute_indexed_load_sets_z(
+            LDY_ABSX, &expected.y, &registers.x, &expected.x);
+}
+TEST_F(CpuTest, ldy_abs_x_sets_n) {
+    absolute_indexed_load_sets_register(
+            LDY_ABSX, &expected.y, &registers.x, &expected.x);
+}
+// LDA_ABSX
+TEST_F(CpuTest, lda_abs_x_sets_reg) {
+    absolute_indexed_load_sets_register(
+            LDA_ABSX, &expected.a, &registers.x, &expected.x);
+}
+TEST_F(CpuTest, lda_abs_x_sets_reg_crossing_page) {
+    absolute_indexed_load_sets_reg_crossing_page(
+            LDA_ABSX, &expected.a, &registers.x, &expected.x);
+}
+TEST_F(CpuTest, lda_abs_x_sets_z_flag) {
+    absolute_indexed_load_sets_z(
+            LDA_ABSX, &expected.a, &registers.x, &expected.x);
+}
+TEST_F(CpuTest, lda_abs_x_sets_n) {
+    absolute_indexed_load_sets_register(
+            LDA_ABSX, &expected.a, &registers.x, &expected.x);
+}
+// LDX_ABSY
+TEST_F(CpuTest, ldx_abs_y_sets_reg) {
+    absolute_indexed_load_sets_register(
+            LDX_ABSY, &expected.x, &registers.y, &expected.y);
+}
+TEST_F(CpuTest, ldx_abs_y_sets_reg_crossing_page) {
+    absolute_indexed_load_sets_reg_crossing_page(
+            LDX_ABSY, &expected.x, &registers.y, &expected.y);
+}
+TEST_F(CpuTest, ldx_abs_y_sets_z_flag) {
+    absolute_indexed_load_sets_z(
+            LDX_ABSY, &expected.x, &registers.y, &expected.y);
+}
+TEST_F(CpuTest, ldx_abs_y_sets_n) {
+    absolute_indexed_load_sets_register(
+            LDX_ABSY, &expected.x, &registers.y, &expected.y);
+}
+
+// BCS
 TEST_F(CpuTest, bcs_branch_not_taken) {
     stage_instruction(BCS);
     expected.pc += 1;

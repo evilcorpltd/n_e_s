@@ -56,6 +56,10 @@ Opcode decode(const uint8_t op) {
         return {Family::BVS, BvsRelative, AddressMode::Relative};
     case SeiImplied:
         return {Family::SEI, SeiImplied, AddressMode::Implied};
+    case AdcAbsoluteY:
+        return {Family::ADC, AdcAbsoluteY, AddressMode::AbsoluteY};
+    case AdcAbsoluteX:
+        return {Family::ADC, AdcAbsoluteX, AddressMode::AbsoluteX};
     case StaIndexedIndirect:
         return {Family::STA, StaIndexedIndirect, AddressMode::IndexedIndirect};
     case StyZeropage:
@@ -124,8 +128,16 @@ Opcode decode(const uint8_t op) {
         return {Family::LDX, LdxZeropageY, AddressMode::ZeropageY};
     case ClvImplied:
         return {Family::CLV, ClvImplied, AddressMode::Implied};
+    case LdaAbsoluteY:
+        return {Family::LDA, LdaAbsoluteY, AddressMode::AbsoluteY};
     case TsxImplied:
         return {Family::TSX, TsxImplied, AddressMode::Implied};
+    case LdyAbsoluteX:
+        return {Family::LDY, LdyAbsoluteX, AddressMode::AbsoluteX};
+    case LdaAbsoluteX:
+        return {Family::LDA, LdaAbsoluteX, AddressMode::AbsoluteX};
+    case LdxAbsoluteY:
+        return {Family::LDX, LdxAbsoluteY, AddressMode::AbsoluteY};
     case CpyImmediate:
         return {Family::CPY, CpyImmediate, AddressMode::Immediate};
     case CpyZeropage:
