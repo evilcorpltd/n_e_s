@@ -326,6 +326,9 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::CpyImmediate:
     case Instruction::CpyZeropage:
     case Instruction::CpyAbsolute:
+    case Instruction::CmpImmediate:
+    case Instruction::CmpZeropage:
+    case Instruction::CmpAbsolute:
         result.append(create_compare_instruction(opcode));
         break;
     case Instruction::NopImplied:
@@ -542,6 +545,8 @@ Pipeline Mos6502::create_compare_instruction(Opcode opcode) {
         reg = &registers_->x;
     } else if (opcode.family == Family::CPY) {
         reg = &registers_->y;
+    } else if (opcode.family == Family::CMP) {
+        reg = &registers_->a;
     }
 
     Pipeline result;

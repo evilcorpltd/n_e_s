@@ -94,9 +94,12 @@ enum Opcode : uint8_t {
     LDX_ABSY = 0xBE,
     CPY_IMM = 0xC0,
     CPY_ZERO = 0xC4,
+    CMP_ZERO = 0xC5,
     INY = 0xC8,
+    CMP_IMM = 0xC9,
     DEX = 0xCA,
     CPY_ABS = 0xCC,
+    CMP_ABS = 0xCD,
     BNE = 0xD0,
     CLD = 0xD8,
     CPX_IMM = 0xE0,
@@ -1536,7 +1539,25 @@ TEST_F(CpuTest, cpy_imm_sets_nc) {
     compare_immediate_sets_n_c(&registers.y, &expected.y);
 }
 
-// CPX, CPY Absolute mode
+// CMP Immediate mode
+TEST_F(CpuTest, cmp_imm_sets_n_and_clears_z_c) {
+    stage_instruction(CMP_IMM);
+    compare_immediate_sets_n_clears_z_c(&registers.a, &expected.a);
+}
+TEST_F(CpuTest, cmp_imm_sets_c_and_clears_n_z) {
+    stage_instruction(CMP_IMM);
+    compare_immediate_sets_c_clears_n_z(&registers.a, &expected.a);
+}
+TEST_F(CpuTest, cmp_imm_sets_z_c_clears_n) {
+    stage_instruction(CMP_IMM);
+    compare_immediate_sets_z_c_clears_n(&registers.a, &expected.a);
+}
+TEST_F(CpuTest, cmp_imm_sets_nc) {
+    stage_instruction(CMP_IMM);
+    compare_immediate_sets_n_c(&registers.a, &expected.a);
+}
+
+// CPX, CPY, CMP Absolute mode
 TEST_F(CpuTest, cpx_abs_sets_nc) {
     stage_instruction(CPX_ABS);
     compare_abs_sets_n_c(&registers.x, &expected.x);
@@ -1545,8 +1566,12 @@ TEST_F(CpuTest, cpy_abs_sets_nc) {
     stage_instruction(CPY_ABS);
     compare_abs_sets_n_c(&registers.y, &expected.y);
 }
+TEST_F(CpuTest, cmp_abs_sets_nc) {
+    stage_instruction(CMP_ABS);
+    compare_abs_sets_n_c(&registers.a, &expected.a);
+}
 
-// CPX, CPY Zeropage mode
+// CPX, CPY, CMP Zeropage mode
 TEST_F(CpuTest, cpx_zeropage_sets_nc) {
     stage_instruction(CPX_ZERO);
     compare_zeropage_sets_n_c(&registers.x, &expected.x);
@@ -1554,6 +1579,10 @@ TEST_F(CpuTest, cpx_zeropage_sets_nc) {
 TEST_F(CpuTest, cpy_zeropage_sets_nc) {
     stage_instruction(CPY_ZERO);
     compare_zeropage_sets_n_c(&registers.y, &expected.y);
+}
+TEST_F(CpuTest, cmp_zeropage_sets_nc) {
+    stage_instruction(CMP_ZERO);
+    compare_zeropage_sets_n_c(&registers.a, &expected.a);
 }
 
 // NOP
