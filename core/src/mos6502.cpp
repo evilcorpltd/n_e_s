@@ -328,6 +328,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::CpyAbsolute:
     case Instruction::CmpImmediate:
     case Instruction::CmpZeropage:
+    case Instruction::CmpZeropageX:
     case Instruction::CmpAbsolute:
         result.append(create_compare_instruction(opcode));
         break;

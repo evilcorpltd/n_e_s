@@ -101,6 +101,7 @@ enum Opcode : uint8_t {
     CPY_ABS = 0xCC,
     CMP_ABS = 0xCD,
     BNE = 0xD0,
+    CMP_ZEROX = 0xD5,
     CLD = 0xD8,
     CPX_IMM = 0xE0,
     CPX_ZERO = 0xE4,
@@ -1583,6 +1584,25 @@ TEST_F(CpuTest, cpy_zeropage_sets_nc) {
 TEST_F(CpuTest, cmp_zeropage_sets_nc) {
     stage_instruction(CMP_ZERO);
     compare_zeropage_sets_n_c(&registers.a, &expected.a);
+}
+
+TEST_F(CpuTest, cmp_zero_x_sets_zc) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = expected.a = 0x07;
+    registers.x = expected.x = 0xED;
+    registers.p |= N_FLAG;
+    expected.p |= Z_FLAG | C_FLAG;
+
+    stage_instruction(CMP_ZEROX);
+
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+    ON_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED))).WillByDefault(Return(0x07));
+
+    step_execution(4);
+
+    EXPECT_EQ(expected, registers);
 }
 
 // NOP

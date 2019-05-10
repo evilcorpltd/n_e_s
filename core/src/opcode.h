@@ -128,7 +128,7 @@ enum Instruction : uint8_t {
     // DecAbsolute = 0xCE,
     BneRelative = 0xD0,
     // CmpIndirectY = 0xD1,
-    // CmpZeropageX = 0xD5,
+    CmpZeropageX = 0xD5,
     // DecZeropageX = 0xD6,
     CldImplied = 0xD8,
     // CmpAbsoluteY = 0xD9,
