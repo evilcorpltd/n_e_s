@@ -2,7 +2,7 @@
 
 #include "core/icpu.h"
 #include "core/immu.h"
-#include "opcode.h"
+#include "core/opcode.h"
 #include "pipeline.h"
 
 #include <cstdint>

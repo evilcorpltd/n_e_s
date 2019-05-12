@@ -1,4 +1,4 @@
-#include "opcode.h"
+#include "core/opcode.h"
 
 namespace n_e_s::core {
 

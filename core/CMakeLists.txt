@@ -2,16 +2,17 @@ project(n_e_s_core)
 
 add_library(${PROJECT_NAME}
     include/core/cpu_factory.h
-    include/core/membank_factory.h
-    include/core/mmu_factory.h
-    include/core/ppu_factory.h
-    include/core/rom_factory.h
     include/core/icpu.h
-    include/core/invalid_address.h
     include/core/imembank.h
     include/core/immu.h
+    include/core/invalid_address.h
     include/core/ippu.h
     include/core/irom.h
+    include/core/membank_factory.h
+    include/core/mmu_factory.h
+    include/core/opcode.h
+    include/core/ppu_factory.h
+    include/core/rom_factory.h
     src/cpu_factory.cpp
     src/invalid_address.cpp
     src/mapped_membank.h
@@ -24,15 +25,14 @@ add_library(${PROJECT_NAME}
     src/mos6502.cpp
     src/mos6502.h
     src/opcode.cpp
-    src/opcode.h
     src/pipeline.cpp
     src/pipeline.h
     src/ppu.cpp
     src/ppu.h
     src/ppu_factory.cpp
-    src/rom_factory.cpp
     src/rom/nrom.cpp
     src/rom/nrom.h
+    src/rom_factory.cpp
 )
 add_library(n_e_s::core ALIAS ${PROJECT_NAME})
 
