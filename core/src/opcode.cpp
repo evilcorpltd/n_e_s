@@ -1,5 +1,7 @@
 #include "core/opcode.h"
 
+#include <string>
+
 namespace n_e_s::core {
 
 Opcode decode(const uint8_t op) {
@@ -184,6 +186,111 @@ Opcode decode(const uint8_t op) {
         // Since this is an invalid opcode the instruction and address mode
         // have no real meaning, so we just use 0, 0 for them.
         return {Family::Invalid, BrkImplied, AddressMode::Implied};
+    }
+}
+
+std::string to_string(const Family family) {
+    switch (family) {
+    case Family::Invalid:
+        return "Invalid";
+    case Family::BRK:
+        return "BRK";
+    case Family::INC:
+        return "INC";
+    case Family::PHP:
+        return "PHP";
+    case Family::BPL:
+        return "BPL";
+    case Family::CLC:
+        return "CLC";
+    case Family::BIT:
+        return "BIT";
+    case Family::PLP:
+        return "PLP";
+    case Family::AND:
+        return "AND";
+    case Family::JSR:
+        return "JSR";
+    case Family::BMI:
+        return "BMI";
+    case Family::SEC:
+        return "SEC";
+    case Family::LSR:
+        return "LSR";
+    case Family::PHA:
+        return "PHA";
+    case Family::JMP:
+        return "JMP";
+    case Family::BVC:
+        return "BVC";
+    case Family::CLI:
+        return "CLI";
+    case Family::ADC:
+        return "ADC";
+    case Family::PLA:
+        return "PLA";
+    case Family::RTS:
+        return "RTS";
+    case Family::BVS:
+        return "BVS";
+    case Family::SEI:
+        return "SEI";
+    case Family::STY:
+        return "STY";
+    case Family::STA:
+        return "STA";
+    case Family::STX:
+        return "STX";
+    case Family::TXS:
+        return "TXS";
+    case Family::BCC:
+        return "BCC";
+    case Family::LDX:
+        return "LDX";
+    case Family::LDY:
+        return "LDY";
+    case Family::LDA:
+        return "LDA";
+    case Family::BCS:
+        return "BCS";
+    case Family::CLV:
+        return "CLV";
+    case Family::BNE:
+        return "BNE";
+    case Family::CLD:
+        return "CLD";
+    case Family::CPX:
+        return "CPX";
+    case Family::NOP:
+        return "NOP";
+    case Family::INX:
+        return "INX";
+    case Family::INY:
+        return "INY";
+    case Family::CPY:
+        return "CPY";
+    case Family::CMP:
+        return "CMP";
+    case Family::BEQ:
+        return "BEQ";
+    case Family::SED:
+        return "SED";
+    case Family::TYA:
+        return "TYA";
+    case Family::TAY:
+        return "TAY";
+    case Family::TAX:
+        return "TAX";
+    case Family::TSX:
+        return "TSX";
+    case Family::TXA:
+        return "TXA";
+    case Family::DEY:
+        return "DEY";
+    case Family::DEX:
+        return "DEX";
+    default:
+        return "UNKNOWN";
     }
 }
 
