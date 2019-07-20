@@ -30,7 +30,7 @@ namespace n_e_s::core {
 std::unique_ptr<IRom> RomFactory::from_file(const std::string &filepath) {
     std::ifstream file(filepath, std::ios::binary);
     if (!file) {
-        throw std::invalid_argument("Unable to open file");
+        throw std::invalid_argument("Unable to open file: " + filepath);
     }
 
     return from_bytes(file);
