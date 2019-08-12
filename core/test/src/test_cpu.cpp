@@ -101,7 +101,10 @@ enum Opcode : uint8_t {
     CPY_ABS = 0xCC,
     CMP_ABS = 0xCD,
     BNE = 0xD0,
+    CMP_ZEROX = 0xD5,
     CLD = 0xD8,
+    CMP_ABSY = 0xD9,
+    CMP_ABSX = 0xDD,
     CPX_IMM = 0xE0,
     CPX_ZERO = 0xE4,
     INC_ZERO = 0xE6,
@@ -409,6 +412,40 @@ public:
         ON_CALL(mmu, read_byte(0x4567)).WillByDefault(Return(127));
 
         step_execution(4);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void compare_abs_indexed_sets_cz_without_pagecrossing(uint8_t *index_reg,
+            uint8_t *index_reg_expected) {
+        registers.a = expected.a = 0x07;
+        *index_reg = *index_reg_expected = 0x10;
+        registers.p |= N_FLAG;
+        expected.p |= Z_FLAG | C_FLAG;
+
+        expected.pc += 2;
+
+        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x5678));
+        ON_CALL(mmu, read_byte(0x5678 + 0x10)).WillByDefault(Return(0x07));
+
+        step_execution(4);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void compare_abs_indexed_sets_cz_with_pagecrossing(uint8_t *index_reg,
+            uint8_t *index_reg_expected) {
+        registers.a = expected.a = 0x07;
+        *index_reg = *index_reg_expected = 0xAB;
+        registers.p |= N_FLAG;
+        expected.p |= Z_FLAG | C_FLAG;
+
+        expected.pc += 2;
+
+        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x5678));
+        ON_CALL(mmu, read_byte(0x5678 + 0xAB - 0x0100))
+                .WillByDefault(Return(0xDEAD));
+        ON_CALL(mmu, read_byte(0x5678 + 0xAB)).WillByDefault(Return(0x07));
+
+        step_execution(5);
         EXPECT_EQ(expected, registers);
     }
 
@@ -1571,6 +1608,27 @@ TEST_F(CpuTest, cmp_abs_sets_nc) {
     compare_abs_sets_n_c(&registers.a, &expected.a);
 }
 
+// CMP Absolute indexed mode
+TEST_F(CpuTest, cmp_absx_sets_nc_without_pagecrossing) {
+    stage_instruction(CMP_ABSX);
+    compare_abs_indexed_sets_cz_without_pagecrossing(&registers.x, &expected.x);
+}
+
+TEST_F(CpuTest, cmp_absx_sets_nc_with_pagecrossing) {
+    stage_instruction(CMP_ABSX);
+    compare_abs_indexed_sets_cz_with_pagecrossing(&registers.x, &expected.x);
+}
+
+TEST_F(CpuTest, cmp_absy_sets_nc_without_pagecrossing) {
+    stage_instruction(CMP_ABSY);
+    compare_abs_indexed_sets_cz_without_pagecrossing(&registers.y, &expected.y);
+}
+
+TEST_F(CpuTest, cmp_absy_sets_nc_with_pagecrossing) {
+    stage_instruction(CMP_ABSY);
+    compare_abs_indexed_sets_cz_with_pagecrossing(&registers.y, &expected.y);
+}
+
 // CPX, CPY, CMP Zeropage mode
 TEST_F(CpuTest, cpx_zeropage_sets_nc) {
     stage_instruction(CPX_ZERO);
@@ -1583,6 +1641,25 @@ TEST_F(CpuTest, cpy_zeropage_sets_nc) {
 TEST_F(CpuTest, cmp_zeropage_sets_nc) {
     stage_instruction(CMP_ZERO);
     compare_zeropage_sets_n_c(&registers.a, &expected.a);
+}
+
+TEST_F(CpuTest, cmp_zero_x_sets_zc) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = expected.a = 0x07;
+    registers.x = expected.x = 0xED;
+    registers.p |= N_FLAG;
+    expected.p |= Z_FLAG | C_FLAG;
+
+    stage_instruction(CMP_ZEROX);
+
+    expected.pc += 1;
+
+    ON_CALL(mmu, read_byte(0x4322)).WillByDefault(Return(0x44));
+    ON_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED))).WillByDefault(Return(0x07));
+
+    step_execution(4);
+
+    EXPECT_EQ(expected, registers);
 }
 
 // NOP

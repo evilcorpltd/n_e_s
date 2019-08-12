@@ -156,8 +156,14 @@ Opcode decode(const uint8_t op) {
         return {Family::CMP, CmpAbsolute, AddressMode::Absolute};
     case BneRelative:
         return {Family::BNE, BneRelative, AddressMode::Relative};
+    case CmpZeropageX:
+        return {Family::CMP, CmpZeropageX, AddressMode::ZeropageX};
     case CldImplied:
         return {Family::CLD, CldImplied, AddressMode::Implied};
+    case CmpAbsoluteY:
+        return {Family::CMP, CmpAbsoluteY, AddressMode::AbsoluteY};
+    case CmpAbsoluteX:
+        return {Family::CMP, CmpAbsoluteX, AddressMode::AbsoluteX};
     case CpxImmediate:
         return {Family::CPX, CpxImmediate, AddressMode::Immediate};
     case CpxZeropage:
