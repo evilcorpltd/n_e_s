@@ -54,7 +54,6 @@ install:
 
 before_build:
   - cmd: if defined VCVARS call "%VCVARS%"
-  - cmd: flags.bat
   - ps: |
       mkdir build
       cd build

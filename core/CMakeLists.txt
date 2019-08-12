@@ -54,4 +54,9 @@ set_target_properties(${PROJECT_NAME}
         CXX_EXTENSIONS NO
 )
 
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+        n_e_s_warnings
+)
+
 add_subdirectory(test)
