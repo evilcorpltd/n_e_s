@@ -7,6 +7,8 @@ include(sanitizers)
 
 enable_testing()
 
+add_subdirectory(warnings)
+
 add_subdirectory(application)
 add_subdirectory(core)
 add_subdirectory(nes)

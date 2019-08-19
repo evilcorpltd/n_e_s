@@ -93,7 +93,6 @@ matrix:
       env: MATRIX_EVAL="CXX=clang++-8 BUILD_TYPE=Debug"
 
 before_script:
-  - source flags.sh
   - mkdir _build && cd _build
   - eval "${MATRIX_EVAL}"
 
