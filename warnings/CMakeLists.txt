@@ -1,6 +1,7 @@
 project(n_e_s_warnings)
 
 add_library(${PROJECT_NAME} INTERFACE)
+add_library(n_e_s::warnings ALIAS ${PROJECT_NAME})
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     if("${CMAKE_CXX_SIMULATE_ID}" STREQUAL "MSVC")

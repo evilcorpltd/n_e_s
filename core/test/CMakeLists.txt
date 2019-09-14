@@ -48,8 +48,8 @@ set_target_properties(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        n_e_s_core
-        n_e_s_warnings
+        n_e_s::core
+        n_e_s::warnings
         gmock
 )
 
