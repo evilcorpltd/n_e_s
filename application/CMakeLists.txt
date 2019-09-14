@@ -6,8 +6,8 @@ add_executable(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        n_e_s_nes
-        n_e_s_warnings
+        n_e_s::nes
+        n_e_s::warnings
 )
 
 target_compile_features(${PROJECT_NAME}

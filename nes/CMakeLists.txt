@@ -4,6 +4,7 @@ add_library(${PROJECT_NAME}
     include/nes/nes.h
     src/nes.cpp
 )
+add_library(n_e_s::nes ALIAS ${PROJECT_NAME})
 
 target_compile_features(${PROJECT_NAME}
     PRIVATE
@@ -26,8 +27,8 @@ set_target_properties(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        n_e_s_core
-        n_e_s_warnings
+        n_e_s::core
+        n_e_s::warnings
 )
 
 add_subdirectory(test)
