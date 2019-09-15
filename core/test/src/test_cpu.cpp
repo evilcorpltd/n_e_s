@@ -510,8 +510,13 @@ public:
         stage_instruction(instruction);
         expected.pc += 2;
 
-        EXPECT_CALL(mmu, read_word(start_pc + 1))
-                .WillOnce(Return(effective_address));
+        const uint8_t lower_address = effective_address & 0x00FF;
+        const uint8_t upper_address = (effective_address & 0xFF00) >> 8;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1))
+                .WillOnce(Return(lower_address));
+        EXPECT_CALL(mmu, read_byte(start_pc + 2))
+                .WillOnce(Return(upper_address));
         EXPECT_CALL(mmu, read_byte(effective_address))
                 .WillOnce(Return(memory_content));
 
@@ -524,8 +529,13 @@ public:
         stage_instruction(instruction);
         expected.pc += 2;
 
-        EXPECT_CALL(mmu, read_word(start_pc + 1))
-                .WillOnce(Return(effective_address));
+        const uint8_t lower_address = effective_address & 0x00FF;
+        const uint8_t upper_address = (effective_address & 0xFF00) >> 8;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1))
+                .WillOnce(Return(lower_address));
+        EXPECT_CALL(mmu, read_byte(start_pc + 2))
+                .WillOnce(Return(upper_address));
         EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
 
         step_execution(4);
@@ -833,7 +843,8 @@ TEST_F(CpuTest, jsr) {
     const uint8_t expected_pc_stack_addr = expected.sp - 1;
     expected.sp -= 2; // 1 word
 
-    EXPECT_CALL(mmu, read_word(registers.pc + 1)).WillOnce(Return(0xDEAD));
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0xAD));
+    EXPECT_CALL(mmu, read_byte(registers.pc + 2)).WillOnce(Return(0xDE));
 
     EXPECT_CALL(mmu,
             write_word(
