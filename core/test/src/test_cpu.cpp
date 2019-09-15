@@ -255,65 +255,6 @@ public:
         EXPECT_EQ(expected, registers);
     }
 
-    void load_absolute_sets_reg(uint8_t *reg) {
-        *reg = 0x42;
-        expected.pc += 2;
-
-        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x4567));
-        EXPECT_CALL(mmu, read_byte(0x4567)).WillOnce(Return(*reg));
-
-        step_execution(4);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void load_absolute_sets_n_flag(uint8_t *reg) {
-        *reg = 128;
-        expected.p |= N_FLAG;
-        expected.pc += 2;
-
-        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x4567));
-        EXPECT_CALL(mmu, read_byte(0x4567)).WillOnce(Return(*reg));
-
-        step_execution(4);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void load_absolute_clears_n_flag(uint8_t *reg) {
-        registers.p |= N_FLAG;
-        *reg = 127;
-        expected.pc += 2;
-
-        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x4567));
-        EXPECT_CALL(mmu, read_byte(0x4567)).WillOnce(Return(*reg));
-
-        step_execution(4);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void load_absolute_sets_z_flag(uint8_t *reg) {
-        *reg = 0;
-        expected.p |= Z_FLAG;
-        expected.pc += 2;
-
-        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x4567));
-        EXPECT_CALL(mmu, read_byte(0x4567)).WillOnce(Return(*reg));
-
-        step_execution(4);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void load_absolute_clears_z_flag(uint8_t *reg) {
-        registers.p |= Z_FLAG;
-        *reg = 1;
-        expected.pc += 2;
-
-        ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x4567));
-        EXPECT_CALL(mmu, read_byte(0x4567)).WillOnce(Return(*reg));
-
-        step_execution(4);
-        EXPECT_EQ(expected, registers);
-    }
-
     void load_zeropage_reg_sets_reg(uint8_t instruction,
             uint8_t *target_reg,
             uint8_t *index_reg,
@@ -589,6 +530,50 @@ public:
 
         step_execution(4);
         EXPECT_EQ(expected, registers);
+    }
+
+    void compare_abs_sets_n_c(uint8_t instruction,
+            uint8_t *reg,
+            uint8_t *expected_reg) {
+        *expected_reg = *reg = 0;
+        expected.p |= N_FLAG | C_FLAG;
+        registers.p |= Z_FLAG;
+        memory_content = 127;
+        run_read_instruction(instruction);
+    }
+
+    void load_absolute_sets_reg(uint8_t instruction, uint8_t *reg) {
+        *reg = 0x42;
+        memory_content = *reg;
+        run_read_instruction(instruction);
+    }
+
+    void load_absolute_sets_n_flag(uint8_t instruction, uint8_t *reg) {
+        *reg = 128;
+        memory_content = *reg;
+        expected.p |= N_FLAG;
+        run_read_instruction(instruction);
+    }
+
+    void load_absolute_clears_n_flag(uint8_t instruction, uint8_t *reg) {
+        *reg = 127;
+        memory_content = *reg;
+        registers.p |= N_FLAG;
+        run_read_instruction(instruction);
+    }
+
+    void load_absolute_sets_z_flag(uint8_t instruction, uint8_t *reg) {
+        *reg = 0;
+        memory_content = *reg;
+        expected.p |= Z_FLAG;
+        run_read_instruction(instruction);
+    }
+
+    void load_absolute_clears_z_flag(uint8_t instruction, uint8_t *reg) {
+        *reg = 1;
+        memory_content = *reg;
+        registers.p |= Z_FLAG;
+        run_read_instruction(instruction);
     }
 
     uint16_t start_pc{0x1121};
@@ -1297,69 +1282,54 @@ TEST_F(CpuTest, lda_i_clears_z_flag) {
 }
 
 // LDX Absolute mode
-TEST_F(CpuTest, ldx_abs_sets_reg) {
-    stage_instruction(LDX_ABS);
-    load_absolute_sets_reg(&expected.x);
+TEST_F(CpuAbsoluteTest, ldx_abs_sets_reg) {
+    load_absolute_sets_reg(LDX_ABS, &expected.x);
 }
-TEST_F(CpuTest, ldx_abs_sets_n_flag) {
-    stage_instruction(LDX_ABS);
-    load_absolute_sets_n_flag(&expected.x);
+TEST_F(CpuAbsoluteTest, ldx_abs_sets_n_flag) {
+    load_absolute_sets_n_flag(LDX_ABS, &expected.x);
 }
-TEST_F(CpuTest, ldx_abs_clears_n_flag) {
-    stage_instruction(LDX_ABS);
-    load_absolute_clears_n_flag(&expected.x);
+TEST_F(CpuAbsoluteTest, ldx_abs_clears_n_flag) {
+    load_absolute_clears_n_flag(LDX_ABS, &expected.x);
 }
-TEST_F(CpuTest, ldx_abs_sets_z_flag) {
-    stage_instruction(LDX_ABS);
-    load_absolute_sets_z_flag(&expected.x);
+TEST_F(CpuAbsoluteTest, ldx_abs_sets_z_flag) {
+    load_absolute_sets_z_flag(LDX_ABS, &expected.x);
 }
-TEST_F(CpuTest, ldx_abs_clears_z_flag) {
-    stage_instruction(LDX_ABS);
-    load_absolute_clears_z_flag(&expected.x);
+TEST_F(CpuAbsoluteTest, ldx_abs_clears_z_flag) {
+    load_absolute_clears_z_flag(LDX_ABS, &expected.x);
 }
 
 // LDY Absolute mode
-TEST_F(CpuTest, ldy_abs_sets_reg) {
-    stage_instruction(LDY_ABS);
-    load_absolute_sets_reg(&expected.y);
+TEST_F(CpuAbsoluteTest, ldy_abs_sets_reg) {
+    load_absolute_sets_reg(LDY_ABS, &expected.y);
 }
-TEST_F(CpuTest, ldy_abs_sets_n_flag) {
-    stage_instruction(LDY_ABS);
-    load_absolute_sets_n_flag(&expected.y);
+TEST_F(CpuAbsoluteTest, ldy_abs_sets_n_flag) {
+    load_absolute_sets_n_flag(LDY_ABS, &expected.y);
 }
-TEST_F(CpuTest, ldy_abs_clears_n_flag) {
-    stage_instruction(LDY_ABS);
-    load_absolute_clears_n_flag(&expected.y);
+TEST_F(CpuAbsoluteTest, ldy_abs_clears_n_flag) {
+    load_absolute_clears_n_flag(LDY_ABS, &expected.y);
 }
-TEST_F(CpuTest, ldy_abs_sets_z_flag) {
-    stage_instruction(LDY_ABS);
-    load_absolute_sets_z_flag(&expected.y);
+TEST_F(CpuAbsoluteTest, ldy_abs_sets_z_flag) {
+    load_absolute_sets_z_flag(LDY_ABS, &expected.y);
 }
-TEST_F(CpuTest, ldy_abs_clears_z_flag) {
-    stage_instruction(LDY_ABS);
-    load_absolute_clears_z_flag(&expected.y);
+TEST_F(CpuAbsoluteTest, ldy_abs_clears_z_flag) {
+    load_absolute_clears_z_flag(LDY_ABS, &expected.y);
 }
 
 // LDA Absolute mode
-TEST_F(CpuTest, lda_abs_sets_reg) {
-    stage_instruction(LDA_ABS);
-    load_absolute_sets_reg(&expected.a);
+TEST_F(CpuAbsoluteTest, lda_abs_sets_reg) {
+    load_absolute_sets_reg(LDA_ABS, &expected.a);
 }
-TEST_F(CpuTest, lda_abs_sets_n_flag) {
-    stage_instruction(LDA_ABS);
-    load_absolute_sets_n_flag(&expected.a);
+TEST_F(CpuAbsoluteTest, lda_abs_sets_n_flag) {
+    load_absolute_sets_n_flag(LDA_ABS, &expected.a);
 }
-TEST_F(CpuTest, lda_abs_clears_n_flag) {
-    stage_instruction(LDA_ABS);
-    load_absolute_clears_n_flag(&expected.a);
+TEST_F(CpuAbsoluteTest, lda_abs_clears_n_flag) {
+    load_absolute_clears_n_flag(LDA_ABS, &expected.a);
 }
-TEST_F(CpuTest, lda_abs_sets_z_flag) {
-    stage_instruction(LDA_ABS);
-    load_absolute_sets_z_flag(&expected.a);
+TEST_F(CpuAbsoluteTest, lda_abs_sets_z_flag) {
+    load_absolute_sets_z_flag(LDA_ABS, &expected.a);
 }
-TEST_F(CpuTest, lda_abs_clears_z_flag) {
-    stage_instruction(LDA_ABS);
-    load_absolute_clears_z_flag(&expected.a);
+TEST_F(CpuAbsoluteTest, lda_abs_clears_z_flag) {
+    load_absolute_clears_z_flag(LDA_ABS, &expected.a);
 }
 
 // LD Zeropage
@@ -1583,17 +1553,14 @@ TEST_F(CpuTest, cmp_imm_sets_nc) {
 }
 
 // CPX, CPY, CMP Absolute mode
-TEST_F(CpuTest, cpx_abs_sets_nc) {
-    stage_instruction(CPX_ABS);
-    compare_abs_sets_n_c(&registers.x, &expected.x);
+TEST_F(CpuAbsoluteTest, cpx_abs_sets_nc) {
+    compare_abs_sets_n_c(CPX_ABS, &registers.x, &expected.x);
 }
-TEST_F(CpuTest, cpy_abs_sets_nc) {
-    stage_instruction(CPY_ABS);
-    compare_abs_sets_n_c(&registers.y, &expected.y);
+TEST_F(CpuAbsoluteTest, cpy_abs_sets_nc) {
+    compare_abs_sets_n_c(CPY_ABS, &registers.y, &expected.y);
 }
-TEST_F(CpuTest, cmp_abs_sets_nc) {
-    stage_instruction(CMP_ABS);
-    compare_abs_sets_n_c(&registers.a, &expected.a);
+TEST_F(CpuAbsoluteTest, cmp_abs_sets_nc) {
+    compare_abs_sets_n_c(CMP_ABS, &registers.a, &expected.a);
 }
 
 // CMP Absolute indexed mode
