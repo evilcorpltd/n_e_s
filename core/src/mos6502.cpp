@@ -82,6 +82,8 @@ Pipeline Mos6502::parse_next_instruction() {
     Pipeline result;
     const uint8_t raw_opcode{mmu_->read_byte(registers_->pc++)};
     current_opcode_ = decode(raw_opcode);
+    const MemoryAccess memory_access =
+            get_memory_access(current_opcode_->family);
 
     if (current_opcode_->family == Family::Invalid) {
         std::stringstream err;
@@ -117,7 +119,8 @@ Pipeline Mos6502::parse_next_instruction() {
         break;
     case Instruction::BitZeropage:
     case Instruction::BitAbsolute:
-        result.append(create_addressing_steps(current_opcode_->address_mode));
+        result.append(create_addressing_steps(
+                current_opcode_->address_mode, memory_access));
 
         result.push([=]() {
             const uint8_t value = mmu_->read_byte(effective_address_);
@@ -339,17 +342,10 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::NopImplied:
         result.push([]() { /* Do nothing. */ });
         break;
-    case Instruction::IncZeropage: {
-        result.append(create_zeropage_addressing_steps());
-        result.push([=]() { tmp_ = mmu_->read_byte(effective_address_); });
-        result.push([=]() { mmu_->write_byte(effective_address_, tmp_++); });
-        result.push([=]() {
-            set_zero(tmp_);
-            set_negative(tmp_);
-            mmu_->write_byte(effective_address_, tmp_);
-        });
+    case Instruction::IncZeropage:
+    case Instruction::IncZeropageX:
+        result.append(create_inc_instruction(*current_opcode_));
         break;
-    }
     case Instruction::InxImplied:
         result.push([=]() {
             ++registers_->x;
@@ -389,7 +385,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::EorAbsolute:
     case Instruction::EorAbsoluteX:
     case Instruction::EorAbsoluteY:
-        result.append(create_eor_instruction(opcode));
+        result.append(create_eor_instruction(*current_opcode_));
         break;
     }
     return result;
@@ -480,9 +476,25 @@ Pipeline Mos6502::create_branch_instruction(
     return result;
 }
 
-Pipeline Mos6502::create_add_instruction(Opcode opcode) {
+Pipeline Mos6502::create_inc_instruction(const Opcode opcode) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
     Pipeline result;
-    result.append(create_addressing_steps(opcode.address_mode));
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
+
+    result.push([=]() {
+        const uint8_t new_value = tmp_ + 1;
+        set_zero(new_value);
+        set_negative(new_value);
+        mmu_->write_byte(effective_address_, new_value);
+    });
+
+    return result;
+}
+
+Pipeline Mos6502::create_add_instruction(Opcode opcode) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
+    Pipeline result;
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
     result.push([=]() {
         const uint8_t a_before = registers_->a;
@@ -501,8 +513,9 @@ Pipeline Mos6502::create_add_instruction(Opcode opcode) {
 }
 
 Pipeline Mos6502::create_and_instruction(Opcode opcode) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
     Pipeline result;
-    result.append(create_addressing_steps(opcode.address_mode));
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
     result.push([=]() {
         const uint8_t operand = mmu_->read_byte(effective_address_);
@@ -515,9 +528,9 @@ Pipeline Mos6502::create_and_instruction(Opcode opcode) {
     return result;
 }
 Pipeline Mos6502::create_store_instruction(Opcode opcode) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
     Pipeline result;
-    const bool is_write = true;
-    result.append(create_addressing_steps(opcode.address_mode, is_write));
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
     uint8_t *reg{};
     if (opcode.family == Family::STX) {
@@ -542,8 +555,9 @@ Pipeline Mos6502::create_load_instruction(Opcode opcode) {
         reg = &registers_->a;
     }
 
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
     Pipeline result;
-    result.append(create_addressing_steps(opcode.address_mode));
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
     result.push([=]() {
         *reg = mmu_->read_byte(effective_address_);
@@ -564,9 +578,9 @@ Pipeline Mos6502::create_compare_instruction(Opcode opcode) {
         reg = &registers_->a;
     }
 
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
     Pipeline result;
-    result.append(create_addressing_steps(opcode.address_mode));
-
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
     result.push([=]() {
         const uint8_t value = mmu_->read_byte(effective_address_);
         // Compare instructions are not affected be the
@@ -580,8 +594,9 @@ Pipeline Mos6502::create_compare_instruction(Opcode opcode) {
 }
 
 Pipeline Mos6502::create_eor_instruction(Opcode opcode) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
     Pipeline result;
-    result.append(create_addressing_steps(opcode.address_mode));
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
     result.push([=]() {
         const uint8_t operand = mmu_->read_byte(effective_address_);
@@ -595,35 +610,38 @@ Pipeline Mos6502::create_eor_instruction(Opcode opcode) {
 }
 
 Pipeline Mos6502::create_addressing_steps(AddressMode address_mode,
-        bool is_write) {
+        const MemoryAccess access) {
     Pipeline result;
 
     switch (address_mode) {
     case AddressMode::Zeropage:
-        result.append(create_zeropage_addressing_steps());
+        result.append(create_zeropage_addressing_steps(access));
         break;
     case AddressMode::ZeropageX:
-        result.append(create_zeropage_indexed_addressing_steps(&registers_->x));
+        result.append(create_zeropage_indexed_addressing_steps(
+                &registers_->x, access));
         break;
     case AddressMode::ZeropageY:
-        result.append(create_zeropage_indexed_addressing_steps(&registers_->y));
+        result.append(create_zeropage_indexed_addressing_steps(
+                &registers_->y, access));
         break;
     case AddressMode::Absolute:
         result.append(create_absolute_addressing_steps());
         break;
     case AddressMode::AbsoluteX:
         result.append(create_absolute_indexed_addressing_steps(
-                &registers_->x, is_write));
+                &registers_->x, access == MemoryAccess::Write));
         break;
     case AddressMode::AbsoluteY:
         result.append(create_absolute_indexed_addressing_steps(
-                &registers_->y, is_write));
+                &registers_->y, access == MemoryAccess::Write));
         break;
     case AddressMode::IndexedIndirect:
         result.append(create_indexed_indirect_addressing_steps());
         break;
     case AddressMode::IndirectIndexed:
-        result.append(create_indirect_indexed_addressing_steps(is_write));
+        result.append(create_indirect_indexed_addressing_steps(
+                access == MemoryAccess::Write));
         break;
     default:
         break;
@@ -632,25 +650,53 @@ Pipeline Mos6502::create_addressing_steps(AddressMode address_mode,
     return result;
 }
 
-Pipeline Mos6502::create_zeropage_addressing_steps() {
+Pipeline Mos6502::create_zeropage_addressing_steps(MemoryAccess access) {
     Pipeline result;
-    result.push([=]() {
-        effective_address_ = mmu_->read_byte(registers_->pc);
-        ++registers_->pc;
-    });
+    if (access == MemoryAccess::Read || access == MemoryAccess::Write) {
+        result.push([=]() {
+            effective_address_ = mmu_->read_byte(registers_->pc);
+            ++registers_->pc;
+        });
+    } else {
+        result.push([=]() {
+            effective_address_ = mmu_->read_byte(registers_->pc);
+            ++registers_->pc;
+        });
+        result.push([=]() { tmp_ = mmu_->read_byte(effective_address_); });
+        result.push([=]() {
+            // Extra write with the old value
+            mmu_->write_byte(effective_address_, tmp_);
+        });
+    }
     return result;
 }
 
 Pipeline Mos6502::create_zeropage_indexed_addressing_steps(
-        const uint8_t *index_reg) {
+        const uint8_t *index_reg,
+        MemoryAccess access) {
     Pipeline result;
-    result.push([=]() { /* Empty */ });
-    result.push([=]() {
-        const uint8_t address = mmu_->read_byte(registers_->pc);
-        const uint8_t effective_address_low = address + *index_reg;
-        effective_address_ = effective_address_low;
-        ++registers_->pc;
-    });
+    if (access == MemoryAccess::Read || access == MemoryAccess::Write) {
+        result.push([=]() { /* Empty */ });
+        result.push([=]() {
+            const uint8_t address = mmu_->read_byte(registers_->pc);
+            const uint8_t effective_address_low = address + *index_reg;
+            effective_address_ = effective_address_low;
+            ++registers_->pc;
+        });
+    } else if (access == MemoryAccess::ReadWrite) {
+        result.push([=]() { /* Empty */ });
+        result.push([=]() {
+            const uint16_t address = mmu_->read_byte(registers_->pc);
+            const uint8_t effective_address_low = address + *index_reg;
+            effective_address_ = effective_address_low;
+            ++registers_->pc;
+        });
+        result.push([=]() { tmp_ = mmu_->read_byte(effective_address_); });
+        result.push([=]() {
+            // Extra write to effective address with old value.
+            mmu_->write_byte(effective_address_, tmp_);
+        });
+    }
     return result;
 }
 

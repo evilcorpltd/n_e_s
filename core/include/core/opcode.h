@@ -149,7 +149,7 @@ enum Instruction : uint8_t {
     BeqRelative = 0xF0,
     // SbcIndirectY = 0xF1,
     // SbcZeropageX = 0xF5,
-    // IncZeropageX = 0xF6,
+    IncZeropageX = 0xF6,
     SedImplied = 0xF8,
     // SbcAbsoluteY = 0xF9,
     // SbcAbsoluteX = 0xFD,
@@ -224,6 +224,8 @@ enum class AddressMode {
     IndirectIndexed
 };
 
+enum class MemoryAccess { Read, Write, ReadWrite };
+
 struct Opcode {
     Family family;
     Instruction instruction;
@@ -231,6 +233,8 @@ struct Opcode {
 };
 
 Opcode decode(const uint8_t op);
+
+MemoryAccess get_memory_access(const Family family);
 
 std::string to_string(const Family family);
 
