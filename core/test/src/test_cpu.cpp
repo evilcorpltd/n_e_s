@@ -314,21 +314,6 @@ public:
         EXPECT_EQ(expected, registers);
     }
 
-    void load_zeropage_sets_reg(uint8_t instruction, uint8_t *target_reg) {
-        registers.pc = expected.pc = 0x4321;
-
-        stage_instruction(instruction);
-
-        *target_reg = 0x42;
-        expected.pc += 1;
-
-        EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
-        EXPECT_CALL(mmu, read_byte(0x44)).WillOnce(Return(0x42));
-
-        step_execution(3);
-        EXPECT_EQ(expected, registers);
-    }
-
     void load_zeropage_reg_sets_reg(uint8_t instruction,
             uint8_t *target_reg,
             uint8_t *index_reg,
@@ -448,19 +433,6 @@ public:
         EXPECT_EQ(expected, registers);
     }
 
-    void compare_zeropage_sets_n_c(uint8_t *reg, uint8_t *expected_reg) {
-        *expected_reg = *reg = 0;
-        expected.p |= N_FLAG | C_FLAG;
-        registers.p |= Z_FLAG;
-        expected.pc += 1;
-
-        EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0x44));
-        EXPECT_CALL(mmu, read_byte(0x44)).WillOnce(Return(127));
-
-        step_execution(3);
-        EXPECT_EQ(expected, registers);
-    }
-
     void absolute_indexed_load_sets_register(uint8_t instruction,
             uint8_t *target_reg,
             uint8_t *index_reg,
@@ -551,6 +523,43 @@ public:
     std::unique_ptr<ICpu> cpu;
 
     ICpu::Registers expected;
+};
+
+class CpuZeropageTest : public CpuTest {
+public:
+    void run_instruction(uint8_t instruction, int cycles) {
+        registers.pc = expected.pc = start_pc;
+        stage_instruction(instruction);
+        expected.pc += 1;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1))
+                .WillOnce(Return(effective_address));
+        EXPECT_CALL(mmu, read_byte(effective_address))
+                .WillOnce(Return(return_value));
+
+        step_execution(cycles);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void load_sets_reg(uint8_t instruction, uint8_t *target_reg) {
+        *target_reg = 0x42;
+        run_instruction(instruction, 3);
+    }
+
+    void compare_sets_n_c(uint8_t instruction,
+            uint8_t *reg,
+            uint8_t *expected_reg) {
+        *expected_reg = *reg = 0;
+        expected.p |= N_FLAG | C_FLAG;
+        registers.p |= Z_FLAG;
+        return_value = 127;
+
+        run_instruction(instruction, 3);
+    }
+
+    uint16_t start_pc{0x4321};
+    uint8_t return_value{0x42};
+    uint8_t effective_address{0x44};
 };
 
 TEST_F(CpuTest, reset) {
@@ -757,52 +766,28 @@ TEST_F(CpuTest, and_absy_without_page_crossing) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, bit_zero_sets_zero) {
-    registers.pc = expected.pc = 0x4321;
+TEST_F(CpuZeropageTest, bit_zero_sets_zero) {
     registers.a = expected.a = 0x00;
-
-    stage_instruction(BIT_ZERO);
-
-    expected.pc += 1;
     expected.p = Z_FLAG;
+    return_value = 0x12;
 
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, read_byte(0x44)).WillOnce(Return(0x12));
-
-    step_execution(3);
-    EXPECT_EQ(expected, registers);
+    run_instruction(BIT_ZERO, 3);
 }
-TEST_F(CpuTest, bit_zero_sets_negative) {
-    registers.pc = expected.pc = 0x4321;
+TEST_F(CpuZeropageTest, bit_zero_sets_negative) {
     registers.a = expected.a = 0x02;
     registers.p = Z_FLAG;
-
-    stage_instruction(BIT_ZERO);
-
-    expected.pc += 1;
     expected.p = N_FLAG;
+    return_value = 0xA3;
 
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, read_byte(0x44)).WillOnce(Return(0xA3));
-
-    step_execution(3);
-    EXPECT_EQ(expected, registers);
+    run_instruction(BIT_ZERO, 3);
 }
-TEST_F(CpuTest, bit_zero_sets_overflow) {
-    registers.pc = expected.pc = 0x4321;
+TEST_F(CpuZeropageTest, bit_zero_sets_overflow) {
     registers.a = expected.a = 0x02;
     registers.p = Z_FLAG;
-
-    stage_instruction(BIT_ZERO);
-
-    expected.pc += 1;
     expected.p = V_FLAG;
+    return_value = 0x53;
 
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, read_byte(0x44)).WillOnce(Return(0x53));
-
-    step_execution(3);
-    EXPECT_EQ(expected, registers);
+    run_instruction(BIT_ZERO, 3);
 }
 TEST_F(CpuTest, bit_abs_sets_negative_and_overflow) {
     registers.pc = expected.pc = 0x4321;
@@ -1374,14 +1359,14 @@ TEST_F(CpuTest, lda_abs_clears_z_flag) {
 }
 
 // LD Zeropage
-TEST_F(CpuTest, lda_zeropage_sets_reg) {
-    load_zeropage_sets_reg(LDA_ZERO, &expected.a);
+TEST_F(CpuZeropageTest, lda_zeropage_sets_reg) {
+    load_sets_reg(LDA_ZERO, &expected.a);
 }
-TEST_F(CpuTest, ldx_zeropage_sets_reg) {
-    load_zeropage_sets_reg(LDX_ZERO, &expected.x);
+TEST_F(CpuZeropageTest, ldx_zeropage_sets_reg) {
+    load_sets_reg(LDX_ZERO, &expected.x);
 }
-TEST_F(CpuTest, ldy_zeropage_sets_reg) {
-    load_zeropage_sets_reg(LDY_ZERO, &expected.y);
+TEST_F(CpuZeropageTest, ldy_zeropage_sets_reg) {
+    load_sets_reg(LDY_ZERO, &expected.y);
 }
 
 // LD Zeropage X
@@ -1629,17 +1614,14 @@ TEST_F(CpuTest, cmp_absy_sets_nc_with_pagecrossing) {
 }
 
 // CPX, CPY, CMP Zeropage mode
-TEST_F(CpuTest, cpx_zeropage_sets_nc) {
-    stage_instruction(CPX_ZERO);
-    compare_zeropage_sets_n_c(&registers.x, &expected.x);
+TEST_F(CpuZeropageTest, cpx_zeropage_sets_nc) {
+    compare_sets_n_c(CPX_ZERO, &registers.x, &expected.x);
 }
-TEST_F(CpuTest, cpy_zeropage_sets_nc) {
-    stage_instruction(CPY_ZERO);
-    compare_zeropage_sets_n_c(&registers.y, &expected.y);
+TEST_F(CpuZeropageTest, cpy_zeropage_sets_nc) {
+    compare_sets_n_c(CPY_ZERO, &registers.y, &expected.y);
 }
-TEST_F(CpuTest, cmp_zeropage_sets_nc) {
-    stage_instruction(CMP_ZERO);
-    compare_zeropage_sets_n_c(&registers.a, &expected.a);
+TEST_F(CpuZeropageTest, cmp_zeropage_sets_nc) {
+    compare_sets_n_c(CMP_ZERO, &registers.a, &expected.a);
 }
 
 TEST_F(CpuTest, cmp_zero_x_sets_zc) {
