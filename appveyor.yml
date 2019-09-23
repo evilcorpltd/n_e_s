@@ -35,17 +35,8 @@ environment:
     CMAKE_ARGS: -DCMAKE_C_COMPILER=clang-cl.exe -DCMAKE_CXX_COMPILER=clang-cl.exe
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
-cache:
-  - C:\ninja
-
 install:
-  - ps: |
-      python -m pip install cmake==3.14.4 --disable-pip-version-check
-      if (![IO.File]::Exists("C:\ninja\ninja.exe")) {
-        Start-FileDownload 'https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-win.zip'
-        7z x -y ninja-win.zip -oC:\ninja
-      }
-      $env:PATH="C:\ninja;$env:PATH"
+  - cmd: python -m pip install cmake==3.14.4 ninja==1.9.0.post1 --disable-pip-version-check
 
 before_build:
   - cmd: if defined VCVARS call "%VCVARS%"
