@@ -37,4 +37,11 @@ MemBankList MemBankFactory::create_nes_mem_banks(IPpu *ppu) {
     return mem_banks;
 }
 
+MemBankList MemBankFactory::create_nes_ppu_mem_banks() {
+    MemBankList mem_banks;
+
+    // Empty for now
+    return mem_banks;
+}
+
 } // namespace n_e_s::core

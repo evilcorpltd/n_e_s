@@ -25,8 +25,8 @@ const uint16_t kVBlankScanlineEnd = 260;
 
 namespace n_e_s::core {
 
-Ppu::Ppu(IPpu::Registers *registers)
-        : registers_(registers), scanline_(0), cycle_(0) {}
+Ppu::Ppu(IPpu::Registers *registers, IMmu *mmu)
+        : registers_(registers), mmu_(mmu), scanline_(0), cycle_(0) {}
 
 uint8_t Ppu::read_byte(uint16_t addr) {
     uint8_t byte = 0;
@@ -37,7 +37,7 @@ uint8_t Ppu::read_byte(uint16_t addr) {
     } else if (addr == kOamData) {
         byte = oam_data_[registers_->oamaddr];
     } else {
-        throw InvalidAddress(addr);
+        byte = mmu_->read_byte(addr);
     }
 
     return byte;
@@ -93,7 +93,7 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
             throw InvalidAddress(registers_->vram_addr);
         }
     } else {
-        throw InvalidAddress(addr);
+        mmu_->write_byte(addr, byte);
     }
 } // namespace n_e_s::core
 
