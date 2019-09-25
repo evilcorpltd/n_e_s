@@ -24,6 +24,7 @@ private:
     std::vector<uint8_t> chr_rom_; // const?
     std::vector<uint8_t> prg_ram_;
 
+    constexpr static uint16_t kChrEnd{0x1FFF};
     constexpr static uint16_t kPrgRamStart{0x6000};
     constexpr static uint16_t kPrgRamEnd{0x7FFF};
     constexpr static uint16_t kPrgRomStart{0x8000};
