@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 namespace n_e_s::core {
 
@@ -229,5 +230,7 @@ struct Opcode {
 };
 
 Opcode decode(const uint8_t op);
+
+std::string to_string(const Family family);
 
 } // namespace n_e_s::core

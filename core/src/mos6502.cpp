@@ -1,6 +1,6 @@
 #include "mos6502.h"
 
-#include "opcode.h"
+#include "core/opcode.h"
 
 #include <cassert>
 #include <sstream>

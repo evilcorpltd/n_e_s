@@ -30,6 +30,7 @@ add_executable(${PROJECT_NAME}
     src/test_cpuintegration.cpp
     src/test_invalid_address.cpp
     src/test_mmu.cpp
+    src/test_opcode.cpp
     src/test_ppu.cpp
     src/test_rom.cpp
 )
