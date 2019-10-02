@@ -629,10 +629,14 @@ Pipeline Mos6502::create_zeropage_indexed_addressing_steps(
 
 Pipeline Mos6502::create_absolute_addressing_steps() {
     Pipeline result;
-    result.push([=]() { ++registers_->pc; });
     result.push([=]() {
+        tmp_ = mmu_->read_byte(registers_->pc);
         ++registers_->pc;
-        effective_address_ = mmu_->read_word(registers_->pc - 2);
+    });
+    result.push([=]() {
+        const uint16_t upper = mmu_->read_byte(registers_->pc) << 8;
+        ++registers_->pc;
+        effective_address_ = tmp_ | upper;
     });
     return result;
 }
