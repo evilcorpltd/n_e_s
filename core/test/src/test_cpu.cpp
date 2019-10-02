@@ -93,6 +93,7 @@ enum Opcode : uint8_t {
     LDA_ABSX = 0xBD,
     LDX_ABSY = 0xBE,
     CPY_IMM = 0xC0,
+    CMP_INXIND = 0xC1,
     CPY_ZERO = 0xC4,
     CMP_ZERO = 0xC5,
     INY = 0xC8,
@@ -101,6 +102,7 @@ enum Opcode : uint8_t {
     CPY_ABS = 0xCC,
     CMP_ABS = 0xCD,
     BNE = 0xD0,
+    CMP_INDINX = 0xD1,
     CMP_ZEROX = 0xD5,
     CLD = 0xD8,
     CMP_ABSY = 0xD9,
@@ -1595,6 +1597,94 @@ TEST_F(CpuTest, cmp_absy_sets_nc_with_pagecrossing) {
     compare_abs_indexed_sets_cz_with_pagecrossing(&registers.y, &expected.y);
 }
 
+// CMP Indirect indexed mode
+TEST_F(CpuTest, cmp_indirect_indexed_with_pagecrossing_sets_nc) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0xED;
+    registers.a = expected.a = 0x07;
+    expected.p |= N_FLAG | C_FLAG;
+    registers.p |= Z_FLAG;
+
+    stage_instruction(CMP_INDINX);
+
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
+    ON_CALL(mmu, read_word(0x42)).WillByDefault(Return(0x1234));
+
+    {
+        InSequence s;
+        EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
+                .WillOnce(Return(0x00));
+        EXPECT_CALL(mmu, read_byte(0x1234 + 0xED)).WillOnce(Return(127));
+        step_execution(6);
+    }
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, cmp_indirect_indexed_without_pagecrossing_sets_nc) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0x0D;
+    registers.a = expected.a = 0x07;
+    expected.p |= N_FLAG | C_FLAG;
+    registers.p |= Z_FLAG;
+
+    stage_instruction(CMP_INDINX);
+
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
+    ON_CALL(mmu, read_word(0x42)).WillByDefault(Return(0x1234));
+
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D)).WillOnce(Return(127));
+    step_execution(5);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, cmp_indexed_indirect_sets_nc) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0xED;
+    registers.a = expected.a = 0x07;
+    expected.p |= N_FLAG | C_FLAG;
+    registers.p |= Z_FLAG;
+
+    stage_instruction(CMP_INXIND);
+
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0xAB));
+    ON_CALL(mmu, read_word(u16_to_u8(0xAB + 0xED)))
+            .WillByDefault(Return(0x1234));
+    EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(127));
+
+    step_execution(6);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, cmp_indexed_indirect_handles_wraparound_sets_nc) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0x00;
+    registers.a = expected.a = 0x07;
+    expected.p |= N_FLAG | C_FLAG;
+    registers.p |= Z_FLAG;
+
+    stage_instruction(CMP_INXIND);
+
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0xFF));
+    EXPECT_CALL(mmu, read_byte(0xFF)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(0x00)).WillOnce(Return(0x12));
+    EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(127));
+
+    step_execution(6);
+
+    EXPECT_EQ(expected, registers);
+}
+
 // CPX, CPY, CMP Zeropage mode
 TEST_F(CpuZeropageTest, cpx_zeropage_sets_nc) {
     compare_sets_n_c(CPX_ZERO, &registers.x, &expected.x);
@@ -1973,7 +2063,7 @@ TEST_F(CpuTest, sta_indexed_indirect_handles_wraparound) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, sta_indirect_indexed) {
+TEST_F(CpuTest, sta_indirect_indexed_with_pagecrossing) {
     registers.pc = expected.pc = 0x4321;
     registers.y = expected.y = 0xED;
     registers.a = expected.a = 0x07;
@@ -1984,9 +2074,35 @@ TEST_F(CpuTest, sta_indirect_indexed) {
 
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
     ON_CALL(mmu, read_word(0x42)).WillByDefault(Return(0x1234));
-    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
 
-    step_execution(6);
+    {
+        InSequence s;
+        EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100));
+        EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
+        step_execution(6);
+    }
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sta_indirect_indexed_without_pagecrossing) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0x0D;
+    registers.a = expected.a = 0x07;
+
+    stage_instruction(STA_INDINX);
+
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
+    ON_CALL(mmu, read_word(0x42)).WillByDefault(Return(0x1234));
+
+    {
+        InSequence s;
+        EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D));
+        EXPECT_CALL(mmu, write_byte(0x1234 + 0x0D, 0x07));
+        step_execution(6);
+    }
 
     EXPECT_EQ(expected, registers);
 }

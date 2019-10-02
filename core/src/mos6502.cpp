@@ -332,6 +332,8 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::CmpAbsolute:
     case Instruction::CmpAbsoluteX:
     case Instruction::CmpAbsoluteY:
+    case Instruction::CmpIndirectX:
+    case Instruction::CmpIndirectY:
         result.append(create_compare_instruction(opcode));
         break;
     case Instruction::NopImplied:
@@ -596,7 +598,7 @@ Pipeline Mos6502::create_addressing_steps(AddressMode address_mode,
         result.append(create_indexed_indirect_addressing_steps());
         break;
     case AddressMode::IndirectIndexed:
-        result.append(create_indirect_indexed_addressing_steps());
+        result.append(create_indirect_indexed_addressing_steps(is_write));
         break;
     default:
         break;
@@ -704,17 +706,42 @@ Pipeline Mos6502::create_indexed_indirect_addressing_steps() {
     return result;
 }
 
-Pipeline Mos6502::create_indirect_indexed_addressing_steps() {
+Pipeline Mos6502::create_indirect_indexed_addressing_steps(bool is_write) {
     Pipeline result;
-    result.push([=]() { /* Empty */ });
     result.push([=]() { /* Empty */ });
     result.push([=]() { /* Empty */ });
     result.push([=]() {
         const uint8_t ptr_address = mmu_->read_byte(registers_->pc++);
         const uint16_t address = mmu_->read_word(ptr_address);
+        const uint8_t offset = registers_->y;
 
-        effective_address_ = address + registers_->y;
+        is_crossing_page_boundary_ = cross_page(address, offset);
+        effective_address_ = address + offset;
     });
+    if (is_write) {
+        result.push([=]() {
+            if (is_crossing_page_boundary_) {
+                // The high byte of the effective address is invalid
+                // at this time (smaller by $100), but a read is still
+                // performed.
+                mmu_->read_byte(effective_address_ - 0x0100);
+            } else {
+                // Extra read from effective address.
+                mmu_->read_byte(effective_address_);
+            }
+        });
+    } else {
+        result.push_conditional([=]() {
+            if (is_crossing_page_boundary_) {
+                // The high byte of the effective address is invalid
+                // at this time (smaller by $100), but a read is still
+                // performed.
+                mmu_->read_byte(effective_address_ - 0x0100);
+                return StepResult::Continue;
+            }
+            return StepResult::Skip;
+        });
+    }
     return result;
 }
 
