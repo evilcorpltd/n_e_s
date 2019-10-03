@@ -1,9 +1,15 @@
 #include "core/invalid_address.h"
 #include "core/ppu_factory.h"
 
+#include "mock_mmu.h"
+
 #include <gtest/gtest.h>
 
 using namespace n_e_s::core;
+using namespace n_e_s::core::test;
+
+using testing::NiceMock;
+using testing::Return;
 
 namespace n_e_s::core {
 
@@ -20,7 +26,10 @@ namespace {
 
 class PpuTest : public ::testing::Test {
 public:
-    PpuTest() : registers(), ppu(PpuFactory::create(&registers)), expected() {}
+    PpuTest()
+            : registers(),
+              ppu(PpuFactory::create(&registers, &mmu)),
+              expected() {}
 
     void step_execution(uint32_t cycles) {
         for (uint32_t i = 0; i < cycles; ++i) {
@@ -29,17 +38,20 @@ public:
     }
 
     IPpu::Registers registers;
+    NiceMock<MockMmu> mmu;
     std::unique_ptr<IPpu> ppu;
 
     IPpu::Registers expected;
 };
 
-TEST_F(PpuTest, read_invalid_address) {
-    EXPECT_THROW(ppu->read_byte(0x5000), InvalidAddress);
+TEST_F(PpuTest, reads_from_mmu_for_unhandled_address) {
+    EXPECT_CALL(mmu, read_byte(0x1000)).WillOnce(Return(0x56));
+    EXPECT_EQ(0x56, ppu->read_byte(0x1000));
 }
 
-TEST_F(PpuTest, write_invalid_address) {
-    EXPECT_THROW(ppu->write_byte(0x3000, 0xAB), InvalidAddress);
+TEST_F(PpuTest, writes_to_mmu_for_unhandled_address) {
+    EXPECT_CALL(mmu, write_byte(0x1000, 0x45)).Times(1);
+    ppu->write_byte(0x1000, 0x45);
 }
 
 TEST_F(PpuTest, read_status_register) {

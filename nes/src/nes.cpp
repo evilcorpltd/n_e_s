@@ -13,11 +13,35 @@
 using namespace n_e_s::core;
 
 namespace n_e_s::nes {
+namespace {
+
+class MemBankReference : public IMemBank {
+public:
+    explicit MemBankReference(IMemBank *const membank) : membank_(membank) {}
+
+    bool is_address_in_range(uint16_t addr) const override {
+        return membank_->is_address_in_range(addr);
+    }
+
+    uint8_t read_byte(uint16_t addr) const override {
+        return membank_->read_byte(addr);
+    }
+    void write_byte(uint16_t addr, uint8_t byte) override {
+        membank_->write_byte(addr, byte);
+    }
+
+private:
+    IMemBank *membank_;
+};
+
+} // namespace
 
 class Nes::Impl {
 public:
     Impl()
-            : ppu_(PpuFactory::create(&ppu_registers_)),
+            : ppu_mmu_(MmuFactory::create(
+                      MemBankFactory::create_nes_ppu_mem_banks())),
+              ppu_(PpuFactory::create(&ppu_registers_, ppu_mmu_.get())),
               mmu_(MmuFactory::create(
                       MemBankFactory::create_nes_mem_banks(ppu_.get()))),
               cpu_(CpuFactory::create(&cpu_registers_, mmu_.get())) {}
@@ -35,18 +59,27 @@ public:
     }
 
     void load_rom(const std::string &filepath) {
-        MemBankList membanks{MemBankFactory::create_nes_mem_banks(ppu_.get())};
-
         std::unique_ptr<IRom> rom{RomFactory::from_file(filepath)};
-        membanks.push_back(std::move(rom));
 
-        mmu_ = MmuFactory::create(std::move(membanks));
+        MemBankList ppu_membanks{MemBankFactory::create_nes_ppu_mem_banks()};
+
+        ppu_membanks.push_back(std::make_unique<MemBankReference>(rom.get()));
+
+        ppu_mmu_ = MmuFactory::create(std::move(ppu_membanks));
+        ppu_ = PpuFactory::create(&ppu_registers_, ppu_mmu_.get());
+
+        MemBankList cpu_membanks{
+                MemBankFactory::create_nes_mem_banks(ppu_.get())};
+        cpu_membanks.push_back(std::move(rom));
+
+        mmu_ = MmuFactory::create(std::move(cpu_membanks));
         cpu_ = CpuFactory::create(&cpu_registers_, mmu_.get());
 
         reset();
     }
 
 private:
+    std::unique_ptr<IMmu> ppu_mmu_;
     IPpu::Registers ppu_registers_{};
     std::unique_ptr<IPpu> ppu_;
 

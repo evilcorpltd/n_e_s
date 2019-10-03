@@ -78,6 +78,8 @@ TEST(Nrom, has_the_correct_address_space) {
     std::string bytes{nrom_bytes(1, 1)};
     std::stringstream ss(bytes);
     std::unique_ptr<IRom> nrom{RomFactory::from_bytes(ss)};
+    EXPECT_TRUE(nrom->is_address_in_range(0x0000));
+    EXPECT_TRUE(nrom->is_address_in_range(0x1FFF));
     EXPECT_TRUE(nrom->is_address_in_range(0x6000));
     EXPECT_TRUE(nrom->is_address_in_range(0xFFFF));
 }
@@ -109,6 +111,9 @@ TEST(Nrom, write_and_read_byte) {
     std::string bytes{nrom_bytes(1, 1)};
     std::stringstream ss(bytes);
     std::unique_ptr<IRom> nrom = RomFactory::from_bytes(ss);
+
+    nrom->write_byte(0x0100, 0x89);
+    EXPECT_EQ(0x89, nrom->read_byte(0x0100));
 
     nrom->write_byte(0x6000, 0x0F);
     EXPECT_EQ(0x0F, nrom->read_byte(0x6000));
