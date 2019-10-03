@@ -20,7 +20,7 @@ public:
     CpuIntegrationTest()
             : registers(),
               mmu(),
-              cpu{CpuFactory::create(&registers, &mmu)},
+              cpu{CpuFactory::create_mos6502(&registers, &mmu)},
               expected() {
         registers.sp = expected.sp = 0xFF;
     }

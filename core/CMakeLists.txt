@@ -5,6 +5,7 @@ add_library(${PROJECT_NAME}
     include/core/icpu.h
     include/core/imembank.h
     include/core/immu.h
+    include/core/imos6502.h
     include/core/invalid_address.h
     include/core/ippu.h
     include/core/irom.h

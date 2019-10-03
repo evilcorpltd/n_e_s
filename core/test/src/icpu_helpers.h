@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/icpu.h"
+#include "core/imos6502.h"
 
 #include <iosfwd>
 

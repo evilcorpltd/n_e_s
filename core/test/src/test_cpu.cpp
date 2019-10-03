@@ -122,7 +122,7 @@ public:
     CpuTest()
             : registers(),
               mmu(),
-              cpu{CpuFactory::create(&registers, &mmu)},
+              cpu{CpuFactory::create_mos6502(&registers, &mmu)},
               expected() {}
 
     void stage_instruction(uint8_t instruction) {
@@ -463,7 +463,7 @@ public:
 
     CpuRegisters registers;
     NiceMock<MockMmu> mmu;
-    std::unique_ptr<ICpu> cpu;
+    std::unique_ptr<IMos6502> cpu;
 
     CpuRegisters expected;
 };
@@ -627,6 +627,24 @@ TEST_F(CpuTest, reset_clears_pipeline) {
                     // been staged.
 
     EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, current_opcode_returns_empty) {
+    const auto opcode = cpu->current_opcode();
+
+    EXPECT_FALSE(opcode.has_value());
+}
+
+TEST_F(CpuTest, current_opcode_returns_instruction) {
+    stage_instruction(PHP);
+    step_execution(1);
+
+    const auto opcode = cpu->current_opcode();
+
+    EXPECT_TRUE(opcode.has_value());
+    EXPECT_EQ(Instruction::PhpImplied, opcode->instruction);
+    EXPECT_EQ(Family::PHP, opcode->family);
+    EXPECT_EQ(AddressMode::Implied, opcode->address_mode);
 }
 
 TEST_F(CpuTest, unsupported_instruction) {
