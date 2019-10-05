@@ -6,10 +6,10 @@
 
 namespace n_e_s::core {
 
-bool operator==(const ICpu::Registers &a, const ICpu::Registers &b);
+bool operator==(const CpuRegisters &a, const CpuRegisters &b);
 
 // Required by gtest to use pascal case.
 // NOLINTNEXTLINE(readability-identifier-naming)
-void PrintTo(const ICpu::Registers &r, std::ostream *os);
+void PrintTo(const CpuRegisters &r, std::ostream *os);
 
 } // namespace n_e_s::core

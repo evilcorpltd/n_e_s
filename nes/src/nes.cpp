@@ -85,7 +85,7 @@ private:
 
     std::unique_ptr<IMmu> mmu_;
 
-    ICpu::Registers cpu_registers_{};
+    CpuRegisters cpu_registers_{};
     std::unique_ptr<ICpu> cpu_;
 
     uint64_t cycle_{};

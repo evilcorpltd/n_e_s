@@ -41,7 +41,7 @@ constexpr bool cross_page(uint16_t address, uint8_t index) {
 
 namespace n_e_s::core {
 
-Mos6502::Stack::Stack(Registers *registers, IMmu *mmu)
+Mos6502::Stack::Stack(CpuRegisters *registers, IMmu *mmu)
         : registers_(registers), mmu_(mmu) {}
 
 uint8_t Mos6502::Stack::pop_byte() {
@@ -63,7 +63,7 @@ void Mos6502::Stack::push_word(uint16_t word) {
     --registers_->sp;
 }
 
-Mos6502::Mos6502(Registers *const registers, IMmu *const mmu)
+Mos6502::Mos6502(CpuRegisters *const registers, IMmu *const mmu)
         : registers_(registers),
           mmu_(mmu),
           stack_(registers_, mmu_),

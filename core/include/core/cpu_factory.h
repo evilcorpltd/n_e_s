@@ -9,7 +9,7 @@ namespace n_e_s::core {
 
 class CpuFactory {
 public:
-    static std::unique_ptr<ICpu> create(ICpu::Registers *registers, IMmu *mmu);
+    static std::unique_ptr<ICpu> create(CpuRegisters *registers, IMmu *mmu);
 };
 
 } // namespace n_e_s::core

@@ -12,14 +12,14 @@ namespace n_e_s::core {
 class Mos6502 : public ICpu {
 public:
     // Assumes ownership of nothing. Really irresponsible.
-    Mos6502(Registers *registers, IMmu *mmu);
+    Mos6502(CpuRegisters *registers, IMmu *mmu);
 
     // ICpu
     void execute() override;
     void reset() override;
 
 private:
-    Registers *const registers_;
+    CpuRegisters *const registers_;
     IMmu *const mmu_;
 
     // Wraps the mmu to provide more convenient access to the stack.
@@ -27,7 +27,7 @@ private:
     // point to the next available address in the mmu's stack area.
     class Stack {
     public:
-        Stack(Registers *registers, IMmu *mmu);
+        Stack(CpuRegisters *registers, IMmu *mmu);
 
         uint8_t pop_byte();
         uint16_t pop_word();
@@ -36,7 +36,7 @@ private:
         void push_word(uint16_t word);
 
     private:
-        Registers *const registers_;
+        CpuRegisters *const registers_;
         IMmu *const mmu_;
         const uint16_t ram_offset_{0x0100};
     };
