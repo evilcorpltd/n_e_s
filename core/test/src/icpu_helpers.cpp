@@ -8,14 +8,14 @@ using namespace n_e_s::core::test;
 
 namespace n_e_s::core {
 
-bool operator==(const ICpu::Registers &a, const ICpu::Registers &b) {
+bool operator==(const CpuRegisters &a, const CpuRegisters &b) {
     return a.pc == b.pc && a.sp == b.sp && a.a == b.a && a.x == b.x &&
            a.y == b.y && a.p == b.p;
 }
 
 // Required by gtest to use pascal case.
 // NOLINTNEXTLINE(readability-identifier-naming)
-void PrintTo(const ICpu::Registers &r, std::ostream *os) {
+void PrintTo(const CpuRegisters &r, std::ostream *os) {
     *os << "PC: " << hex_out_s(r.pc);
     *os << " SP: " << hex_out_s(r.sp);
     *os << " A: " << hex_out_s(r.a);

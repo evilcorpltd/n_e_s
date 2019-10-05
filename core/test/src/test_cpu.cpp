@@ -461,11 +461,11 @@ public:
         EXPECT_EQ(expected, registers);
     }
 
-    ICpu::Registers registers;
+    CpuRegisters registers;
     NiceMock<MockMmu> mmu;
     std::unique_ptr<ICpu> cpu;
 
-    ICpu::Registers expected;
+    CpuRegisters expected;
 };
 
 class CpuZeropageTest : public CpuTest {

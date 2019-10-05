@@ -9,7 +9,7 @@ namespace n_e_s::core {
 
 class Ppu : public IPpu {
 public:
-    explicit Ppu(IPpu::Registers *registers, IMmu *mmu);
+    explicit Ppu(PpuRegisters *registers, IMmu *mmu);
 
     uint8_t read_byte(uint16_t addr) override;
     void write_byte(uint16_t addr, uint8_t byte) override;
@@ -17,7 +17,7 @@ public:
     void execute() override;
 
 private:
-    IPpu::Registers *const registers_;
+    PpuRegisters *const registers_;
     IMmu *const mmu_;
     uint16_t scanline_;
     uint16_t cycle_;

@@ -4,8 +4,7 @@
 
 namespace n_e_s::core {
 
-std::unique_ptr<IPpu> PpuFactory::create(IPpu::Registers *registers,
-        IMmu *mmu) {
+std::unique_ptr<IPpu> PpuFactory::create(PpuRegisters *registers, IMmu *mmu) {
     return std::make_unique<Ppu>(registers, mmu);
 }
 

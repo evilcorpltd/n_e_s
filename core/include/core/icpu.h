@@ -15,6 +15,15 @@ enum CpuFlag {
     N_FLAG = 1 << 7, // negative
 };
 
+struct CpuRegisters {
+    uint16_t pc; // program counter
+    uint8_t sp; // stack pointer
+    uint8_t a; // accumulator
+    uint8_t x; // x index
+    uint8_t y; // y index
+    uint8_t p; // status
+};
+
 class ICpu {
 public:
     virtual ~ICpu() = default;
@@ -24,15 +33,6 @@ public:
 
     // Causes the CPU to jump to its reset routine.
     virtual void reset() = 0;
-
-    struct Registers {
-        uint16_t pc; // program counter
-        uint8_t sp; // stack pointer
-        uint8_t a; // accumulator
-        uint8_t x; // x index
-        uint8_t y; // y index
-        uint8_t p; // status
-    };
 };
 
 } // namespace n_e_s::core

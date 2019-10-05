@@ -13,7 +13,7 @@ using testing::Return;
 
 namespace n_e_s::core {
 
-bool operator==(const IPpu::Registers &a, const IPpu::Registers &b) {
+bool operator==(const PpuRegisters &a, const PpuRegisters &b) {
     return a.ctrl == b.ctrl && a.mask == b.mask && a.status == b.status &&
            a.oamaddr == b.oamaddr && a.fine_x_scroll == b.fine_x_scroll &&
            a.vram_addr == b.vram_addr && a.temp_vram_addr == b.temp_vram_addr &&
@@ -37,11 +37,11 @@ public:
         }
     }
 
-    IPpu::Registers registers;
+    PpuRegisters registers;
     NiceMock<MockMmu> mmu;
     std::unique_ptr<IPpu> ppu;
 
-    IPpu::Registers expected;
+    PpuRegisters expected;
 };
 
 TEST_F(PpuTest, reads_from_mmu_for_unhandled_address) {

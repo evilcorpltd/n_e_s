@@ -58,11 +58,11 @@ public:
         mmu.write_word(kBrkAddress, address);
     }
 
-    ICpu::Registers registers;
+    CpuRegisters registers;
     FakeMmu mmu;
     std::unique_ptr<ICpu> cpu;
 
-    ICpu::Registers expected;
+    CpuRegisters expected;
 };
 
 TEST_F(CpuIntegrationTest, simple_program) {

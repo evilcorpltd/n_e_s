@@ -39,23 +39,23 @@ private:
 class Nes::Impl {
 public:
     Impl()
-            : ppu_mmu_(MmuFactory::create(
+            : ppu_mmu(MmuFactory::create(
                       MemBankFactory::create_nes_ppu_mem_banks())),
-              ppu_(PpuFactory::create(&ppu_registers_, ppu_mmu_.get())),
-              mmu_(MmuFactory::create(
-                      MemBankFactory::create_nes_mem_banks(ppu_.get()))),
-              cpu_(CpuFactory::create(&cpu_registers_, mmu_.get())) {}
+              ppu(PpuFactory::create(&ppu_registers, ppu_mmu.get())),
+              mmu(MmuFactory::create(
+                      MemBankFactory::create_nes_mem_banks(ppu.get()))),
+              cpu(CpuFactory::create(&cpu_registers, mmu.get())) {}
 
     void execute() {
-        if (cycle_++ % 3 == 0) {
-            cpu_->execute();
+        if (cycle++ % 3 == 0) {
+            cpu->execute();
         }
 
-        ppu_->execute();
+        ppu->execute();
     }
 
     void reset() {
-        cpu_->reset();
+        cpu->reset();
     }
 
     void load_rom(const std::string &filepath) {
@@ -65,30 +65,29 @@ public:
 
         ppu_membanks.push_back(std::make_unique<MemBankReference>(rom.get()));
 
-        ppu_mmu_ = MmuFactory::create(std::move(ppu_membanks));
-        ppu_ = PpuFactory::create(&ppu_registers_, ppu_mmu_.get());
+        ppu_mmu = MmuFactory::create(std::move(ppu_membanks));
+        ppu = PpuFactory::create(&ppu_registers, ppu_mmu.get());
 
         MemBankList cpu_membanks{
-                MemBankFactory::create_nes_mem_banks(ppu_.get())};
+                MemBankFactory::create_nes_mem_banks(ppu.get())};
         cpu_membanks.push_back(std::move(rom));
 
-        mmu_ = MmuFactory::create(std::move(cpu_membanks));
-        cpu_ = CpuFactory::create(&cpu_registers_, mmu_.get());
+        mmu = MmuFactory::create(std::move(cpu_membanks));
+        cpu = CpuFactory::create(&cpu_registers, mmu.get());
 
         reset();
     }
 
-private:
-    std::unique_ptr<IMmu> ppu_mmu_;
-    IPpu::Registers ppu_registers_{};
-    std::unique_ptr<IPpu> ppu_;
+    std::unique_ptr<IMmu> ppu_mmu;
+    PpuRegisters ppu_registers{};
+    std::unique_ptr<IPpu> ppu;
 
-    std::unique_ptr<IMmu> mmu_;
+    std::unique_ptr<IMmu> mmu;
 
-    ICpu::Registers cpu_registers_{};
-    std::unique_ptr<ICpu> cpu_;
+    CpuRegisters cpu_registers{};
+    std::unique_ptr<ICpu> cpu;
 
-    uint64_t cycle_{};
+    uint64_t cycle{};
 };
 
 Nes::Nes() : impl_(std::make_unique<Impl>()) {}
@@ -105,6 +104,51 @@ void Nes::reset() {
 
 void Nes::load_rom(const std::string &filepath) {
     impl_->load_rom(filepath);
+}
+n_e_s::core::ICpu &Nes::cpu() {
+    return *impl_->cpu;
+}
+const n_e_s::core::ICpu &Nes::cpu() const {
+    return *impl_->cpu;
+}
+
+n_e_s::core::IPpu &Nes::ppu() {
+    return *impl_->ppu;
+}
+const n_e_s::core::IPpu &Nes::ppu() const {
+    return *impl_->ppu;
+}
+
+n_e_s::core::IMmu &Nes::mmu() {
+    return *impl_->mmu;
+}
+const n_e_s::core::IMmu &Nes::mmu() const {
+    return *impl_->mmu;
+}
+
+n_e_s::core::IMmu &Nes::ppu_mmu() {
+    return *impl_->ppu_mmu;
+}
+const n_e_s::core::IMmu &Nes::ppu_mmu() const {
+    return *impl_->ppu_mmu;
+}
+
+n_e_s::core::CpuRegisters &Nes::cpu_registers() {
+    return impl_->cpu_registers;
+}
+const n_e_s::core::CpuRegisters &Nes::cpu_registers() const {
+    return impl_->cpu_registers;
+}
+
+n_e_s::core::PpuRegisters &Nes::ppu_registers() {
+    return impl_->ppu_registers;
+}
+const n_e_s::core::PpuRegisters &Nes::ppu_registers() const {
+    return impl_->ppu_registers;
+}
+
+uint64_t Nes::current_cycle() const {
+    return impl_->cycle;
 }
 
 } // namespace n_e_s::nes
