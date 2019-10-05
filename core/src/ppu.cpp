@@ -25,7 +25,7 @@ const uint16_t kVBlankScanlineEnd = 260;
 
 namespace n_e_s::core {
 
-Ppu::Ppu(IPpu::Registers *registers, IMmu *mmu)
+Ppu::Ppu(PpuRegisters *registers, IMmu *mmu)
         : registers_(registers), mmu_(mmu), scanline_(0), cycle_(0) {}
 
 uint8_t Ppu::read_byte(uint16_t addr) {

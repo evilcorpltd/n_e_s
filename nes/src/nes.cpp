@@ -80,7 +80,7 @@ public:
 
 private:
     std::unique_ptr<IMmu> ppu_mmu_;
-    IPpu::Registers ppu_registers_{};
+    PpuRegisters ppu_registers_{};
     std::unique_ptr<IPpu> ppu_;
 
     std::unique_ptr<IMmu> mmu_;
