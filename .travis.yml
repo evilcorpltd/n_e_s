@@ -15,7 +15,7 @@ matrix:
             - libstdc++-7-dev
       script:
         - CXX=clang++-7 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-        - run-clang-tidy-7.py -q -p . "application|core|nes" -header-filter=".*"
+        - travis_wait run-clang-tidy-7.py -q -p . "application|core|nes" -header-filter=".*"
 
     - name: "clang-format"
       addons:
