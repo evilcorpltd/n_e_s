@@ -186,6 +186,14 @@ Opcode decode(const uint8_t op) {
         return {Family::BEQ, BeqRelative, AddressMode::Relative};
     case SedImplied:
         return {Family::SED, SedImplied, AddressMode::Implied};
+    case EorImmediate:
+        return {Family::EOR, EorImmediate, AddressMode::Immediate};
+    case EorAbsolute:
+        return {Family::EOR, EorAbsolute, AddressMode::Absolute};
+    case EorAbsoluteX:
+        return {Family::EOR, EorAbsoluteX, AddressMode::AbsoluteX};
+    case EorAbsoluteY:
+        return {Family::EOR, EorAbsoluteY, AddressMode::AbsoluteY};
     default:
         // Since this is an invalid opcode the instruction and address mode
         // have no real meaning, so we just use 0, 0 for them.
@@ -293,6 +301,8 @@ std::string to_string(const Family family) {
         return "DEY";
     case Family::DEX:
         return "DEX";
+    case Family::EOR:
+        return "EOR";
     default:
         return "UNKNOWN";
     }
