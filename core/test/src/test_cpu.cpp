@@ -2422,11 +2422,10 @@ TEST_F(CpuTest, eor_absx_with_page_crossing) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, eor_absy_without_page_crossing)
-{
+TEST_F(CpuTest, eor_absy_without_page_crossing) {
     registers.pc = expected.pc = 0x4321;
     registers.a = 0b00111100;
-    registers.p =  Z_FLAG | N_FLAG;
+    registers.p = Z_FLAG | N_FLAG;
     registers.y = expected.y = 0x10;
 
     stage_instruction(EOR_ABSY);
