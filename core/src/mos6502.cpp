@@ -73,6 +73,10 @@ void Mos6502::execute() {
     if (pipeline_.done()) {
         pipeline_ = parse_next_instruction();
     } else {
+        if (nmi_) {
+            pipeline_ = create_nmi();
+            nmi_ = false;
+        }
         pipeline_.execute_step();
     }
 }
@@ -397,12 +401,17 @@ Pipeline Mos6502::parse_next_instruction() {
 
 void Mos6502::reset() {
     pipeline_.clear();
+    nmi_ = false;
 
     registers_->pc = mmu_->read_word(kResetAddress);
 }
 
 std::optional<Opcode> Mos6502::current_opcode() const {
     return current_opcode_;
+}
+
+void Mos6502::set_nmi(bool nmi) {
+    nmi_ = nmi;
 }
 
 void Mos6502::clear_flag(uint8_t flag) {
@@ -448,6 +457,28 @@ void Mos6502::set_overflow(uint8_t reg_value,
     } else {
         clear_flag(V_FLAG);
     }
+}
+
+Pipeline Mos6502::create_nmi() {
+    Pipeline result;
+    result.push([=]() {
+        // Dummy read
+        mmu_->read_byte(registers_->pc++);
+    });
+    result.push([=]() {
+        // Dummy read
+        mmu_->read_byte(registers_->pc++);
+    });
+    result.push([=]() { stack_.push_byte(registers_->pc >> 8); });
+    result.push([=]() { stack_.push_byte(registers_->pc & 0xFF); });
+    result.push([=]() { stack_.push_byte(registers_->p); });
+    result.push([=]() { tmp_ = mmu_->read_byte(0xFFFA); });
+    result.push([=]() {
+        const uint16_t pch = mmu_->read_byte(0xFFFB) << 8;
+        registers_->pc = pch | tmp_;
+    });
+
+    return result;
 }
 
 Pipeline Mos6502::create_branch_instruction(

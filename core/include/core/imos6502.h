@@ -32,6 +32,8 @@ class IMos6502 : public ICpu {
 public:
     // Returns the currently staged opcode.
     virtual std::optional<Opcode> current_opcode() const = 0;
+
+    virtual void set_nmi(bool nmi) = 0;
 };
 
 } // namespace n_e_s::core

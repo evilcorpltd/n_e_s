@@ -19,6 +19,8 @@ public:
     void reset() override;
     std::optional<Opcode> current_opcode() const override;
 
+    void set_nmi(bool nmi) override;
+
 private:
     CpuRegisters *const registers_;
     IMmu *const mmu_;
@@ -45,6 +47,9 @@ private:
     Stack stack_;
 
     std::optional<Opcode> current_opcode_;
+
+    // Set to true if a nmi interrupt should be exectued.
+    bool nmi_{false};
 
     // Holds the atoms staged to be executed.
     Pipeline pipeline_;
@@ -80,6 +85,7 @@ private:
 
     Pipeline parse_next_instruction();
 
+    Pipeline create_nmi();
     Pipeline create_branch_instruction(const std::function<bool()> &condition);
     Pipeline create_add_instruction(Opcode opcode);
     Pipeline create_and_instruction(Opcode opcode);

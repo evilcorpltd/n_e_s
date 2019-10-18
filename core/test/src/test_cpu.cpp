@@ -21,6 +21,7 @@ constexpr uint8_t u16_to_u8(uint16_t u16) {
 const uint16_t kStackOffset = 0x0100;
 const uint16_t kResetAddress = 0xFFFC;
 const uint16_t kBrkAddress = 0xFFFE;
+const uint16_t kNmiAddress = 0xFFFA;
 
 // Tests and opcodes should be written without looking at the cpu
 // implementation. Look at a data sheet and don't cheat!
@@ -127,7 +128,9 @@ public:
             : registers(),
               mmu(),
               cpu{CpuFactory::create_mos6502(&registers, &mmu)},
-              expected() {}
+              expected() {
+        registers.sp = expected.sp = 0xFF;
+    }
 
     void stage_instruction(uint8_t instruction) {
         expected.pc += 1;
@@ -655,6 +658,35 @@ TEST_F(CpuTest, unsupported_instruction) {
     stage_instruction(0xFF);
 
     EXPECT_THROW(step_execution(1), std::logic_error);
+}
+
+TEST_F(CpuTest, nmi) {
+    registers.pc = 0x1234;
+    stage_instruction(LDA_ZERO);
+    cpu->set_nmi(true);
+
+    expected.sp -= 2 + 1; // 1 word and 1 byte
+
+    // Dummy reads
+    // Read from 0x1234 is done when parsing the LDA instruction, so PC is at
+    // 0x1235 when nmi is run.
+    EXPECT_CALL(mmu, read_byte(0x1235));
+    EXPECT_CALL(mmu, read_byte(0x1236));
+
+    // Set nmi vector to 0x5678
+    expected.pc = 0x5678;
+    EXPECT_CALL(mmu, read_byte(kNmiAddress)).WillOnce(Return(0x78));
+    EXPECT_CALL(mmu, read_byte(kNmiAddress + 1)).WillOnce(Return(0x56));
+
+    // First the return address is pushed and then the registers.
+    EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp, 0x12));
+    EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp - 1, 0x37));
+    EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp - 2, registers.p));
+
+    // 1 instruction to decode LDA, 7 for nmi
+    step_execution(1 + 7);
+
+    EXPECT_EQ(expected, registers);
 }
 
 TEST_F(CpuTest, brk) {
