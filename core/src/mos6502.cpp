@@ -389,7 +389,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::EorAbsolute:
     case Instruction::EorAbsoluteX:
     case Instruction::EorAbsoluteY:
-        result.append(create_eor_instruction(opcode));
+        result.append(create_eor_instruction(*current_opcode_));
         break;
     }
     return result;
