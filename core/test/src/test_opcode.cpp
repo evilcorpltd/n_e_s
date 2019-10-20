@@ -57,5 +57,6 @@ TEST(Opcode, Family) {
     EXPECT_EQ("TXA", to_string(Family::TXA));
     EXPECT_EQ("DEY", to_string(Family::DEY));
     EXPECT_EQ("DEX", to_string(Family::DEX));
+    EXPECT_EQ("EOR", to_string(Family::EOR));
 }
 } // namespace

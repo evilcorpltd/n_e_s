@@ -385,6 +385,12 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::SedImplied:
         result.push([=]() { set_flag(D_FLAG); });
         break;
+    case Instruction::EorImmediate:
+    case Instruction::EorAbsolute:
+    case Instruction::EorAbsoluteX:
+    case Instruction::EorAbsoluteY:
+        result.append(create_eor_instruction(opcode));
+        break;
     }
     return result;
 } // namespace n_e_s::core
@@ -570,6 +576,21 @@ Pipeline Mos6502::create_compare_instruction(Opcode opcode) {
         set_zero(static_cast<uint8_t>(temp_result));
         set_negative(static_cast<uint8_t>(temp_result));
     });
+    return result;
+}
+
+Pipeline Mos6502::create_eor_instruction(Opcode opcode) {
+    Pipeline result;
+    result.append(create_addressing_steps(opcode.address_mode));
+
+    result.push([=]() {
+        const uint8_t operand = mmu_->read_byte(effective_address_);
+        registers_->a ^= operand;
+
+        set_zero(registers_->a);
+        set_negative(registers_->a);
+    });
+
     return result;
 }
 
