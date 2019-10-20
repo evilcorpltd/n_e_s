@@ -391,6 +391,10 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::EorAbsoluteY:
         result.append(create_eor_instruction(opcode));
         break;
+    case Instruction::RolAbsolute:
+    case Instruction::RolAbsoluteX:
+        result.append(create_rol_instruction(opcode));
+        break;
     }
     return result;
 } // namespace n_e_s::core
@@ -583,6 +587,24 @@ Pipeline Mos6502::create_eor_instruction(Opcode opcode) {
         const uint8_t operand = mmu_->read_byte(effective_address_);
         registers_->a ^= operand;
 
+        set_zero(registers_->a);
+        set_negative(registers_->a);
+    });
+
+    return result;
+}
+
+Pipeline Mos6502::create_rol_instruction(Opcode opcode) {
+    Pipeline result;
+    result.append(create_addressing_steps(opcode.address_mode));
+
+    result.push([=]() {
+        const uint8_t operand = mmu_->read_byte(effective_address_);
+        const uint8_t carry = registers_->p & C_FLAG ? 0x01 : 0x00;
+        const uint16_t temp_result = (operand << 1) | carry;
+        registers_->a = static_cast<uint8_t>(temp_result);
+
+        set_carry(temp_result > 0xFF);
         set_zero(registers_->a);
         set_negative(registers_->a);
     });

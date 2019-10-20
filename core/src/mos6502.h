@@ -84,6 +84,7 @@ private:
     Pipeline create_load_instruction(Opcode opcode);
     Pipeline create_compare_instruction(Opcode opcode);
     Pipeline create_eor_instruction(Opcode opcode);
+    Pipeline create_rol_instruction(Opcode opcode);
 
     Pipeline create_addressing_steps(AddressMode address_mode,
             bool is_write = false);
