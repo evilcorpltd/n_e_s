@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/icpu.h"
 #include "core/immu.h"
+#include "core/imos6502.h"
 #include "core/opcode.h"
 #include "pipeline.h"
 
@@ -9,7 +9,7 @@
 
 namespace n_e_s::core {
 
-class Mos6502 : public ICpu {
+class Mos6502 : public IMos6502 {
 public:
     // Assumes ownership of nothing. Really irresponsible.
     Mos6502(CpuRegisters *registers, IMmu *mmu);
@@ -17,6 +17,7 @@ public:
     // ICpu
     void execute() override;
     void reset() override;
+    std::optional<Opcode> current_opcode() const override;
 
 private:
     CpuRegisters *const registers_;
@@ -42,6 +43,8 @@ private:
     };
 
     Stack stack_;
+
+    std::optional<Opcode> current_opcode_;
 
     // Holds the atoms staged to be executed.
     Pipeline pipeline_;

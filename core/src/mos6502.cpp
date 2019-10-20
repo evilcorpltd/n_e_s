@@ -81,20 +81,20 @@ void Mos6502::execute() {
 Pipeline Mos6502::parse_next_instruction() {
     Pipeline result;
     const uint8_t raw_opcode{mmu_->read_byte(registers_->pc++)};
-    const Opcode opcode = decode(raw_opcode);
+    current_opcode_ = decode(raw_opcode);
 
-    if (opcode.family == Family::Invalid) {
+    if (current_opcode_->family == Family::Invalid) {
         std::stringstream err;
         err << "Bad instruction: " << std::showbase << std::hex << +raw_opcode;
         err << " @ " << registers_->pc - 1;
         throw std::logic_error(err.str());
     }
 
-    if (opcode.address_mode == AddressMode::Immediate) {
+    if (current_opcode_->address_mode == AddressMode::Immediate) {
         effective_address_ = registers_->pc++;
     }
 
-    switch (opcode.instruction) {
+    switch (current_opcode_->instruction) {
     case Instruction::BrkImplied:
         result.push([=]() { ++registers_->pc; });
         result.push([=]() {
@@ -117,7 +117,7 @@ Pipeline Mos6502::parse_next_instruction() {
         break;
     case Instruction::BitZeropage:
     case Instruction::BitAbsolute:
-        result.append(create_addressing_steps(opcode.address_mode));
+        result.append(create_addressing_steps(current_opcode_->address_mode));
 
         result.push([=]() {
             const uint8_t value = mmu_->read_byte(effective_address_);
@@ -143,7 +143,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::AndAbsolute:
     case Instruction::AndAbsoluteX:
     case Instruction::AndAbsoluteY:
-        result.append(create_and_instruction(opcode));
+        result.append(create_and_instruction(*current_opcode_));
         break;
     case Instruction::ClcImplied:
         result.push([=]() { clear_flag(C_FLAG); });
@@ -196,7 +196,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::AdcAbsolute:
     case Instruction::AdcAbsoluteX:
     case Instruction::AdcAbsoluteY:
-        result.append(create_add_instruction(opcode));
+        result.append(create_add_instruction(*current_opcode_));
         break;
     case Instruction::PlaImplied:
         result.push([=]() {
@@ -244,7 +244,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::StyZeropage:
     case Instruction::StyAbsolute:
     case Instruction::StyZeropageX:
-        result.append(create_store_instruction(opcode));
+        result.append(create_store_instruction(*current_opcode_));
         break;
     case Instruction::TxsImplied:
         result.push([=]() { registers_->sp = registers_->x; });
@@ -304,7 +304,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::LdyAbsoluteX:
     case Instruction::LdaAbsoluteX:
     case Instruction::LdxAbsoluteY:
-        result.append(create_load_instruction(opcode));
+        result.append(create_load_instruction(*current_opcode_));
         break;
     case Instruction::BcsRelative:
         result.append(create_branch_instruction(
@@ -334,7 +334,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::CmpAbsoluteY:
     case Instruction::CmpIndirectX:
     case Instruction::CmpIndirectY:
-        result.append(create_compare_instruction(opcode));
+        result.append(create_compare_instruction(*current_opcode_));
         break;
     case Instruction::NopImplied:
         result.push([]() { /* Do nothing. */ });
@@ -393,6 +393,10 @@ void Mos6502::reset() {
     pipeline_.clear();
 
     registers_->pc = mmu_->read_word(kResetAddress);
+}
+
+std::optional<Opcode> Mos6502::current_opcode() const {
+    return current_opcode_;
 }
 
 void Mos6502::clear_flag(uint8_t flag) {

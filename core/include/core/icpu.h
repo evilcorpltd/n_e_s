@@ -1,28 +1,6 @@
 #pragma once
 
-#include <cstdint>
-
 namespace n_e_s::core {
-
-enum CpuFlag {
-    C_FLAG = 1 << 0, // carry
-    Z_FLAG = 1 << 1, // zero
-    I_FLAG = 1 << 2, // interrupt disable
-    D_FLAG = 1 << 3, // decimal mode
-    B_FLAG = 1 << 4, // break
-    FLAG_5 = 1 << 5, // unused, always 1
-    V_FLAG = 1 << 6, // overflow
-    N_FLAG = 1 << 7, // negative
-};
-
-struct CpuRegisters {
-    uint16_t pc; // program counter
-    uint8_t sp; // stack pointer
-    uint8_t a; // accumulator
-    uint8_t x; // x index
-    uint8_t y; // y index
-    uint8_t p; // status
-};
 
 class ICpu {
 public:

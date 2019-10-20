@@ -44,7 +44,7 @@ public:
               ppu(PpuFactory::create(&ppu_registers, ppu_mmu.get())),
               mmu(MmuFactory::create(
                       MemBankFactory::create_nes_mem_banks(ppu.get()))),
-              cpu(CpuFactory::create(&cpu_registers, mmu.get())) {}
+              cpu(CpuFactory::create_mos6502(&cpu_registers, mmu.get())) {}
 
     void execute() {
         if (cycle++ % 3 == 0) {
@@ -73,7 +73,7 @@ public:
         cpu_membanks.push_back(std::move(rom));
 
         mmu = MmuFactory::create(std::move(cpu_membanks));
-        cpu = CpuFactory::create(&cpu_registers, mmu.get());
+        cpu = CpuFactory::create_mos6502(&cpu_registers, mmu.get());
 
         reset();
     }
