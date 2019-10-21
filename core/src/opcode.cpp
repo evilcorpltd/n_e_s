@@ -197,6 +197,10 @@ Opcode decode(const uint8_t op) {
         return {Family::EOR, EorAbsoluteX, AddressMode::AbsoluteX};
     case EorAbsoluteY:
         return {Family::EOR, EorAbsoluteY, AddressMode::AbsoluteY};
+    case RolAbsolute:
+        return {Family::ROL, RolAbsolute, AddressMode::Absolute};
+    case RolAbsoluteX:
+        return {Family::ROL, RolAbsoluteX, AddressMode::AbsoluteX};
     default:
         // Since this is an invalid opcode the instruction and address mode
         // have no real meaning, so we just use 0, 0 for them.
@@ -254,6 +258,7 @@ MemoryAccess get_memory_access(const Family family) {
     case Family::DEY:
     case Family::DEX:
     case Family::EOR:
+    case Family::ROL:
         return MemoryAccess::Read;
     case Family::STY:
     case Family::STA:
@@ -368,6 +373,8 @@ std::string to_string(const Family family) {
         return "DEX";
     case Family::EOR:
         return "EOR";
+    case Family::ROL:
+        return "ROL";
     default:
         return "UNKNOWN";
     }

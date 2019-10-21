@@ -35,10 +35,12 @@ enum Opcode : uint8_t {
     AND_IMM = 0x29,
     BIT_ABS = 0x2C,
     AND_ABS = 0x2D,
+    ROL_ABS = 0x2E,
     BMI = 0x30,
     SEC = 0x38,
     AND_ABSY = 0x39,
     AND_ABSX = 0x3D,
+    ROL_ABSX = 0x3E,
     LSR_ACC = 0x4A,
     PHA = 0x48,
     EOR_IMM = 0x49,
@@ -2480,4 +2482,94 @@ TEST_F(CpuTest, eor_absy_without_page_crossing) {
     EXPECT_EQ(expected, registers);
 }
 
+// ROL, ABS
+TEST_F(CpuAbsoluteTest, rol_abs_set_neg_clear_zero) {
+    registers.a = 0b00000000;
+    registers.p = Z_FLAG;
+    expected.a = 0b10101010;
+    expected.p = N_FLAG;
+    memory_content = 0b01010101;
+
+    run_read_instruction(ROL_ABS);
+}
+
+TEST_F(CpuAbsoluteTest, rol_abs_set_carry_clear_zero) {
+    registers.a = 0b00000000;
+    registers.p = Z_FLAG;
+    expected.a = 0b01010100;
+    expected.p = C_FLAG;
+    memory_content = 0b10101010;
+
+    run_read_instruction(ROL_ABS);
+}
+
+TEST_F(CpuAbsoluteTest, rol_abs_clear_zero_clear_carry) {
+    registers.a = 0b00000000;
+    registers.p = Z_FLAG | C_FLAG;
+    expected.a = 0b01111001;
+    expected.p = 0;
+    memory_content = 0b00111100;
+
+    run_read_instruction(ROL_ABS);
+}
+
+TEST_F(CpuAbsoluteTest, rol_abs_clear_neg_set_zero_carry) {
+    registers.a = 0b10000000;
+    registers.p = N_FLAG;
+    expected.a = 0b00000000;
+    expected.p = Z_FLAG | C_FLAG;
+    memory_content = 0b10000000;
+
+    run_read_instruction(ROL_ABS);
+}
+
+TEST_F(CpuAbsoluteTest, rol_abs_clear_neg_retain_carry) {
+    registers.a = 0b10000000;
+    registers.p = N_FLAG | C_FLAG;
+    expected.a = 0b00000001;
+    expected.p = C_FLAG;
+    memory_content = 0b10000000;
+
+    run_read_instruction(ROL_ABS);
+}
+
+// ROL, ABSX
+TEST_F(CpuTest, rol_absx_without_page_crossing) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = 0b10101010;
+    registers.p = N_FLAG;
+    registers.x = expected.x = 0x10;
+
+    stage_instruction(ROL_ABSX);
+
+    expected.pc += 2;
+    expected.a = 0b01100110;
+    expected.p = 0;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x5678));
+    EXPECT_CALL(mmu, read_byte(0x5678 + 0x10)).WillOnce(Return(0b00110011));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, tol_absx_with_page_crossing) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = 0b00000000;
+    registers.p = Z_FLAG;
+    registers.x = expected.x = 0xAB;
+
+    stage_instruction(ROL_ABSX);
+
+    expected.pc += 2;
+    expected.a = 0b11100000;
+    expected.p = N_FLAG | C_FLAG;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x5678));
+    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB - 0x100)).WillOnce(Return(0xDEAD));
+    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB)).WillOnce(Return(0b11110000));
+
+    step_execution(5);
+    EXPECT_EQ(expected, registers);
+}
 } // namespace
