@@ -118,6 +118,7 @@ enum Opcode : uint8_t {
     NOP = 0xEA,
     CPX_ABS = 0xEC,
     BEQ = 0xF0,
+    INC_ZEROX = 0xF6,
     SED = 0xF8,
 };
 
@@ -1801,6 +1802,7 @@ TEST_F(CpuTest, inc_zero_increments) {
         step_execution(5);
     }
 }
+
 TEST_F(CpuTest, inc_zero_sets_z_flag) {
     registers.pc = 0x1234;
     expected.p |= Z_FLAG;
@@ -1836,6 +1838,25 @@ TEST_F(CpuTest, inc_zero_clears_n_flag) {
     EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0x44));
     EXPECT_CALL(mmu, read_byte(0x44)).WillOnce(Return(125));
     step_execution(5);
+}
+
+TEST_F(CpuTest, inc_zerox_increments) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0xED;
+
+    stage_instruction(INC_ZEROX);
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
+    EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED))).WillOnce(Return(0x05));
+    {
+        InSequence s;
+        EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x05));
+        EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x06));
+    }
+
+    step_execution(6);
+    EXPECT_EQ(expected, registers);
 }
 
 // INX

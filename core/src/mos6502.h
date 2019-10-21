@@ -81,6 +81,7 @@ private:
     Pipeline parse_next_instruction();
 
     Pipeline create_branch_instruction(const std::function<bool()> &condition);
+    Pipeline create_inc_instruction(Opcode opcode);
     Pipeline create_add_instruction(Opcode opcode);
     Pipeline create_and_instruction(Opcode opcode);
     Pipeline create_store_instruction(Opcode opcode);
@@ -89,10 +90,11 @@ private:
     Pipeline create_eor_instruction(Opcode opcode);
 
     Pipeline create_addressing_steps(AddressMode address_mode,
-            bool is_write = false);
+            MemoryAccess access);
 
-    Pipeline create_zeropage_addressing_steps();
-    Pipeline create_zeropage_indexed_addressing_steps(const uint8_t *index_reg);
+    Pipeline create_zeropage_addressing_steps(MemoryAccess access);
+    Pipeline create_zeropage_indexed_addressing_steps(const uint8_t *index_reg,
+            MemoryAccess access);
     Pipeline create_absolute_addressing_steps();
     Pipeline create_absolute_indexed_addressing_steps(const uint8_t *index_reg,
             bool is_write);

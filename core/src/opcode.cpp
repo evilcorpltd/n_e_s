@@ -1,5 +1,6 @@
 #include "core/opcode.h"
 
+#include <stdexcept>
 #include <string>
 
 namespace n_e_s::core {
@@ -184,6 +185,8 @@ Opcode decode(const uint8_t op) {
         return {Family::CPX, CpxAbsolute, AddressMode::Absolute};
     case BeqRelative:
         return {Family::BEQ, BeqRelative, AddressMode::Relative};
+    case IncZeropageX:
+        return {Family::INC, IncZeropageX, AddressMode::ZeropageX};
     case SedImplied:
         return {Family::SED, SedImplied, AddressMode::Implied};
     case EorImmediate:
@@ -199,6 +202,68 @@ Opcode decode(const uint8_t op) {
         // have no real meaning, so we just use 0, 0 for them.
         return {Family::Invalid, BrkImplied, AddressMode::Implied};
     }
+}
+
+MemoryAccess get_memory_access(const Family family) {
+    switch (family) {
+    // Return Read for instructions where memory access type has no meaning.
+    // Set correct access type when we implement missing addressing modes.
+    case Family::Invalid:
+    case Family::BRK:
+    case Family::PHP:
+    case Family::BPL:
+    case Family::CLC:
+    case Family::BIT:
+    case Family::PLP:
+    case Family::AND:
+    case Family::JSR:
+    case Family::BMI:
+    case Family::SEC:
+    case Family::LSR:
+    case Family::PHA:
+    case Family::JMP:
+    case Family::BVC:
+    case Family::CLI:
+    case Family::ADC:
+    case Family::PLA:
+    case Family::RTS:
+    case Family::BVS:
+    case Family::SEI:
+    case Family::TXS:
+    case Family::BCC:
+    case Family::LDX:
+    case Family::LDY:
+    case Family::LDA:
+    case Family::BCS:
+    case Family::CLV:
+    case Family::BNE:
+    case Family::CLD:
+    case Family::CPX:
+    case Family::NOP:
+    case Family::INX:
+    case Family::INY:
+    case Family::CPY:
+    case Family::CMP:
+    case Family::BEQ:
+    case Family::SED:
+    case Family::TYA:
+    case Family::TAY:
+    case Family::TAX:
+    case Family::TSX:
+    case Family::TXA:
+    case Family::DEY:
+    case Family::DEX:
+    case Family::EOR:
+        return MemoryAccess::Read;
+    case Family::STY:
+    case Family::STA:
+    case Family::STX:
+        return MemoryAccess::Write;
+    case Family::INC:
+        return MemoryAccess::ReadWrite;
+    }
+    // Should not happen
+    throw std::logic_error("Unknown family");
 }
 
 std::string to_string(const Family family) {
