@@ -103,6 +103,7 @@ enum Opcode : uint8_t {
     CMP_INXIND = 0xC1,
     CPY_ZERO = 0xC4,
     CMP_ZERO = 0xC5,
+    DEC_ZERO = 0xC6,
     INY = 0xC8,
     CMP_IMM = 0xC9,
     DEX = 0xCA,
@@ -111,6 +112,7 @@ enum Opcode : uint8_t {
     BNE = 0xD0,
     CMP_INDINX = 0xD1,
     CMP_ZEROX = 0xD5,
+    DEC_ZEROX = 0xD6,
     CLD = 0xD8,
     CMP_ABSY = 0xD9,
     CMP_ABSX = 0xDD,
@@ -1875,6 +1877,47 @@ TEST_F(CpuTest, inc_zerox_increments) {
     EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED))).WillOnce(Return(0x05));
     EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x05));
     EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x06));
+
+    step_execution(6);
+    EXPECT_EQ(expected, registers);
+}
+
+// DEC
+TEST_F(CpuZeropageTest, dec_zero_decrements) {
+    memory_content = 0x06;
+    run_readwrite_instruction(DEC_ZERO, 0x05);
+}
+
+TEST_F(CpuZeropageTest, dec_zero_sets_z_flag) {
+    expected.p = Z_FLAG;
+    memory_content = 0x01;
+    run_readwrite_instruction(DEC_ZERO, 0x00);
+}
+
+TEST_F(CpuZeropageTest, dec_zero_clears_z_flag_sets_n_flag) {
+    registers.p = Z_FLAG;
+    expected.p = N_FLAG;
+    memory_content = 0xFE;
+    run_readwrite_instruction(DEC_ZERO, 0xFD);
+}
+
+TEST_F(CpuZeropageTest, dec_zero_clears_n_flag) {
+    registers.p = N_FLAG;
+    memory_content = 126;
+    run_readwrite_instruction(DEC_ZERO, 125);
+}
+
+TEST_F(CpuTest, dec_zerox_decrements) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0xED;
+
+    stage_instruction(DEC_ZEROX);
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
+    EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED))).WillOnce(Return(0x05));
+    EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x05));
+    EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x04));
 
     step_execution(6);
     EXPECT_EQ(expected, registers);

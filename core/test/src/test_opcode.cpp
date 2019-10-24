@@ -48,6 +48,7 @@ TEST(Opcode, Family) {
     EXPECT_EQ("INY", to_string(Family::INY));
     EXPECT_EQ("CPY", to_string(Family::CPY));
     EXPECT_EQ("CMP", to_string(Family::CMP));
+    EXPECT_EQ("DEC", to_string(Family::DEC));
     EXPECT_EQ("BEQ", to_string(Family::BEQ));
     EXPECT_EQ("SED", to_string(Family::SED));
     EXPECT_EQ("TYA", to_string(Family::TYA));
