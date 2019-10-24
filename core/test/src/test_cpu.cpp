@@ -127,7 +127,9 @@ public:
             : registers(),
               mmu(),
               cpu{CpuFactory::create_mos6502(&registers, &mmu)},
-              expected() {}
+              expected() {
+        registers.sp = expected.sp = 0xFF;
+    }
 
     void stage_instruction(uint8_t instruction) {
         expected.pc += 1;
@@ -658,23 +660,23 @@ TEST_F(CpuTest, unsupported_instruction) {
 }
 
 TEST_F(CpuTest, brk) {
+    registers.pc = 0x1234;
     stage_instruction(BRK);
     expected.pc = 0xDEAD;
 
-    const uint8_t expected_pc_stack_addr = expected.sp - 1;
-    const uint8_t expected_p_stack_addr = expected_pc_stack_addr - 1;
-
     expected.sp -= 2 + 1; // 1 word and 1 byte
 
-    ON_CALL(mmu, read_word(kBrkAddress)).WillByDefault(Return(0xDEAD));
+    // Dummy read
+    EXPECT_CALL(mmu, read_byte(0x1235));
+
+    EXPECT_CALL(mmu, read_byte(kBrkAddress)).WillOnce(Return(0xAD));
+    EXPECT_CALL(mmu, read_byte(kBrkAddress + 1)).WillOnce(Return(0xDE));
 
     // First the return address is pushed and then the registers.
+    EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp, 0x12));
+    EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp - 1, 0x36));
     EXPECT_CALL(mmu,
-            write_word(
-                    kStackOffset + expected_pc_stack_addr, registers.pc + 2));
-    EXPECT_CALL(mmu,
-            write_byte(kStackOffset + expected_p_stack_addr,
-                    registers.p | B_FLAG));
+            write_byte(kStackOffset + registers.sp - 2, registers.p | B_FLAG));
 
     step_execution(7);
 
