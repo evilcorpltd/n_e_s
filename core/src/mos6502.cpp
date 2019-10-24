@@ -220,15 +220,17 @@ Pipeline Mos6502::parse_next_instruction() {
         break;
     case Instruction::RtsImplied:
         result.push([=]() {
-            /* Do nothing. */
+            // Dummy read
+            mmu_->read_byte(registers_->pc);
         });
         result.push([=]() {
             /* Do nothing. */
         });
+        result.push([=]() { tmp_ = stack_.pop_byte(); });
         result.push([=]() {
-            /* Do nothing. */
+            const uint16_t pch = stack_.pop_byte() << 8u;
+            registers_->pc = pch | tmp_;
         });
-        result.push([=]() { registers_->pc = stack_.pop_word(); });
         result.push([=]() { ++registers_->pc; });
         break;
     case Instruction::BvsRelative:
