@@ -35,6 +35,8 @@ Opcode decode(const uint8_t op) {
         return {Family::AND, AndAbsoluteY, AddressMode::AbsoluteY};
     case AndAbsoluteX:
         return {Family::AND, AndAbsoluteX, AddressMode::AbsoluteX};
+    case RtiImplied:
+        return {Family::RTI, RtiImplied, AddressMode::Implied};
     case PhaImplied:
         return {Family::PHA, PhaImplied, AddressMode::Implied};
     case LsrAccumulator:
@@ -220,6 +222,7 @@ MemoryAccess get_memory_access(const Family family) {
     case Family::BIT:
     case Family::PLP:
     case Family::AND:
+    case Family::RTI:
     case Family::JSR:
     case Family::BMI:
     case Family::SEC:
@@ -292,6 +295,8 @@ std::string to_string(const Family family) {
         return "PLP";
     case Family::AND:
         return "AND";
+    case Family::RTI:
+        return "RTI";
     case Family::JSR:
         return "JSR";
     case Family::BMI:

@@ -41,6 +41,7 @@ enum Opcode : uint8_t {
     SEC = 0x38,
     AND_ABSY = 0x39,
     AND_ABSX = 0x3D,
+    RTI = 0x40,
     LSR_ACC = 0x4A,
     PHA = 0x48,
     EOR_IMM = 0x49,
@@ -1259,6 +1260,28 @@ TEST_F(CpuTest, rts) {
     EXPECT_CALL(mmu, read_byte(kStackOffset + registers.sp + 1))
             .WillOnce(Return(0xAD));
     EXPECT_CALL(mmu, read_byte(kStackOffset + registers.sp + 2))
+            .WillOnce(Return(0xDE));
+
+    step_execution(6);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, rti) {
+    registers.pc = 0x1234;
+    stage_instruction(RTI);
+    registers.sp = 0x0A;
+    expected.p = 0xCD;
+    expected.sp = registers.sp + 3;
+    expected.pc = 0xDEAD;
+
+    // Dummy read
+    EXPECT_CALL(mmu, read_byte(0x1235));
+
+    EXPECT_CALL(mmu, read_byte(kStackOffset + registers.sp + 1))
+            .WillOnce(Return(expected.p));
+    EXPECT_CALL(mmu, read_byte(kStackOffset + registers.sp + 2))
+            .WillOnce(Return(0xAD));
+    EXPECT_CALL(mmu, read_byte(kStackOffset + registers.sp + 3))
             .WillOnce(Return(0xDE));
 
     step_execution(6);

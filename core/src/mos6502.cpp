@@ -231,6 +231,21 @@ Pipeline Mos6502::parse_next_instruction() {
         });
         result.push([=]() { ++registers_->pc; });
         break;
+    case Instruction::RtiImplied:
+        result.push([=]() {
+            // Dummy read
+            mmu_->read_byte(registers_->pc);
+        });
+        result.push([=]() {
+            /* Do nothing. */
+        });
+        result.push([=]() { registers_->p = stack_.pop_byte(); });
+        result.push([=]() { tmp_ = stack_.pop_byte(); });
+        result.push([=]() {
+            const uint16_t pch = stack_.pop_byte() << 8u;
+            registers_->pc = pch | tmp_;
+        });
+        break;
     case Instruction::BvsRelative:
         result.append(create_branch_instruction(
                 [=]() { return registers_->p & V_FLAG; }));
