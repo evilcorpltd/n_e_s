@@ -502,6 +502,27 @@ public:
         EXPECT_EQ(expected, registers);
     }
 
+    void run_readwrite_instruction(uint8_t instruction,
+            uint8_t new_memory_content) {
+        registers.pc = expected.pc = start_pc;
+        stage_instruction(instruction);
+        expected.pc += 1;
+
+        {
+            InSequence s;
+            EXPECT_CALL(mmu, read_byte(start_pc + 1))
+                    .WillOnce(Return(effective_address));
+            EXPECT_CALL(mmu, read_byte(effective_address))
+                    .WillOnce(Return(memory_content));
+            // Dummy write
+            EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
+            EXPECT_CALL(mmu, write_byte(effective_address, new_memory_content));
+            step_execution(5);
+        }
+
+        EXPECT_EQ(expected, registers);
+    }
+
     void load_sets_reg(uint8_t instruction, uint8_t *target_reg) {
         *target_reg = 0x42;
         run_read_instruction(instruction, 3);
@@ -1788,56 +1809,26 @@ TEST_F(CpuTest, beq_negative_operand) {
 }
 
 // INC
-TEST_F(CpuTest, inc_zero_increments) {
-    registers.pc = 0x1234;
-    stage_instruction(INC_ZERO);
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, read_byte(0x44)).WillOnce(Return(0x05));
-
-    {
-        InSequence s;
-        EXPECT_CALL(mmu, write_byte(0x44, 0x05));
-        EXPECT_CALL(mmu, write_byte(0x44, 0x06));
-        step_execution(5);
-    }
+TEST_F(CpuZeropageTest, inc_zero_increments) {
+    memory_content = 0x05;
+    run_readwrite_instruction(INC_ZERO, 0x06);
 }
 
-TEST_F(CpuTest, inc_zero_sets_z_flag) {
-    registers.pc = 0x1234;
-    expected.p |= Z_FLAG;
-    stage_instruction(INC_ZERO);
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, read_byte(0x44)).WillOnce(Return(0xFF));
-    step_execution(5);
+TEST_F(CpuZeropageTest, inc_zero_sets_z_flag) {
+    expected.p = Z_FLAG;
+    memory_content = 0xFF;
+    run_readwrite_instruction(INC_ZERO, 0x00);
 }
-TEST_F(CpuTest, inc_zero_clears_z_flag) {
-    registers.pc = 0x1234;
-    registers.p |= Z_FLAG;
-    stage_instruction(INC_ZERO);
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, read_byte(0x44)).WillOnce(Return(0xFD));
-    step_execution(5);
+TEST_F(CpuZeropageTest, inc_zero_clears_z_flag_sets_n_flag) {
+    registers.p = Z_FLAG;
+    expected.p = N_FLAG;
+    memory_content = 0xFD;
+    run_readwrite_instruction(INC_ZERO, 0xFE);
 }
-TEST_F(CpuTest, inc_zero_sets_n_flag) {
-    registers.pc = 0x1234;
-    expected.p |= N_FLAG;
-    stage_instruction(INC_ZERO);
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, read_byte(0x44)).WillOnce(Return(127));
-    step_execution(5);
-}
-TEST_F(CpuTest, inc_zero_clears_n_flag) {
-    registers.pc = 0x1234;
-    registers.p |= N_FLAG;
-    stage_instruction(INC_ZERO);
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, read_byte(0x44)).WillOnce(Return(125));
-    step_execution(5);
+TEST_F(CpuZeropageTest, inc_zero_clears_n_flag) {
+    registers.p = N_FLAG;
+    memory_content = 125;
+    run_readwrite_instruction(INC_ZERO, 126);
 }
 
 TEST_F(CpuTest, inc_zerox_increments) {
