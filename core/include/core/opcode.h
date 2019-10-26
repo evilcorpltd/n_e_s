@@ -27,7 +27,7 @@ enum Instruction : uint8_t {
     // RolZeropage = 0x26,
     PlpImplied = 0x28,
     AndImmediate = 0x29,
-    // RolAccumulator = 0x2A,
+    RolAccumulator = 0x2A,
     BitAbsolute = 0x2C,
     AndAbsolute = 0x2D,
     // RolAbsolute = 0x2E,
@@ -207,6 +207,7 @@ enum class Family {
     DEY,
     DEX,
     EOR,
+    ROL,
 };
 
 enum class AddressMode {

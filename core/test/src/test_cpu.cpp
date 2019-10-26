@@ -34,6 +34,7 @@ enum Opcode : uint8_t {
     BIT_ZERO = 0x24,
     PLP = 0x28,
     AND_IMM = 0x29,
+    ROL_ACC = 0x2A,
     BIT_ABS = 0x2C,
     AND_ABS = 0x2D,
     BMI = 0x30,
@@ -2514,4 +2515,57 @@ TEST_F(CpuTest, eor_absy_without_page_crossing) {
     EXPECT_EQ(expected, registers);
 }
 
+// ROL, ACC
+TEST_F(CpuTest, rol_a_rotates) {
+    stage_instruction(ROL_ACC);
+    registers.a = 0b00110011;
+    expected.a = 0b01100110;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, rol_a_all_zero_no_change) {
+    stage_instruction(ROL_ACC);
+    registers.a = 0b00000000;
+    registers.p = Z_FLAG;
+    expected.a = 0b00000000;
+    expected.p = Z_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, rol_a_c_set_clears_c_and_z_flags) {
+    stage_instruction(ROL_ACC);
+    registers.a = 0b00000000;
+    registers.p = C_FLAG;
+    expected.a = 0b00000001;
+    expected.p = 0;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, rol_a_set_c_and_z_flags_clears_n) {
+    stage_instruction(ROL_ACC);
+    registers.a = 0b10000000;
+    registers.p = N_FLAG;
+    expected.a = 0b00000000;
+    expected.p = C_FLAG | Z_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, rol_a_clear_neg_retain_c) {
+    stage_instruction(ROL_ACC);
+    registers.a = 0b10000000;
+    registers.p = N_FLAG | C_FLAG;
+    expected.a = 0b00000001;
+    expected.p = C_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
 } // namespace

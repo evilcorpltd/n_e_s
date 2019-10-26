@@ -391,6 +391,16 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::EorAbsoluteY:
         result.append(create_eor_instruction(*current_opcode_));
         break;
+    case RolAccumulator:
+        result.push([=]() {
+            const uint8_t carry = registers_->p & C_FLAG ? 0x01 : 0x00;
+            const uint16_t temp_result = (registers_->a << 1) | carry;
+            registers_->a = static_cast<uint8_t>(temp_result);
+            set_carry(temp_result > 0xFF);
+            set_zero(registers_->a);
+            set_negative(registers_->a);
+        });
+        break;
     }
     return result;
 } // namespace n_e_s::core
