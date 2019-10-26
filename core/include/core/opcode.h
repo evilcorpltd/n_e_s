@@ -42,7 +42,7 @@ enum Instruction : uint8_t {
     // RtiImplied = 0x40,
     // EorIndirectX = 0x41,
     // EorZeropage = 0x45,
-    // LsrAccumulator = 0x46,
+    // LsrZeropage = 0x46,
     PhaImplied = 0x48,
     EorImmediate = 0x49,
     LsrAccumulator = 0x4A,
