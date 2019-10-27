@@ -251,10 +251,11 @@ TEST_F(PpuTest, increment_vram_addr_by_32_after_writing) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(PpuTest, throw_if_ppu_address_is_out_of_range) {
+TEST_F(PpuTest, forwards_ppudata_reads_to_mmu_) {
     registers.vram_addr = 0x4001;
+    EXPECT_CALL(mmu, write_byte(0x4001, 0x05)).Times(1);
 
-    EXPECT_THROW(ppu->write_byte(0x2007, 0x05), InvalidAddress);
+    ppu->write_byte(0x2007, 0x05);
 }
 
 } // namespace
