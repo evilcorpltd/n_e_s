@@ -28,7 +28,7 @@ environment:
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
 install:
-  - cmd: python -m pip install cmake==3.14.4 ninja==1.9.0.post1 --disable-pip-version-check
+  - cmd: python -m pip install cmake==3.15.3 ninja==1.9.0.post1 --disable-pip-version-check
 
 before_build:
   - cmd: if defined VCVARS call "%VCVARS%"
