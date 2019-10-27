@@ -21,6 +21,7 @@ private:
     IMmu *const mmu_;
     uint16_t scanline_;
     uint16_t cycle_;
+    uint8_t read_buffer_;
 
     // Object Atribute Memory
     constexpr static uint16_t kOamSize{256};
@@ -45,6 +46,10 @@ private:
     // has been done. Returns 1 if bit 2 in the ctrl register is not set and 32
     // if the bit is set.
     uint8_t get_vram_address_increment() const;
+
+    // Increments the VRAM address. Shall be done after reading or writing
+    // from/to the VRAM.
+    void increment_vram_address();
 
     void execute_pre_render_scanline();
     void execute_visible_scanline();

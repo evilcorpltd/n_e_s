@@ -12,6 +12,7 @@ const uint16_t kOamData = 0x2004;
 const uint16_t kPpuScroll = 0x2005;
 const uint16_t kPpuAddr = 0x2006;
 const uint16_t kPpuData = 0x2007;
+const uint16_t kFirstPaletteData = 0x3F00;
 
 const uint16_t kLastCycleInScanline = 340;
 const uint16_t kLastScanlineInFrame = 261;
@@ -26,7 +27,11 @@ const uint16_t kVBlankScanlineEnd = 260;
 namespace n_e_s::core {
 
 Ppu::Ppu(PpuRegisters *registers, IMmu *mmu)
-        : registers_(registers), mmu_(mmu), scanline_(0), cycle_(0) {}
+        : registers_(registers),
+          mmu_(mmu),
+          scanline_(0),
+          cycle_(0),
+          read_buffer_(0) {}
 
 uint8_t Ppu::read_byte(uint16_t addr) {
     uint8_t byte = 0;
@@ -36,6 +41,16 @@ uint8_t Ppu::read_byte(uint16_t addr) {
         clear_vblank_flag();
     } else if (addr == kOamData) {
         byte = oam_data_[registers_->oamaddr];
+    } else if (addr == kPpuData) {
+        byte = mmu_->read_byte(registers_->vram_addr);
+        if (registers_->vram_addr < kFirstPaletteData) {
+            const uint8_t tmp_buffer = read_buffer_;
+            read_buffer_ = byte;
+            byte = tmp_buffer;
+        } else {
+            // TODO(ML): Update read_buffer_
+        }
+        increment_vram_address();
     } else {
         byte = mmu_->read_byte(addr);
     }
@@ -87,7 +102,7 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
         }
     } else if (addr == kPpuData) {
         mmu_->write_byte(registers_->vram_addr, byte);
-        registers_->vram_addr += get_vram_address_increment();
+        increment_vram_address();
     } else {
         mmu_->write_byte(addr, byte);
     }
@@ -154,6 +169,10 @@ uint8_t Ppu::get_vram_address_increment() const {
     }
 
     return addr_increment;
+}
+
+void Ppu::increment_vram_address() {
+    registers_->vram_addr += get_vram_address_increment();
 }
 
 void Ppu::execute_pre_render_scanline() {

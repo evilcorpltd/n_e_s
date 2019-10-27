@@ -257,5 +257,44 @@ TEST_F(PpuTest, forwards_ppudata_reads_to_mmu_) {
 
     ppu->write_byte(0x2007, 0x05);
 }
+TEST_F(PpuTest, read_vram_below_palette_memory_start) {
+    registers.vram_addr = 0x03;
+
+    EXPECT_CALL(mmu, read_byte(0x03)).WillOnce(Return(0x45));
+    const uint8_t first_read_byte = ppu->read_byte(0x2007);
+
+    EXPECT_CALL(mmu, read_byte(0x04)).WillOnce(Return(0x56));
+    const uint8_t second_read_byte = ppu->read_byte(0x2007);
+
+    EXPECT_EQ(0x00, first_read_byte);
+    EXPECT_EQ(0x45, second_read_byte);
+}
+
+TEST_F(PpuTest, read_from_palette_memory) {
+    registers.vram_addr = 0x3F00;
+
+    EXPECT_CALL(mmu, read_byte(0x3F00)).WillOnce(Return(0x68));
+
+    const uint8_t read_byte = ppu->read_byte(0x2007);
+
+    EXPECT_EQ(0x68, read_byte);
+}
+
+TEST_F(PpuTest, increment_vram_addr_by_1_after_reading) {
+    expected.vram_addr = 0x0001;
+
+    ppu->read_byte(0x2007);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, increment_vram_addr_by_32_after_reading) {
+    registers.ctrl = expected.ctrl = 0x04;
+    expected.vram_addr = 0x0020;
+
+    ppu->read_byte(0x2007);
+
+    EXPECT_EQ(expected, registers);
+}
 
 } // namespace
