@@ -4,7 +4,7 @@
 #include <string>
 
 namespace n_e_s::core {
-class ICpu;
+class IMos6502;
 struct CpuRegisters;
 
 class IPpu;
@@ -24,8 +24,8 @@ public:
     void reset();
     void load_rom(const std::string &filepath);
 
-    n_e_s::core::ICpu &cpu();
-    const n_e_s::core::ICpu &cpu() const;
+    n_e_s::core::IMos6502 &cpu();
+    const n_e_s::core::IMos6502 &cpu() const;
 
     n_e_s::core::IPpu &ppu();
     const n_e_s::core::IPpu &ppu() const;
