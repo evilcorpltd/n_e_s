@@ -48,12 +48,6 @@ uint8_t Mos6502::Stack::pop_byte() {
     return mmu_->read_byte(ram_offset_ + ++registers_->sp);
 }
 
-uint16_t Mos6502::Stack::pop_word() {
-    const uint16_t ret = mmu_->read_word(ram_offset_ + ++registers_->sp);
-    ++registers_->sp;
-    return ret;
-}
-
 void Mos6502::Stack::push_byte(uint8_t byte) {
     mmu_->write_byte(ram_offset_ + registers_->sp--, byte);
 }
