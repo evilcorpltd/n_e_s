@@ -1,8 +1,8 @@
 #include "nes/nes.h"
 
 #include "core/cpu_factory.h"
-#include "core/icpu.h"
 #include "core/immu.h"
+#include "core/imos6502.h"
 #include "core/ippu.h"
 #include "core/irom.h"
 #include "core/membank_factory.h"
@@ -85,7 +85,7 @@ public:
     std::unique_ptr<IMmu> mmu;
 
     CpuRegisters cpu_registers{};
-    std::unique_ptr<ICpu> cpu;
+    std::unique_ptr<IMos6502> cpu;
 
     uint64_t cycle{};
 };
@@ -105,10 +105,10 @@ void Nes::reset() {
 void Nes::load_rom(const std::string &filepath) {
     impl_->load_rom(filepath);
 }
-n_e_s::core::ICpu &Nes::cpu() {
+n_e_s::core::IMos6502 &Nes::cpu() {
     return *impl_->cpu;
 }
-const n_e_s::core::ICpu &Nes::cpu() const {
+const n_e_s::core::IMos6502 &Nes::cpu() const {
     return *impl_->cpu;
 }
 
