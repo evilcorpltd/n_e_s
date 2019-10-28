@@ -1248,12 +1248,23 @@ TEST_F(CpuTest, cli) {
 }
 
 TEST_F(CpuTest, rts) {
+    registers.pc = 0x1234;
     stage_instruction(RTS);
     registers.sp = 0x0A;
     expected.sp = 0x0C;
     expected.pc = 0xDEAD + 1;
 
-    EXPECT_CALL(mmu, read_word(kStackOffset + 0x0B)).WillOnce(Return(0xDEAD));
+    {
+        InSequence s;
+
+        // Dummy read
+        EXPECT_CALL(mmu, read_byte(0x1235));
+
+        EXPECT_CALL(mmu, read_byte(kStackOffset + registers.sp + 1))
+                .WillOnce(Return(0xAD));
+        EXPECT_CALL(mmu, read_byte(kStackOffset + registers.sp + 2))
+                .WillOnce(Return(0xDE));
+    }
 
     step_execution(6);
     EXPECT_EQ(expected, registers);

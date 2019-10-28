@@ -48,12 +48,6 @@ uint8_t Mos6502::Stack::pop_byte() {
     return mmu_->read_byte(ram_offset_ + ++registers_->sp);
 }
 
-uint16_t Mos6502::Stack::pop_word() {
-    const uint16_t ret = mmu_->read_word(ram_offset_ + ++registers_->sp);
-    ++registers_->sp;
-    return ret;
-}
-
 void Mos6502::Stack::push_byte(uint8_t byte) {
     mmu_->write_byte(ram_offset_ + registers_->sp--, byte);
 }
@@ -220,15 +214,17 @@ Pipeline Mos6502::parse_next_instruction() {
         break;
     case Instruction::RtsImplied:
         result.push([=]() {
-            /* Do nothing. */
+            // Dummy read
+            mmu_->read_byte(registers_->pc);
         });
         result.push([=]() {
             /* Do nothing. */
         });
+        result.push([=]() { tmp_ = stack_.pop_byte(); });
         result.push([=]() {
-            /* Do nothing. */
+            const uint16_t pch = stack_.pop_byte() << 8u;
+            registers_->pc = pch | tmp_;
         });
-        result.push([=]() { registers_->pc = stack_.pop_word(); });
         result.push([=]() { ++registers_->pc; });
         break;
     case Instruction::BvsRelative:

@@ -33,7 +33,6 @@ private:
         Stack(CpuRegisters *registers, IMmu *mmu);
 
         uint8_t pop_byte();
-        uint16_t pop_word();
 
         void push_byte(uint8_t byte);
         void push_word(uint16_t word);
