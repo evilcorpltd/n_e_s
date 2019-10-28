@@ -274,10 +274,19 @@ TEST_F(PpuTest, read_from_palette_memory) {
     registers.vram_addr = 0x3F00;
 
     EXPECT_CALL(mmu, read_byte(0x3F00)).WillOnce(Return(0x68));
+    EXPECT_CALL(mmu, read_byte(0x2F00)).WillOnce(Return(0x31));
 
-    const uint8_t read_byte = ppu->read_byte(0x2007);
+    uint8_t read_byte = ppu->read_byte(0x2007);
 
     EXPECT_EQ(0x68, read_byte);
+
+    registers.vram_addr = 0x0100;
+
+    EXPECT_CALL(mmu, read_byte(0x0100)).WillOnce(Return(0x11));
+
+    read_byte = ppu->read_byte(0x2007);
+
+    EXPECT_EQ(0x31, read_byte);
 }
 
 TEST_F(PpuTest, increment_vram_addr_by_1_after_reading) {

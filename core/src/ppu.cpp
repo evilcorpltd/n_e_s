@@ -48,7 +48,7 @@ uint8_t Ppu::read_byte(uint16_t addr) {
             read_buffer_ = byte;
             byte = tmp_buffer;
         } else {
-            // TODO(ML): Update read_buffer_
+            read_buffer_ = mmu_->read_byte(registers_->vram_addr - 0x1000);
         }
         increment_vram_address();
     } else {
