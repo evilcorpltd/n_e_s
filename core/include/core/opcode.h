@@ -27,7 +27,7 @@ enum Instruction : uint8_t {
     // RolZeropage = 0x26,
     PlpImplied = 0x28,
     AndImmediate = 0x29,
-    // RolAccumulator = 0x2A,
+    RolAccumulator = 0x2A,
     BitAbsolute = 0x2C,
     AndAbsolute = 0x2D,
     // RolAbsolute = 0x2E,
@@ -42,7 +42,7 @@ enum Instruction : uint8_t {
     // RtiImplied = 0x40,
     // EorIndirectX = 0x41,
     // EorZeropage = 0x45,
-    // LsrAccumulator = 0x46,
+    // LsrZeropage = 0x46,
     PhaImplied = 0x48,
     EorImmediate = 0x49,
     LsrAccumulator = 0x4A,
@@ -63,7 +63,7 @@ enum Instruction : uint8_t {
     // RorZeropage = 0x66,
     PlaImplied = 0x68,
     AdcImmediate = 0x69,
-    // RorAccumulator = 0x6A,
+    RorAccumulator = 0x6A,
     // JmpIndirect = 0x6C,
     AdcAbsolute = 0x6D,
     // RorAbsolute = 0x6E,
@@ -207,6 +207,8 @@ enum class Family {
     DEY,
     DEX,
     EOR,
+    ROL,
+    ROR,
 };
 
 enum class AddressMode {
