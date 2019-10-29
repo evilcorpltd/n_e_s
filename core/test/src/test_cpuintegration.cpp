@@ -91,7 +91,8 @@ TEST_F(CpuIntegrationTest, simple_program) {
                     0x8c,
                     0x02,
                     0x04,
-                    0x00});
+                    0x00,
+                    0x00}); // Needed for previous BRK dummy read
     set_reset_address(0x0600);
     set_break_address(0xDEAD);
 
@@ -134,7 +135,8 @@ TEST_F(CpuIntegrationTest, branch) {
                     0x8e,
                     0x01,
                     0x02,
-                    0x00});
+                    0x00,
+                    0x00}); // Needed for previous BRK dummy read
 
     set_reset_address(0x0600);
     set_break_address(0xDEAD);
@@ -189,25 +191,18 @@ TEST_F(CpuIntegrationTest, stack) {
                     0xd0,
                     0xf5,
                     0x68});
-    load_hex_dump(0x0600,
-            {0xa2,
-                    0x00,
-                    0xa0,
-                    0x00,
-                    0x8a,
-                    0x99,
+    load_hex_dump(0x0610,
+            {0x99,
                     0x00,
                     0x02,
-                    0x48,
-                    0xe8,
                     0xc8,
                     0xc0,
-                    0x10,
+                    0x20,
                     0xd0,
-                    0xf5,
-                    0x68});
-    load_hex_dump(
-            0x0610, {0x99, 0x00, 0x02, 0xc8, 0xc0, 0x20, 0xd0, 0xf7, 0x00});
+                    0xf7,
+                    0x00,
+                    0x00,
+                    0x00}); // Needed for previous BRK dummy read
 
     // STA with absolute indexed addressing will first read from the effective
     // address before writing to it, so we need to initialize the fake mmu with

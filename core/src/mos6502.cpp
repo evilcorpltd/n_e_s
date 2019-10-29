@@ -96,14 +96,18 @@ Pipeline Mos6502::parse_next_instruction() {
 
     switch (current_opcode_->instruction) {
     case Instruction::BrkImplied:
-        result.push([=]() { ++registers_->pc; });
         result.push([=]() {
-            /* Do nothing. */
+            // Dummy read
+            mmu_->read_byte(registers_->pc++);
         });
-        result.push([=]() { stack_.push_word(registers_->pc); });
+        result.push([=]() { stack_.push_byte(registers_->pc >> 8); });
+        result.push([=]() { stack_.push_byte(registers_->pc & 0xFF); });
         result.push([=]() { stack_.push_byte(registers_->p | B_FLAG); });
-        result.push([=]() { ++registers_->pc; });
-        result.push([=]() { registers_->pc = mmu_->read_word(kBrkAddress); });
+        result.push([=]() { tmp_ = mmu_->read_byte(kBrkAddress); });
+        result.push([=]() {
+            const uint16_t pch = mmu_->read_byte(kBrkAddress + 1) << 8;
+            registers_->pc = pch | tmp_;
+        });
         break;
     case Instruction::PhpImplied:
         result.push([=]() {
