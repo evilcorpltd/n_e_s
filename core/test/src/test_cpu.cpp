@@ -418,13 +418,10 @@ public:
         *target_reg = 0x37;
         ON_CALL(mmu, read_word(registers.pc + 1)).WillByDefault(Return(0x01FF));
 
-        {
-            InSequence s;
-            EXPECT_CALL(mmu, read_byte(0x00FF + *index_reg));
-            EXPECT_CALL(mmu, read_byte(0x01FF + *index_reg))
-                    .WillOnce(Return(*target_reg));
-            step_execution(5);
-        }
+        EXPECT_CALL(mmu, read_byte(0x00FF + *index_reg));
+        EXPECT_CALL(mmu, read_byte(0x01FF + *index_reg))
+                .WillOnce(Return(*target_reg));
+        step_execution(5);
 
         EXPECT_EQ(expected, registers);
     }
@@ -476,6 +473,8 @@ public:
     std::unique_ptr<IMos6502> cpu;
 
     CpuRegisters expected;
+
+    InSequence in_sequence{};
 };
 
 class CpuZeropageTest : public CpuTest {
@@ -513,17 +512,14 @@ public:
         stage_instruction(instruction);
         expected.pc += 1;
 
-        {
-            InSequence s;
-            EXPECT_CALL(mmu, read_byte(start_pc + 1))
-                    .WillOnce(Return(effective_address));
-            EXPECT_CALL(mmu, read_byte(effective_address))
-                    .WillOnce(Return(memory_content));
-            // Dummy write
-            EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
-            EXPECT_CALL(mmu, write_byte(effective_address, new_memory_content));
-            step_execution(5);
-        }
+        EXPECT_CALL(mmu, read_byte(start_pc + 1))
+                .WillOnce(Return(effective_address));
+        EXPECT_CALL(mmu, read_byte(effective_address))
+                .WillOnce(Return(memory_content));
+        // Dummy write
+        EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
+        EXPECT_CALL(mmu, write_byte(effective_address, new_memory_content));
+        step_execution(5);
 
         EXPECT_EQ(expected, registers);
     }
@@ -697,15 +693,16 @@ TEST_F(CpuTest, nmi) {
     EXPECT_CALL(mmu, read_byte(0x1235));
     EXPECT_CALL(mmu, read_byte(0x1236));
 
-    // Set nmi vector to 0x5678
-    expected.pc = 0x5678;
-    EXPECT_CALL(mmu, read_byte(kNmiAddress)).WillOnce(Return(0x78));
-    EXPECT_CALL(mmu, read_byte(kNmiAddress + 1)).WillOnce(Return(0x56));
+    expected.pc = 0x5678; // nmi vector
 
     // First the return address is pushed and then the registers.
     EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp, 0x12));
     EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp - 1, 0x37));
     EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp - 2, registers.p));
+
+    // Read nmi vector 0x5678
+    EXPECT_CALL(mmu, read_byte(kNmiAddress)).WillOnce(Return(0x78));
+    EXPECT_CALL(mmu, read_byte(kNmiAddress + 1)).WillOnce(Return(0x56));
 
     // 1 instruction to decode LDA, 7 for nmi
     step_execution(1 + 7);
@@ -723,14 +720,14 @@ TEST_F(CpuTest, brk) {
     // Dummy read
     EXPECT_CALL(mmu, read_byte(0x1235));
 
-    EXPECT_CALL(mmu, read_byte(kBrkAddress)).WillOnce(Return(0xAD));
-    EXPECT_CALL(mmu, read_byte(kBrkAddress + 1)).WillOnce(Return(0xDE));
-
     // First the return address is pushed and then the registers.
     EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp, 0x12));
     EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp - 1, 0x36));
     EXPECT_CALL(mmu,
             write_byte(kStackOffset + registers.sp - 2, registers.p | B_FLAG));
+
+    EXPECT_CALL(mmu, read_byte(kBrkAddress)).WillOnce(Return(0xAD));
+    EXPECT_CALL(mmu, read_byte(kBrkAddress + 1)).WillOnce(Return(0xDE));
 
     step_execution(7);
 
@@ -1256,17 +1253,13 @@ TEST_F(CpuTest, rts) {
     expected.sp = 0x0C;
     expected.pc = 0xDEAD + 1;
 
-    {
-        InSequence s;
+    // Dummy read
+    EXPECT_CALL(mmu, read_byte(0x1235));
 
-        // Dummy read
-        EXPECT_CALL(mmu, read_byte(0x1235));
-
-        EXPECT_CALL(mmu, read_byte(kStackOffset + registers.sp + 1))
-                .WillOnce(Return(0xAD));
-        EXPECT_CALL(mmu, read_byte(kStackOffset + registers.sp + 2))
-                .WillOnce(Return(0xDE));
-    }
+    EXPECT_CALL(mmu, read_byte(kStackOffset + registers.sp + 1))
+            .WillOnce(Return(0xAD));
+    EXPECT_CALL(mmu, read_byte(kStackOffset + registers.sp + 2))
+            .WillOnce(Return(0xDE));
 
     step_execution(6);
     EXPECT_EQ(expected, registers);
@@ -1714,13 +1707,9 @@ TEST_F(CpuTest, cmp_indirect_indexed_with_pagecrossing_sets_nc) {
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
     ON_CALL(mmu, read_word(0x42)).WillByDefault(Return(0x1234));
 
-    {
-        InSequence s;
-        EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
-                .WillOnce(Return(0x00));
-        EXPECT_CALL(mmu, read_byte(0x1234 + 0xED)).WillOnce(Return(127));
-        step_execution(6);
-    }
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100)).WillOnce(Return(0x00));
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED)).WillOnce(Return(127));
+    step_execution(6);
 
     EXPECT_EQ(expected, registers);
 }
@@ -1858,7 +1847,6 @@ TEST_F(CpuZeropageTest, inc_zero_increments) {
     memory_content = 0x05;
     run_readwrite_instruction(INC_ZERO, 0x06);
 }
-
 TEST_F(CpuZeropageTest, inc_zero_sets_z_flag) {
     expected.p = Z_FLAG;
     memory_content = 0xFF;
@@ -1885,11 +1873,8 @@ TEST_F(CpuTest, inc_zerox_increments) {
 
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
     EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED))).WillOnce(Return(0x05));
-    {
-        InSequence s;
-        EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x05));
-        EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x06));
-    }
+    EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x05));
+    EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x06));
 
     step_execution(6);
     EXPECT_EQ(expected, registers);
@@ -2061,12 +2046,9 @@ TEST_F(CpuTest, sta_abs_x_indexed) {
     expected.pc += 2;
 
     ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x1234));
-    {
-        InSequence s;
-        EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
-                .WillOnce(Return(0xDEAD));
-        EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
-    }
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
+            .WillOnce(Return(0xDEAD));
+    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
 
     step_execution(5);
 
@@ -2083,12 +2065,9 @@ TEST_F(CpuTest, sta_abs_y_indexed) {
     expected.pc += 2;
 
     ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x1234));
-    {
-        InSequence s;
-        EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
-                .WillOnce(Return(0xDEAD));
-        EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
-    }
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
+            .WillOnce(Return(0xDEAD));
+    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
 
     step_execution(5);
 
@@ -2145,12 +2124,9 @@ TEST_F(CpuTest, sta_indirect_indexed_with_pagecrossing) {
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
     ON_CALL(mmu, read_word(0x42)).WillByDefault(Return(0x1234));
 
-    {
-        InSequence s;
-        EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100));
-        EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
-        step_execution(6);
-    }
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100));
+    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
+    step_execution(6);
 
     EXPECT_EQ(expected, registers);
 }
@@ -2167,12 +2143,9 @@ TEST_F(CpuTest, sta_indirect_indexed_without_pagecrossing) {
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
     ON_CALL(mmu, read_word(0x42)).WillByDefault(Return(0x1234));
 
-    {
-        InSequence s;
-        EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D));
-        EXPECT_CALL(mmu, write_byte(0x1234 + 0x0D, 0x07));
-        step_execution(6);
-    }
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D));
+    EXPECT_CALL(mmu, write_byte(0x1234 + 0x0D, 0x07));
+    step_execution(6);
 
     EXPECT_EQ(expected, registers);
 }
