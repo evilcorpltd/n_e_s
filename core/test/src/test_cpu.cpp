@@ -693,15 +693,16 @@ TEST_F(CpuTest, nmi) {
     EXPECT_CALL(mmu, read_byte(0x1235));
     EXPECT_CALL(mmu, read_byte(0x1236));
 
-    // Set nmi vector to 0x5678
-    expected.pc = 0x5678;
-    EXPECT_CALL(mmu, read_byte(kNmiAddress)).WillOnce(Return(0x78));
-    EXPECT_CALL(mmu, read_byte(kNmiAddress + 1)).WillOnce(Return(0x56));
+    expected.pc = 0x5678; // nmi vector
 
     // First the return address is pushed and then the registers.
     EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp, 0x12));
     EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp - 1, 0x37));
     EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp - 2, registers.p));
+
+    // Read nmi vector 0x5678
+    EXPECT_CALL(mmu, read_byte(kNmiAddress)).WillOnce(Return(0x78));
+    EXPECT_CALL(mmu, read_byte(kNmiAddress + 1)).WillOnce(Return(0x56));
 
     // 1 instruction to decode LDA, 7 for nmi
     step_execution(1 + 7);
@@ -719,14 +720,14 @@ TEST_F(CpuTest, brk) {
     // Dummy read
     EXPECT_CALL(mmu, read_byte(0x1235));
 
-    EXPECT_CALL(mmu, read_byte(kBrkAddress)).WillOnce(Return(0xAD));
-    EXPECT_CALL(mmu, read_byte(kBrkAddress + 1)).WillOnce(Return(0xDE));
-
     // First the return address is pushed and then the registers.
     EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp, 0x12));
     EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp - 1, 0x36));
     EXPECT_CALL(mmu,
             write_byte(kStackOffset + registers.sp - 2, registers.p | B_FLAG));
+
+    EXPECT_CALL(mmu, read_byte(kBrkAddress)).WillOnce(Return(0xAD));
+    EXPECT_CALL(mmu, read_byte(kBrkAddress + 1)).WillOnce(Return(0xDE));
 
     step_execution(7);
 
