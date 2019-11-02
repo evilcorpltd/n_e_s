@@ -41,7 +41,8 @@ uint8_t Mmu::read_byte(uint16_t addr) const {
 
 uint16_t Mmu::read_word(uint16_t addr) const {
     if (const IMemBank *mem_bank = get_mem_bank(addr)) {
-        return mem_bank->read_byte(addr) | mem_bank->read_byte(addr + 1) << 8;
+        return static_cast<uint16_t>(
+                mem_bank->read_byte(addr) | mem_bank->read_byte(addr + 1) << 8);
     }
 
     throw InvalidAddress(addr);

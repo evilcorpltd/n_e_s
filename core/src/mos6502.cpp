@@ -738,7 +738,7 @@ Pipeline Mos6502::create_zeropage_indexed_addressing_steps(
     } else if (access == MemoryAccess::ReadWrite) {
         result.push([=]() { /* Empty */ });
         result.push([=]() {
-            const uint16_t address = mmu_->read_byte(registers_->pc);
+            const uint8_t address = mmu_->read_byte(registers_->pc);
             const uint8_t effective_address_low = address + *index_reg;
             effective_address_ = effective_address_low;
             ++registers_->pc;
