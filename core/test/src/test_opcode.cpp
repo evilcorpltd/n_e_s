@@ -17,6 +17,7 @@ TEST(Opcode, Family) {
     EXPECT_EQ("BIT", to_string(Family::BIT));
     EXPECT_EQ("PLP", to_string(Family::PLP));
     EXPECT_EQ("AND", to_string(Family::AND));
+    EXPECT_EQ("RTI", to_string(Family::RTI));
     EXPECT_EQ("JSR", to_string(Family::JSR));
     EXPECT_EQ("BMI", to_string(Family::BMI));
     EXPECT_EQ("SEC", to_string(Family::SEC));
@@ -48,6 +49,7 @@ TEST(Opcode, Family) {
     EXPECT_EQ("INY", to_string(Family::INY));
     EXPECT_EQ("CPY", to_string(Family::CPY));
     EXPECT_EQ("CMP", to_string(Family::CMP));
+    EXPECT_EQ("DEC", to_string(Family::DEC));
     EXPECT_EQ("BEQ", to_string(Family::BEQ));
     EXPECT_EQ("SED", to_string(Family::SED));
     EXPECT_EQ("TYA", to_string(Family::TYA));

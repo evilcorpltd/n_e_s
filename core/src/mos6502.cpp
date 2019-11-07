@@ -231,6 +231,21 @@ Pipeline Mos6502::parse_next_instruction() {
         });
         result.push([=]() { ++registers_->pc; });
         break;
+    case Instruction::RtiImplied:
+        result.push([=]() {
+            // Dummy read
+            mmu_->read_byte(registers_->pc);
+        });
+        result.push([=]() {
+            /* Do nothing. */
+        });
+        result.push([=]() { registers_->p = stack_.pop_byte(); });
+        result.push([=]() { tmp_ = stack_.pop_byte(); });
+        result.push([=]() {
+            const uint16_t pch = stack_.pop_byte() << 8u;
+            registers_->pc = pch | tmp_;
+        });
+        break;
     case Instruction::BvsRelative:
         result.append(create_branch_instruction(
                 [=]() { return registers_->p & V_FLAG; }));
@@ -349,6 +364,10 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::IncZeropage:
     case Instruction::IncZeropageX:
         result.append(create_inc_instruction(*current_opcode_));
+        break;
+    case Instruction::DecZeropage:
+    case Instruction::DecZeropageX:
+        result.append(create_dec_instruction(*current_opcode_));
         break;
     case Instruction::InxImplied:
         result.push([=]() {
@@ -535,6 +554,21 @@ Pipeline Mos6502::create_inc_instruction(const Opcode opcode) {
 
     result.push([=]() {
         const uint8_t new_value = tmp_ + 1;
+        set_zero(new_value);
+        set_negative(new_value);
+        mmu_->write_byte(effective_address_, new_value);
+    });
+
+    return result;
+}
+
+Pipeline Mos6502::create_dec_instruction(const Opcode opcode) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
+    Pipeline result;
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
+
+    result.push([=]() {
+        const uint8_t new_value = tmp_ - 1;
         set_zero(new_value);
         set_negative(new_value);
         mmu_->write_byte(effective_address_, new_value);

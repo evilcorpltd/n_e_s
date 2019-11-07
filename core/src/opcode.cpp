@@ -35,6 +35,8 @@ Opcode decode(const uint8_t op) {
         return {Family::AND, AndAbsoluteY, AddressMode::AbsoluteY};
     case AndAbsoluteX:
         return {Family::AND, AndAbsoluteX, AddressMode::AbsoluteX};
+    case RtiImplied:
+        return {Family::RTI, RtiImplied, AddressMode::Implied};
     case PhaImplied:
         return {Family::PHA, PhaImplied, AddressMode::Implied};
     case LsrAccumulator:
@@ -149,6 +151,8 @@ Opcode decode(const uint8_t op) {
         return {Family::CPY, CpyZeropage, AddressMode::Zeropage};
     case CmpZeropage:
         return {Family::CMP, CmpZeropage, AddressMode::Zeropage};
+    case DecZeropage:
+        return {Family::DEC, DecZeropage, AddressMode::Zeropage};
     case InyImplied:
         return {Family::INY, InyImplied, AddressMode::Implied};
     case CmpImmediate:
@@ -165,6 +169,8 @@ Opcode decode(const uint8_t op) {
         return {Family::CMP, CmpIndirectY, AddressMode::IndirectIndexed};
     case CmpZeropageX:
         return {Family::CMP, CmpZeropageX, AddressMode::ZeropageX};
+    case DecZeropageX:
+        return {Family::DEC, DecZeropageX, AddressMode::ZeropageX};
     case CldImplied:
         return {Family::CLD, CldImplied, AddressMode::Implied};
     case CmpAbsoluteY:
@@ -220,6 +226,7 @@ MemoryAccess get_memory_access(const Family family) {
     case Family::BIT:
     case Family::PLP:
     case Family::AND:
+    case Family::RTI:
     case Family::JSR:
     case Family::BMI:
     case Family::SEC:
@@ -264,6 +271,7 @@ MemoryAccess get_memory_access(const Family family) {
     case Family::STX:
         return MemoryAccess::Write;
     case Family::INC:
+    case Family::DEC:
     case Family::ROL:
     case Family::ROR:
         return MemoryAccess::ReadWrite;
@@ -292,6 +300,8 @@ std::string to_string(const Family family) {
         return "PLP";
     case Family::AND:
         return "AND";
+    case Family::RTI:
+        return "RTI";
     case Family::JSR:
         return "JSR";
     case Family::BMI:
@@ -354,6 +364,8 @@ std::string to_string(const Family family) {
         return "CPY";
     case Family::CMP:
         return "CMP";
+    case Family::DEC:
+        return "DEC";
     case Family::BEQ:
         return "BEQ";
     case Family::SED:
