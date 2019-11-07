@@ -482,7 +482,7 @@ public:
 
 class CpuZeropageTest : public CpuTest {
 public:
-    void run_read_instruction(uint8_t instruction, int cycles) {
+    void run_read_instruction(uint8_t instruction, uint8_t cycles) {
         registers.pc = expected.pc = start_pc;
         stage_instruction(instruction);
         expected.pc += 1;
