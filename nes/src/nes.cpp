@@ -44,7 +44,14 @@ public:
               ppu(PpuFactory::create(&ppu_registers, ppu_mmu.get())),
               mmu(MmuFactory::create(
                       MemBankFactory::create_nes_mem_banks(ppu.get()))),
-              cpu(CpuFactory::create_mos6502(&cpu_registers, mmu.get())) {}
+              cpu(CpuFactory::create_mos6502(&cpu_registers, mmu.get())) {
+        // P should be set to 0x34 according to the information here:
+        // https://wiki.nesdev.com/w/index.php/CPU_power_up_state
+        // However, nestest sets p to 0x24 instead. We do that for now as well.
+        cpu_registers.p = I_FLAG | FLAG_5;
+        cpu_registers.a = cpu_registers.x = cpu_registers.y = 0x00;
+        cpu_registers.sp = 0xFD;
+    }
 
     void execute() {
         if (cycle++ % 3 == 0) {
