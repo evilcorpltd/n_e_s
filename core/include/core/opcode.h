@@ -10,15 +10,16 @@ enum Instruction : uint8_t {
     // OraZeropage = 0x05,
     // AslZeropage = 0x06,
     PhpImplied = 0x08,
+    OraImmediate = 0x09,
     // AslAccumulator = 0x0A,
-    // OraAbsolute = 0x0D,
+    OraAbsolute = 0x0D,
     // AslAbsolute = 0x0E,
     BplRelative = 0x10,
     // OraZeropageX = 0x15,
     // AslZeropageX = 0x16,
     ClcImplied = 0x18,
-    // OraAbsoluteY = 0x19,
-    // OraAbsoluteX = 0x1D,
+    OraAbsoluteY = 0x19,
+    OraAbsoluteX = 0x1D,
     // AslAbsoluteX = 0x1E,
     JsrAbsolute = 0x20,
     // AndIndirectX = 0x21,
@@ -211,6 +212,7 @@ enum class Family {
     EOR,
     ROL,
     ROR,
+    ORA,
 };
 
 enum class AddressMode {

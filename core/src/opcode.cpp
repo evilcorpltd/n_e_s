@@ -207,6 +207,14 @@ Opcode decode(const uint8_t op) {
         return {Family::ROL, RolAccumulator, AddressMode::Accumulator};
     case RorAccumulator:
         return {Family::ROR, RorAccumulator, AddressMode::Accumulator};
+    case OraImmediate:
+        return {Family::ORA, OraImmediate, AddressMode::Immediate};
+    case OraAbsolute:
+        return {Family::ORA, OraAbsolute, AddressMode::Absolute};
+    case OraAbsoluteY:
+        return {Family::ORA, OraAbsoluteY, AddressMode::AbsoluteY};
+    case OraAbsoluteX:
+        return {Family::ORA, OraAbsoluteX, AddressMode::AbsoluteX};
     default:
         // Since this is an invalid opcode the instruction and address mode
         // have no real meaning, so we just use 0, 0 for them.
@@ -265,6 +273,7 @@ MemoryAccess get_memory_access(const Family family) {
     case Family::DEY:
     case Family::DEX:
     case Family::EOR:
+    case Family::ORA:
         return MemoryAccess::Read;
     case Family::STY:
     case Family::STA:
@@ -390,6 +399,8 @@ std::string to_string(const Family family) {
         return "ROL";
     case Family::ROR:
         return "ROR";
+    case Family::ORA:
+        return "ORA";
     default:
         return "UNKNOWN";
     }
