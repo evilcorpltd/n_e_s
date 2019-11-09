@@ -294,58 +294,6 @@ public:
         EXPECT_EQ(expected, registers);
     }
 
-    void compare_immediate_sets_n_clears_z_c(uint8_t *reg,
-            uint8_t *expected_reg) {
-        *expected_reg = *reg = 0b10001111;
-        expected.p |= N_FLAG;
-        registers.p |= Z_FLAG | C_FLAG;
-        ++expected.pc;
-
-        EXPECT_CALL(mmu, read_byte(registers.pc + 1))
-                .WillOnce(Return(0b00001000));
-
-        step_execution(2);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void compare_immediate_sets_c_clears_n_z(uint8_t *reg,
-            uint8_t *expected_reg) {
-        *expected_reg = *reg = 0x02;
-        expected.p |= C_FLAG;
-        registers.p |= Z_FLAG | N_FLAG;
-        ++expected.pc;
-
-        EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0xFA));
-
-        step_execution(2);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void compare_immediate_sets_z_c_clears_n(uint8_t *reg,
-            uint8_t *expected_reg) {
-        *expected_reg = *reg = 42;
-        expected.p |= Z_FLAG | C_FLAG;
-        registers.p |= N_FLAG;
-        ++expected.pc;
-
-        EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(42));
-
-        step_execution(2);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void compare_immediate_sets_n_c(uint8_t *reg, uint8_t *expected_reg) {
-        *expected_reg = *reg = 0;
-        expected.p |= N_FLAG | C_FLAG;
-        registers.p |= Z_FLAG;
-        ++expected.pc;
-
-        EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(127));
-
-        step_execution(2);
-        EXPECT_EQ(expected, registers);
-    }
-
     void compare_abs_sets_n_c(uint8_t *reg, uint8_t *expected_reg) {
         *expected_reg = *reg = 0;
         expected.p |= N_FLAG | C_FLAG;
@@ -482,6 +430,68 @@ public:
     CpuRegisters expected;
 
     InSequence in_sequence{};
+};
+
+class CpuImmediateTest : public CpuTest {
+public:
+    void run_instruction(uint8_t instruction) {
+        registers.pc = expected.pc = start_pc;
+        stage_instruction(instruction);
+        expected.pc += 1;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1))
+                .WillOnce(Return(memory_content));
+
+        step_execution(2);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void compare_sets_n_clears_z_c(uint8_t instruction,
+            uint8_t *reg,
+            uint8_t *expected_reg) {
+        *expected_reg = *reg = 0b10001111;
+        expected.p |= N_FLAG;
+        registers.p |= Z_FLAG | C_FLAG;
+        memory_content = 0b00001000;
+
+        run_instruction(instruction);
+    }
+
+    void compare_sets_c_clears_n_z(uint8_t instruction,
+            uint8_t *reg,
+            uint8_t *expected_reg) {
+        *expected_reg = *reg = 0x02;
+        expected.p |= C_FLAG;
+        registers.p |= Z_FLAG | N_FLAG;
+        memory_content = 0xFA;
+
+        run_instruction(instruction);
+    }
+
+    void compare_sets_z_c_clears_n(uint8_t instruction,
+            uint8_t *reg,
+            uint8_t *expected_reg) {
+        *expected_reg = *reg = 42;
+        expected.p |= Z_FLAG | C_FLAG;
+        registers.p |= N_FLAG;
+        memory_content = 42;
+
+        run_instruction(instruction);
+    }
+
+    void compare_sets_n_c(uint8_t instruction,
+            uint8_t *reg,
+            uint8_t *expected_reg) {
+        *expected_reg = *reg = 0;
+        expected.p |= N_FLAG | C_FLAG;
+        registers.p |= Z_FLAG;
+        memory_content = 127;
+
+        run_instruction(instruction);
+    }
+
+    uint16_t start_pc{0x4321};
+    uint8_t memory_content{0x42};
 };
 
 class CpuZeropageTest : public CpuTest {
@@ -784,20 +794,13 @@ TEST_F(CpuTest, bpl_negative_operand) {
     branch_test(0, -128 + 5, 3);
 }
 
-TEST_F(CpuTest, and_imm) {
-    registers.pc = expected.pc = 0x4321;
+TEST_F(CpuImmediateTest, and_imm) {
     registers.a = 0b10101010;
     registers.p = Z_FLAG | N_FLAG;
-
-    stage_instruction(AND_IMM);
-
-    ++expected.pc;
     expected.a = 0b00001010;
+    memory_content = 0b00001111;
 
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0b00001111));
-
-    step_execution(2);
-    EXPECT_EQ(expected, registers);
+    run_instruction(AND_IMM);
 }
 
 TEST_F(CpuAbsoluteTest, and_abs_sets_zero_clears_neg) {
@@ -1090,61 +1093,41 @@ TEST_F(CpuTest, bvc_negative_operand) {
     branch_test(0, -128 + 10, 3);
 }
 
-TEST_F(CpuTest, adc_imm_no_carry_or_overflow) {
-    stage_instruction(ADC_IMM);
-
+TEST_F(CpuImmediateTest, adc_imm_no_carry_or_overflow) {
     registers.a = 0x50;
     registers.p = V_FLAG;
     expected.a = 0x60;
-    ++expected.pc;
+    memory_content = 0x10;
 
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0x10));
-
-    step_execution(2);
-    EXPECT_EQ(expected, registers);
+    run_instruction(ADC_IMM);
 }
 
-TEST_F(CpuTest, adc_imm_carry_but_no_overflow) {
-    stage_instruction(ADC_IMM);
-
+TEST_F(CpuImmediateTest, adc_imm_carry_but_no_overflow) {
     registers.a = 0xD0;
     registers.p = V_FLAG;
     expected.p = C_FLAG;
     expected.a = 0x20;
-    ++expected.pc;
+    memory_content = 0x50;
 
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0x50));
-
-    step_execution(2);
-    EXPECT_EQ(expected, registers);
+    run_instruction(ADC_IMM);
 }
 
-TEST_F(CpuTest, adc_imm_no_carry_but_overflow) {
-    stage_instruction(ADC_IMM);
-
+TEST_F(CpuImmediateTest, adc_imm_no_carry_but_overflow) {
     registers.a = 0x50;
     expected.p = V_FLAG | N_FLAG;
     expected.a = 0xA0;
-    ++expected.pc;
+    memory_content = 0x50;
 
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0x50));
-
-    step_execution(2);
-    EXPECT_EQ(expected, registers);
+    run_instruction(ADC_IMM);
 }
 
-TEST_F(CpuTest, adc_imm_carry_and_overflow) {
-    stage_instruction(ADC_IMM);
-
+TEST_F(CpuImmediateTest, adc_imm_carry_and_overflow) {
     registers.a = 0xD0;
     expected.p = V_FLAG | C_FLAG;
     expected.a = 0x60;
-    ++expected.pc;
+    memory_content = 0x90;
 
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0x90));
-
-    step_execution(2);
-    EXPECT_EQ(expected, registers);
+    run_instruction(ADC_IMM);
 }
 
 TEST_F(CpuAbsoluteTest, adc_abs_no_carry_or_overflow) {
@@ -1636,57 +1619,45 @@ TEST_F(CpuTest, cld) {
 }
 
 // CPX Immediate mode
-TEST_F(CpuTest, cpx_imm_sets_n_and_clears_z_c) {
-    stage_instruction(CPX_IMM);
-    compare_immediate_sets_n_clears_z_c(&registers.x, &expected.x);
+TEST_F(CpuImmediateTest, cpx_imm_sets_n_and_clears_z_c) {
+    compare_sets_n_clears_z_c(CPX_IMM, &registers.x, &expected.x);
 }
-TEST_F(CpuTest, cpx_imm_sets_c_and_clears_n_z) {
-    stage_instruction(CPX_IMM);
-    compare_immediate_sets_c_clears_n_z(&registers.x, &expected.x);
+TEST_F(CpuImmediateTest, cpx_imm_sets_c_and_clears_n_z) {
+    compare_sets_c_clears_n_z(CPX_IMM, &registers.x, &expected.x);
 }
-TEST_F(CpuTest, cpx_imm_sets_z_c_clears_n) {
-    stage_instruction(CPX_IMM);
-    compare_immediate_sets_z_c_clears_n(&registers.x, &expected.x);
+TEST_F(CpuImmediateTest, cpx_imm_sets_z_c_clears_n) {
+    compare_sets_z_c_clears_n(CPX_IMM, &registers.x, &expected.x);
 }
-TEST_F(CpuTest, cpx_imm_sets_nc) {
-    stage_instruction(CPX_IMM);
-    compare_immediate_sets_n_c(&registers.x, &expected.x);
+TEST_F(CpuImmediateTest, cpx_imm_sets_nc) {
+    compare_sets_n_c(CPX_IMM, &registers.x, &expected.x);
 }
 
 // CPY Immediate mode
-TEST_F(CpuTest, cpy_imm_sets_n_and_clears_z_c) {
-    stage_instruction(CPY_IMM);
-    compare_immediate_sets_n_clears_z_c(&registers.y, &expected.y);
+TEST_F(CpuImmediateTest, cpy_imm_sets_n_and_clears_z_c) {
+    compare_sets_n_clears_z_c(CPY_IMM, &registers.y, &expected.y);
 }
-TEST_F(CpuTest, cpy_imm_sets_c_and_clears_n_z) {
-    stage_instruction(CPY_IMM);
-    compare_immediate_sets_c_clears_n_z(&registers.y, &expected.y);
+TEST_F(CpuImmediateTest, cpy_imm_sets_c_and_clears_n_z) {
+    compare_sets_c_clears_n_z(CPY_IMM, &registers.y, &expected.y);
 }
-TEST_F(CpuTest, cpy_imm_sets_z_c_clears_n) {
-    stage_instruction(CPY_IMM);
-    compare_immediate_sets_z_c_clears_n(&registers.y, &expected.y);
+TEST_F(CpuImmediateTest, cpy_imm_sets_z_c_clears_n) {
+    compare_sets_z_c_clears_n(CPY_IMM, &registers.y, &expected.y);
 }
-TEST_F(CpuTest, cpy_imm_sets_nc) {
-    stage_instruction(CPY_IMM);
-    compare_immediate_sets_n_c(&registers.y, &expected.y);
+TEST_F(CpuImmediateTest, cpy_imm_sets_nc) {
+    compare_sets_n_c(CPY_IMM, &registers.y, &expected.y);
 }
 
 // CMP Immediate mode
-TEST_F(CpuTest, cmp_imm_sets_n_and_clears_z_c) {
-    stage_instruction(CMP_IMM);
-    compare_immediate_sets_n_clears_z_c(&registers.a, &expected.a);
+TEST_F(CpuImmediateTest, cmp_imm_sets_n_and_clears_z_c) {
+    compare_sets_n_clears_z_c(CMP_IMM, &registers.a, &expected.a);
 }
-TEST_F(CpuTest, cmp_imm_sets_c_and_clears_n_z) {
-    stage_instruction(CMP_IMM);
-    compare_immediate_sets_c_clears_n_z(&registers.a, &expected.a);
+TEST_F(CpuImmediateTest, cmp_imm_sets_c_and_clears_n_z) {
+    compare_sets_c_clears_n_z(CMP_IMM, &registers.a, &expected.a);
 }
-TEST_F(CpuTest, cmp_imm_sets_z_c_clears_n) {
-    stage_instruction(CMP_IMM);
-    compare_immediate_sets_z_c_clears_n(&registers.a, &expected.a);
+TEST_F(CpuImmediateTest, cmp_imm_sets_z_c_clears_n) {
+    compare_sets_z_c_clears_n(CMP_IMM, &registers.a, &expected.a);
 }
-TEST_F(CpuTest, cmp_imm_sets_nc) {
-    stage_instruction(CMP_IMM);
-    compare_immediate_sets_n_c(&registers.a, &expected.a);
+TEST_F(CpuImmediateTest, cmp_imm_sets_nc) {
+    compare_sets_n_c(CMP_IMM, &registers.a, &expected.a);
 }
 
 // CPX, CPY, CMP Absolute mode
