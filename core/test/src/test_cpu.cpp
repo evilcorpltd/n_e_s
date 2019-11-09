@@ -28,8 +28,12 @@ const uint16_t kNmiAddress = 0xFFFA;
 enum Opcode : uint8_t {
     BRK = 0x00,
     PHP = 0x08,
+    ORA_IMM = 0x09,
+    ORA_ABS = 0x0D,
     BPL = 0x10,
     CLC = 0x18,
+    ORA_ABSY = 0x19,
+    ORA_ABSX = 0x1D,
     JSR = 0x20,
     BIT_ZERO = 0x24,
     PLP = 0x28,
@@ -2654,6 +2658,90 @@ TEST_F(CpuTest, ror_a_set_neg_retain_c) {
     expected.p = C_FLAG | N_FLAG;
 
     step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+// ORA, IMM
+TEST_F(CpuTest, ora_imm) {
+    registers.pc = expected.pc = 0x3210;
+    registers.a = 0b10101010;
+    registers.p = Z_FLAG | N_FLAG;
+
+    stage_instruction(ORA_IMM);
+
+    ++expected.pc;
+    expected.a = 0b11111111;
+    expected.p = N_FLAG;
+
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0b01110101));
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+// ORA, ABS
+TEST_F(CpuAbsoluteTest, ora_abs_set_neg_clears_zero) {
+    registers.a = 0b00000000;
+    registers.p = Z_FLAG;
+    expected.a = 0b10101010;
+    expected.p = N_FLAG;
+    memory_content = 0b10101010;
+
+    run_read_instruction(ORA_ABS);
+}
+// ORA, ABSY
+TEST_F(CpuTest, ora_absy_without_page_crossing) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = 0b00111100;
+    registers.p = 0;
+    registers.y = expected.y = 0x10;
+
+    stage_instruction(ORA_ABSY);
+
+    expected.pc += 2;
+    expected.a = 0b11111100;
+    expected.p = N_FLAG;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x5678));
+    EXPECT_CALL(mmu, read_byte(0x5678 + 0x10)).WillOnce(Return(0b11110000));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
+// ORA, ABSX
+TEST_F(CpuTest, ora_absx_without_page_crossing) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = 0b00110000;
+    registers.p = Z_FLAG | N_FLAG;
+    registers.x = expected.x = 0x10;
+
+    stage_instruction(ORA_ABSX);
+
+    expected.pc += 2;
+    expected.a = 0b00110011;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x5678));
+    EXPECT_CALL(mmu, read_byte(0x5678 + 0x10)).WillOnce(Return(0b00100011));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
+TEST_F(CpuTest, ora_absx_with_page_crossing) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = 0b10000000;
+    registers.p = N_FLAG;
+    registers.x = expected.x = 0xAB;
+
+    stage_instruction(ORA_ABSX);
+
+    expected.pc += 2;
+    expected.a = 0b10000001;
+    expected.p = N_FLAG;
+
+    ON_CALL(mmu, read_word(0x4322)).WillByDefault(Return(0x5678));
+    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB - 0x0100))
+            .WillOnce(Return(0xDEAD));
+    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB)).WillOnce(Return(0b00000001));
+
+    step_execution(5);
     EXPECT_EQ(expected, registers);
 }
 

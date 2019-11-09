@@ -431,6 +431,12 @@ Pipeline Mos6502::parse_next_instruction() {
             set_negative(registers_->a);
         });
         break;
+    case Instruction::OraImmediate:
+    case Instruction::OraAbsolute:
+    case Instruction::OraAbsoluteY:
+    case Instruction::OraAbsoluteX:
+        result.append(create_ora_instruction(*current_opcode_));
+        break;
     }
     return result;
 } // namespace n_e_s::core
@@ -687,6 +693,22 @@ Pipeline Mos6502::create_eor_instruction(Opcode opcode) {
     result.push([=]() {
         const uint8_t operand = mmu_->read_byte(effective_address_);
         registers_->a ^= operand;
+
+        set_zero(registers_->a);
+        set_negative(registers_->a);
+    });
+
+    return result;
+}
+
+Pipeline Mos6502::create_ora_instruction(Opcode opcode) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
+    Pipeline result;
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
+
+    result.push([=]() {
+        const uint8_t operand = mmu_->read_byte(effective_address_);
+        registers_->a |= operand;
 
         set_zero(registers_->a);
         set_negative(registers_->a);
