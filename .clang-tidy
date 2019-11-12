@@ -8,6 +8,7 @@ Checks: '
   -google-build-using-namespace,
   misc-*,
   modernize-*,
+  -modernize-use-trailing-return-type,
   performance-*,
   readability-else-after-return,
   readability-identifier-naming,
