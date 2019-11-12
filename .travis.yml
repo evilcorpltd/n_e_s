@@ -52,7 +52,7 @@ matrix:
         - CXX=g++-7 CXXFLAGS="-fprofile-arcs -ftest-coverage" cmake ..
         - make
         - ctest --output-on-failure
-        - gcovr -p --root .. --fail-under-line=99 --exclude '_deps/' --exclude '(.+/)?test/'
+        - gcovr -p --root .. --fail-under-line=99 --exclude 'CMakeFiles/' --exclude '_deps/' --exclude '(.+/)?test/' --exclude '.+/application/'
 
     - name: "gcc 8"
       addons: &gcc8
