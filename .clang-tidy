@@ -6,6 +6,7 @@ Checks: '
   clang-diagnostic-*,
   google-*,
   -google-build-using-namespace,
+  -google-readability-avoid-underscore-in-googletest-name,
   misc-*,
   modernize-*,
   -modernize-use-trailing-return-type,
