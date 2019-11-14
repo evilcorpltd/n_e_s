@@ -49,6 +49,8 @@ Opcode decode(const uint8_t op) {
         return {Family::CLI, CliImplied, AddressMode::Implied};
     case RtsImplied:
         return {Family::RTS, RtsImplied, AddressMode::Implied};
+    case AdcIndirectX:
+        return {Family::ADC, AdcIndirectX, AddressMode::IndexedIndirect};
     case AdcZeropage:
         return {Family::ADC, AdcZeropage, AddressMode::Zeropage};
     case PlaImplied:
@@ -59,6 +61,10 @@ Opcode decode(const uint8_t op) {
         return {Family::ADC, AdcAbsolute, AddressMode::Absolute};
     case BvsRelative:
         return {Family::BVS, BvsRelative, AddressMode::Relative};
+    case AdcIndirectY:
+        return {Family::ADC, AdcIndirectY, AddressMode::IndirectIndexed};
+    case AdcZeropageX:
+        return {Family::ADC, AdcZeropageX, AddressMode::ZeropageX};
     case SeiImplied:
         return {Family::SEI, SeiImplied, AddressMode::Implied};
     case AdcAbsoluteY:
