@@ -8,6 +8,7 @@ Checks: '
   -google-build-using-namespace,
   -google-readability-avoid-underscore-in-googletest-name,
   misc-*,
+  -misc-non-private-member-variables-in-classes,
   modernize-*,
   -modernize-use-trailing-return-type,
   -modernize-use-nodiscard,
