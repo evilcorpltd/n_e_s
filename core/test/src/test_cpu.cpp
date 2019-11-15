@@ -125,14 +125,22 @@ enum Opcode : uint8_t {
     CMP_ABSY = 0xD9,
     CMP_ABSX = 0xDD,
     CPX_IMM = 0xE0,
+    SBC_INXIND = 0xE1,
     CPX_ZERO = 0xE4,
+    SBC_ZERO = 0xE5,
     INC_ZERO = 0xE6,
     INX = 0xE8,
+    SBC_IMM = 0xE9,
     NOP = 0xEA,
     CPX_ABS = 0xEC,
+    SBC_ABS = 0xED,
     BEQ = 0xF0,
+    SBC_INDINX = 0xF1,
+    SBC_ZEROX = 0xF5,
     INC_ZEROX = 0xF6,
     SED = 0xF8,
+    SBC_ABSY = 0xF9,
+    SBC_ABSX = 0xFD,
 };
 
 class CpuTest : public ::testing::Test {
@@ -1096,6 +1104,7 @@ TEST_F(CpuTest, bvc_negative_operand) {
     branch_test(0, -128 + 10, 3);
 }
 
+// ADC
 TEST_F(CpuImmediateTest, adc_imm_no_carry_or_overflow) {
     registers.a = 0x50;
     registers.p = V_FLAG;
@@ -1249,6 +1258,166 @@ TEST_F(CpuTest, adc_indirect_indexed) {
     EXPECT_CALL(mmu, read_word(0x42)).WillOnce(Return(0x1234));
 
     EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D)).WillOnce(Return(0x12));
+    step_execution(5);
+
+    EXPECT_EQ(expected, registers);
+}
+
+// SBC
+TEST_F(CpuImmediateTest, sbc_imm_no_carry_or_overflow) {
+    registers.a = 0x50;
+    registers.p = V_FLAG | C_FLAG;
+    expected.a = 0x60;
+    memory_content = 0xF0;
+
+    run_instruction(SBC_IMM);
+}
+
+TEST_F(CpuImmediateTest, sbc_imm_carry_but_no_overflow) {
+    registers.a = 0x50;
+    registers.p = V_FLAG | C_FLAG;
+    expected.p = C_FLAG;
+    expected.a = 0x20;
+    memory_content = 0x30;
+
+    run_instruction(SBC_IMM);
+}
+
+TEST_F(CpuImmediateTest, sbc_imm_no_carry_but_overflow) {
+    registers.a = 0x50;
+    registers.p = C_FLAG;
+    expected.p = V_FLAG | N_FLAG;
+    expected.a = 0xA0;
+    memory_content = 0xB0;
+
+    run_instruction(SBC_IMM);
+}
+
+TEST_F(CpuImmediateTest, sbc_imm_carry_and_overflow) {
+    registers.a = 0xD0;
+    registers.p = C_FLAG;
+    expected.p = V_FLAG | C_FLAG;
+    expected.a = 0x60;
+    memory_content = 0x70;
+
+    run_instruction(SBC_IMM);
+}
+
+TEST_F(CpuAbsoluteTest, sbc_abs_no_carry_or_overflow) {
+    registers.a = 0x50;
+    registers.p = V_FLAG | C_FLAG;
+    expected.a = 0x60;
+    memory_content = 0xF0;
+
+    run_read_instruction(SBC_ABS);
+}
+
+TEST_F(CpuZeropageTest, sbc_zero_no_carry_or_overflow) {
+    registers.a = 0x50;
+    registers.p = V_FLAG | C_FLAG;
+    expected.a = 0x60;
+    memory_content = 0xF0;
+
+    run_read_instruction(SBC_ZERO, 3);
+}
+
+TEST_F(CpuTest, sbc_absx_no_carry_or_overflow_no_pagecrossing) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0x10;
+
+    stage_instruction(SBC_ABSX);
+
+    registers.a = 0xD0;
+    registers.p = V_FLAG | C_FLAG;
+    expected.p = N_FLAG;
+    expected.a = 0xE0;
+    expected.pc += 2;
+
+    EXPECT_CALL(mmu, read_word(0x4322)).WillOnce(Return(0x5678));
+    EXPECT_CALL(mmu, read_byte(0x5678 + 0x10)).WillOnce(Return(0xF0));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sbc_absy_no_carry_or_overflow_with_pagecrossing) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0xAB;
+
+    stage_instruction(SBC_ABSY);
+
+    registers.a = 0xD0;
+    registers.p = V_FLAG | C_FLAG;
+    expected.p = N_FLAG;
+    expected.a = 0xE0;
+    expected.pc += 2;
+
+    EXPECT_CALL(mmu, read_word(0x4322)).WillOnce(Return(0x5678));
+    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB - 0x0100))
+            .WillOnce(Return(0xDEAD));
+    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB)).WillOnce(Return(0xF0));
+
+    step_execution(5);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sbc_zero_x) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = 0x50;
+    registers.x = expected.x = 0xED;
+    registers.p = V_FLAG | C_FLAG;
+
+    stage_instruction(SBC_ZEROX);
+
+    expected.p = C_FLAG;
+    expected.a = 0x50 - 0x07;
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
+    EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED))).WillOnce(Return(0x07));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sbc_indexed_indirect) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0xED;
+    registers.a = 0xD0;
+    registers.p = C_FLAG;
+    expected.a = 0xE0;
+    expected.p = N_FLAG;
+
+    stage_instruction(SBC_INXIND);
+
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0xAB));
+    EXPECT_CALL(mmu, read_word(u16_to_u8(0xAB + 0xED)))
+            .WillOnce(Return(0x1234));
+    EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(0xF0));
+
+    step_execution(6);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, sbc_indirect_indexed) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0x0D;
+    registers.a = 0xD0;
+    registers.p = C_FLAG;
+    expected.a = 0xE0;
+    expected.p = N_FLAG;
+
+    stage_instruction(SBC_INDINX);
+
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
+    EXPECT_CALL(mmu, read_word(0x42)).WillOnce(Return(0x1234));
+
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D)).WillOnce(Return(0xF0));
     step_execution(5);
 
     EXPECT_EQ(expected, registers);
