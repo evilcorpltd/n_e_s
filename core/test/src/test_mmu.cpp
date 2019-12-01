@@ -105,7 +105,7 @@ TEST_F(MmuTest, ram_bank_mirroring) {
     const std::vector<uint16_t> addrs{0x100, 0x900, 0x1100, 0x1900};
     const std::vector<uint8_t> bytes{0x1F, 0xCC, 0x01, 0xAB};
 
-    for (uint8_t i = 0; i < addrs.size(); ++i) {
+    for (unsigned int i = 0; i < addrs.size(); ++i) {
         mmu->write_byte(addrs[i], bytes[i]);
 
         for (uint16_t addr : addrs) {
