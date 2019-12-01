@@ -507,7 +507,7 @@ public:
 
 class CpuZeropageTest : public CpuTest {
 public:
-    void run_read_instruction(uint8_t instruction, uint8_t cycles) {
+    void run_read_instruction(uint8_t instruction) {
         registers.pc = expected.pc = start_pc;
         stage_instruction(instruction);
         expected.pc += 1;
@@ -517,7 +517,7 @@ public:
         EXPECT_CALL(mmu, read_byte(effective_address))
                 .WillOnce(Return(memory_content));
 
-        step_execution(cycles);
+        step_execution(3);
         EXPECT_EQ(expected, registers);
     }
 
@@ -554,7 +554,7 @@ public:
 
     void load_sets_reg(uint8_t instruction, uint8_t *target_reg) {
         *target_reg = 0x42;
-        run_read_instruction(instruction, 3);
+        run_read_instruction(instruction);
     }
 
     void compare_sets_n_c(uint8_t instruction,
@@ -565,7 +565,7 @@ public:
         registers.p |= Z_FLAG;
         memory_content = 127;
 
-        run_read_instruction(instruction, 3);
+        run_read_instruction(instruction);
     }
 
     uint16_t start_pc{0x4321};
@@ -895,7 +895,7 @@ TEST_F(CpuZeropageTest, bit_zero_sets_zero) {
     expected.p = Z_FLAG;
     memory_content = 0x12;
 
-    run_read_instruction(BIT_ZERO, 3);
+    run_read_instruction(BIT_ZERO);
 }
 TEST_F(CpuZeropageTest, bit_zero_sets_negative) {
     registers.a = expected.a = 0x02;
@@ -903,7 +903,7 @@ TEST_F(CpuZeropageTest, bit_zero_sets_negative) {
     expected.p = N_FLAG;
     memory_content = 0xA3;
 
-    run_read_instruction(BIT_ZERO, 3);
+    run_read_instruction(BIT_ZERO);
 }
 TEST_F(CpuZeropageTest, bit_zero_sets_overflow) {
     registers.a = expected.a = 0x02;
@@ -911,7 +911,7 @@ TEST_F(CpuZeropageTest, bit_zero_sets_overflow) {
     expected.p = V_FLAG;
     memory_content = 0x53;
 
-    run_read_instruction(BIT_ZERO, 3);
+    run_read_instruction(BIT_ZERO);
 }
 TEST_F(CpuAbsoluteTest, bit_abs_sets_negative_and_overflow) {
     registers.a = expected.a = 0x02;
@@ -1157,7 +1157,7 @@ TEST_F(CpuZeropageTest, adc_zero_no_carry_or_overflow) {
     expected.a = 0x60;
     memory_content = 0x10;
 
-    run_read_instruction(ADC_ZERO, 3);
+    run_read_instruction(ADC_ZERO);
 }
 
 TEST_F(CpuTest, adc_absx_no_carry_or_overflow_no_pagecrossing) {
@@ -1310,7 +1310,7 @@ TEST_F(CpuZeropageTest, sbc_zero_no_carry_or_overflow) {
     expected.a = 0x60;
     memory_content = 0xF0;
 
-    run_read_instruction(SBC_ZERO, 3);
+    run_read_instruction(SBC_ZERO);
 }
 
 TEST_F(CpuTest, sbc_absx_no_carry_or_overflow_no_pagecrossing) {
