@@ -1151,21 +1151,13 @@ TEST_F(CpuAbsoluteTest, adc_abs_no_carry_or_overflow) {
     run_read_instruction(ADC_ABS);
 }
 
-TEST_F(CpuTest, adc_zero_no_carry_or_overflow) {
-    registers.pc = expected.pc = 0x4321;
-
-    stage_instruction(ADC_ZERO);
-
+TEST_F(CpuZeropageTest, adc_zero_no_carry_or_overflow) {
     registers.a = 0x50;
     registers.p = V_FLAG;
     expected.a = 0x60;
-    expected.pc += 1;
+    memory_content = 0x10;
 
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x45));
-    EXPECT_CALL(mmu, read_byte(0x45)).WillOnce(Return(0x10));
-
-    step_execution(3);
-    EXPECT_EQ(expected, registers);
+    run_read_instruction(ADC_ZERO, 3);
 }
 
 TEST_F(CpuTest, adc_absx_no_carry_or_overflow_no_pagecrossing) {
