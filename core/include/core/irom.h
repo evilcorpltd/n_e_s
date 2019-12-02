@@ -20,9 +20,10 @@ struct INesHeader {
 
 class IRom : public IMemBank {
 public:
-    explicit IRom(const INesHeader &h) : header(h) {}
+    explicit IRom(const INesHeader &h) : header_(h) {}
 
-    INesHeader header;
+private:
+    INesHeader header_;
 };
 
 } // namespace n_e_s::core

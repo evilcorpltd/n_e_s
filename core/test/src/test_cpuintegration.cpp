@@ -44,7 +44,7 @@ public:
         return max_cycles;
     }
 
-    void load_hex_dump(uint16_t address, std::vector<uint8_t> data) {
+    void load_hex_dump(uint16_t address, const std::vector<uint8_t> &data) {
         for (auto d : data) {
             mmu.write_byte(address++, d);
         }
