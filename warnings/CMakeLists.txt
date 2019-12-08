@@ -18,6 +18,7 @@ target_compile_options(${PROJECT_NAME} INTERFACE
         -Wall;
         -Wdouble-promotion;
         -Wduplicated-cond;
+        -Wduplicated-branches;
         -Werror;
         -Wextra;
         -Wformat-overflow;
@@ -29,7 +30,9 @@ target_compile_options(${PROJECT_NAME} INTERFACE
         -Wnull-dereference;
         -Wold-style-cast;
         -Wshadow;
+        -Wsign-compare;
         -Wundef;
+        -Wuseless-cast;
     >
     $<$<BOOL:${CLANG}>:
         -Wmissing-variable-declarations;
