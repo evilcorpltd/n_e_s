@@ -23,6 +23,8 @@ std::string hex_out_s(T val) {
     std::stringstream sformatter;
     sformatter << std::hex << std::internal << "0x" << std::setfill('0')
                << std::setw(sizeof(T) * CHAR_BIT / kHexDigitBits);
+
+    // NOLINTNEXTLINE(google-readability-braces-around-statements)
     if constexpr (IsChar<T>::value) {
         sformatter << static_cast<int>(val);
     } else {
