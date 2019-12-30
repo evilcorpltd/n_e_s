@@ -61,8 +61,8 @@ std::unique_ptr<IRom> RomFactory::from_bytes(std::istream &bytestream) {
     uint8_t mapper = (h.flags_6 & 0xF0u) >> 4u;
     mapper |= h.flags_7 & 0xF0u;
 
-    const uint32_t prg_rom_byte_count = h.prg_rom_size * 16 * 1024;
-    const uint32_t chr_rom_byte_count = h.chr_rom_size * 8 * 1024;
+    const auto prg_rom_byte_count = static_cast<uint32_t>(h.prg_rom_size * 16 * 1024);
+    const auto chr_rom_byte_count = static_cast<uint32_t>(h.chr_rom_size * 8 * 1024);
 
     const uint32_t expected_rom_size =
             sizeof(INesHeader) + prg_rom_byte_count + chr_rom_byte_count;
