@@ -9,14 +9,14 @@
 namespace n_e_s::core {
 
 enum CpuFlag {
-    C_FLAG = 1 << 0, // carry
-    Z_FLAG = 1 << 1, // zero
-    I_FLAG = 1 << 2, // interrupt disable
-    D_FLAG = 1 << 3, // decimal mode
-    B_FLAG = 1 << 4, // break
-    FLAG_5 = 1 << 5, // unused, always 1
-    V_FLAG = 1 << 6, // overflow
-    N_FLAG = 1 << 7, // negative
+    C_FLAG = 1u << 0u, // carry
+    Z_FLAG = 1u << 1u, // zero
+    I_FLAG = 1u << 2u, // interrupt disable
+    D_FLAG = 1u << 3u, // decimal mode
+    B_FLAG = 1u << 4u, // break
+    FLAG_5 = 1u << 5u, // unused, always 1
+    V_FLAG = 1u << 6u, // overflow
+    N_FLAG = 1u << 7u, // negative
 };
 
 struct CpuRegisters {

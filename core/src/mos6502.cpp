@@ -12,11 +12,11 @@ const uint16_t kResetAddress = 0xFFFC; // This is where the reset routine is.
 const uint16_t kBrkAddress = 0xFFFE; // This is where the break routine is.
 
 constexpr bool is_negative(uint8_t byte) {
-    return byte & (1 << 7);
+    return byte & (1u << 7u);
 }
 
 constexpr uint8_t low_bits(uint8_t byte) {
-    return byte & ~(1 << 7);
+    return byte & ~(1u << 7u);
 }
 
 constexpr int8_t to_signed(uint8_t byte) {
@@ -28,13 +28,14 @@ constexpr int8_t to_signed(uint8_t byte) {
 }
 
 constexpr uint16_t high_byte(uint16_t word) {
-    return word & 0xFF00;
+    return word & 0xFF00u;
 }
 
 // Returns true if accessing an index address will require the cpu to reach
 // across a page boundary.
 constexpr bool cross_page(uint16_t address, uint8_t index) {
-    return ((address + index) & 0xFF00) != (address & 0xFF00);
+    return (static_cast<uint16_t>(address + index) & 0xFF00u) !=
+           (address & 0xFF00u);
 }
 
 } // namespace
@@ -100,12 +101,12 @@ Pipeline Mos6502::parse_next_instruction() {
             // Dummy read
             mmu_->read_byte(registers_->pc++);
         });
-        result.push([=]() { stack_.push_byte(registers_->pc >> 8); });
-        result.push([=]() { stack_.push_byte(registers_->pc & 0xFF); });
+        result.push([=]() { stack_.push_byte(registers_->pc >> 8u); });
+        result.push([=]() { stack_.push_byte(registers_->pc & 0xFFu); });
         result.push([=]() { stack_.push_byte(registers_->p | B_FLAG); });
         result.push([=]() { tmp_ = mmu_->read_byte(kBrkAddress); });
         result.push([=]() {
-            const uint16_t pch = mmu_->read_byte(kBrkAddress + 1) << 8;
+            const uint16_t pch = mmu_->read_byte(kBrkAddress + 1) << 8u;
             registers_->pc = pch | tmp_;
         });
         break;
@@ -128,7 +129,7 @@ Pipeline Mos6502::parse_next_instruction() {
             const uint8_t value = mmu_->read_byte(effective_address_);
             set_zero(value & registers_->a);
             set_negative(value);
-            if (value & (1u << 6)) {
+            if (value & (1u << 6u)) {
                 set_flag(V_FLAG);
             } else {
                 clear_flag(V_FLAG);
@@ -170,9 +171,9 @@ Pipeline Mos6502::parse_next_instruction() {
         break;
     case Instruction::LsrAccumulator:
         result.push([=]() {
-            set_carry(registers_->a & 1);
-            registers_->a &= ~1;
-            registers_->a >>= 1;
+            set_carry(registers_->a & 1u);
+            registers_->a &= ~1u;
+            registers_->a >>= 1u;
             set_zero(registers_->a);
             clear_flag(N_FLAG);
         });
@@ -416,7 +417,8 @@ Pipeline Mos6502::parse_next_instruction() {
     case RolAccumulator:
         result.push([=]() {
             const uint8_t carry = registers_->p & C_FLAG ? 0x01 : 0x00;
-            const uint16_t temp_result = (registers_->a << 1) | carry;
+            const uint16_t temp_result =
+                    static_cast<uint16_t>(registers_->a << 1u) | carry;
             registers_->a = static_cast<uint8_t>(temp_result);
             set_carry(temp_result > 0xFF);
             set_zero(registers_->a);
@@ -426,8 +428,9 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::RorAccumulator:
         result.push([=]() {
             const uint8_t carry_in = registers_->p & C_FLAG ? 0x80 : 0x00;
-            const bool carry_out = (registers_->a & 0x01) == 0x01;
-            const uint16_t temp_result = (registers_->a >> 1) | carry_in;
+            const bool carry_out = (registers_->a & 0x01u) == 0x01;
+            const uint16_t temp_result =
+                    static_cast<uint16_t>(registers_->a >> 1u) | carry_in;
             registers_->a = static_cast<uint8_t>(temp_result);
             set_carry(carry_out);
             set_zero(registers_->a);
@@ -460,7 +463,7 @@ void Mos6502::set_nmi(bool nmi) {
 }
 
 void Mos6502::clear_flag(uint8_t flag) {
-    registers_->p &= ~flag;
+    registers_->p &= static_cast<uint8_t>(~flag);
 }
 
 void Mos6502::set_flag(uint8_t flag) {
@@ -495,8 +498,9 @@ void Mos6502::set_overflow(uint8_t reg_value,
         uint8_t operand,
         uint16_t resulting_value) {
     // See: http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
-    const bool overflow = ((reg_value ^ resulting_value) &
-                                  (operand ^ resulting_value) & 0x80) != 0;
+    auto a = static_cast<uint8_t>(reg_value ^ resulting_value);
+    auto b = static_cast<uint8_t>(operand ^ resulting_value);
+    const bool overflow = (static_cast<uint8_t>(a & b) & 0x80u) != 0;
     if (overflow) {
         set_flag(V_FLAG);
     } else {
@@ -514,12 +518,12 @@ Pipeline Mos6502::create_nmi() {
         // Dummy read
         mmu_->read_byte(registers_->pc++);
     });
-    result.push([=]() { stack_.push_byte(registers_->pc >> 8); });
-    result.push([=]() { stack_.push_byte(registers_->pc & 0xFF); });
+    result.push([=]() { stack_.push_byte(registers_->pc >> 8u); });
+    result.push([=]() { stack_.push_byte(registers_->pc & 0xFFu); });
     result.push([=]() { stack_.push_byte(registers_->p); });
     result.push([=]() { tmp_ = mmu_->read_byte(0xFFFA); });
     result.push([=]() {
-        const uint16_t pch = mmu_->read_byte(0xFFFB) << 8;
+        const uint16_t pch = mmu_->read_byte(0xFFFB) << 8u;
         registers_->pc = pch | tmp_;
     });
 
@@ -818,7 +822,7 @@ Pipeline Mos6502::create_absolute_addressing_steps() {
         ++registers_->pc;
     });
     result.push([=]() {
-        const uint16_t upper = mmu_->read_byte(registers_->pc) << 8;
+        const uint16_t upper = mmu_->read_byte(registers_->pc) << 8u;
         ++registers_->pc;
         effective_address_ = tmp_ | upper;
     });
@@ -879,7 +883,7 @@ Pipeline Mos6502::create_indexed_indirect_addressing_steps() {
             // Special case where the effective address should come from
             // 0x00 and 0xFF, not 0x0100 and 0x00FF.
             const uint8_t lower = mmu_->read_byte(address);
-            const uint16_t upper = mmu_->read_byte(0x00) << 8;
+            const uint16_t upper = mmu_->read_byte(0x00) << 8u;
             effective_address_ = upper | lower;
         } else {
             effective_address_ = mmu_->read_word(address);

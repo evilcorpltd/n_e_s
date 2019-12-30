@@ -15,8 +15,8 @@ std::string ines_header_bytes(const uint8_t mapper,
         const uint8_t chr_rom_size,
         const uint8_t prg_ram_size) {
     INesHeader header{};
-    header.flags_6 = mapper & 0x0F << 4;
-    header.flags_7 = mapper & 0xF0;
+    header.flags_6 = mapper & 0x0Fu << 4u;
+    header.flags_7 = mapper & 0xF0u;
     header.prg_rom_size = prg_rom_size;
     header.chr_rom_size = chr_rom_size;
     header.prg_ram_size = prg_ram_size;
