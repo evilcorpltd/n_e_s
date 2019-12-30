@@ -12,7 +12,7 @@ std::unique_ptr<IMmu> MmuFactory::create(MemBankList mem_banks) {
         mmu->add_mem_bank(std::move(mem_bank));
     }
 
-    return mmu;
+    return std::move(mmu);
 }
 
 } // namespace n_e_s::core
