@@ -426,9 +426,10 @@ std::string to_string(const Family family) {
         return "ORA";
     case Family::SBC:
         return "SBC";
-    default:
-        return "UNKNOWN";
     }
+
+    // Should not happen
+    throw std::logic_error("Unknown family");
 }
 
 } // namespace n_e_s::core
