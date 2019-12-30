@@ -185,22 +185,38 @@ Opcode decode(const uint8_t op) {
         return {Family::CMP, CmpAbsoluteX, AddressMode::AbsoluteX};
     case CpxImmediate:
         return {Family::CPX, CpxImmediate, AddressMode::Immediate};
+    case SbcIndirectX:
+        return {Family::SBC, SbcIndirectX, AddressMode::IndexedIndirect};
     case CpxZeropage:
         return {Family::CPX, CpxZeropage, AddressMode::Zeropage};
+    case SbcZeropage:
+        return {Family::SBC, SbcZeropage, AddressMode::Zeropage};
     case IncZeropage:
         return {Family::INC, IncZeropage, AddressMode::Zeropage};
     case InxImplied:
         return {Family::INX, InxImplied, AddressMode::Implied};
+    case SbcImmediate:
+        return {Family::SBC, SbcImmediate, AddressMode::Immediate};
     case NopImplied:
         return {Family::NOP, NopImplied, AddressMode::Implied};
     case CpxAbsolute:
         return {Family::CPX, CpxAbsolute, AddressMode::Absolute};
+    case SbcAbsolute:
+        return {Family::SBC, SbcAbsolute, AddressMode::Absolute};
     case BeqRelative:
         return {Family::BEQ, BeqRelative, AddressMode::Relative};
+    case SbcIndirectY:
+        return {Family::SBC, SbcIndirectY, AddressMode::IndirectIndexed};
+    case SbcZeropageX:
+        return {Family::SBC, SbcZeropageX, AddressMode::ZeropageX};
     case IncZeropageX:
         return {Family::INC, IncZeropageX, AddressMode::ZeropageX};
     case SedImplied:
         return {Family::SED, SedImplied, AddressMode::Implied};
+    case SbcAbsoluteY:
+        return {Family::SED, SbcAbsoluteY, AddressMode::AbsoluteY};
+    case SbcAbsoluteX:
+        return {Family::SED, SbcAbsoluteX, AddressMode::AbsoluteX};
     case EorImmediate:
         return {Family::EOR, EorImmediate, AddressMode::Immediate};
     case EorAbsolute:
@@ -280,6 +296,7 @@ MemoryAccess get_memory_access(const Family family) {
     case Family::DEX:
     case Family::EOR:
     case Family::ORA:
+    case Family::SBC:
         return MemoryAccess::Read;
     case Family::STY:
     case Family::STA:
@@ -407,6 +424,8 @@ std::string to_string(const Family family) {
         return "ROR";
     case Family::ORA:
         return "ORA";
+    case Family::SBC:
+        return "SBC";
     default:
         return "UNKNOWN";
     }

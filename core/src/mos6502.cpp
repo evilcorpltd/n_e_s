@@ -206,6 +206,16 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::AdcIndirectY:
         result.append(create_add_instruction(*current_opcode_));
         break;
+    case Instruction::SbcZeropage:
+    case Instruction::SbcZeropageX:
+    case Instruction::SbcImmediate:
+    case Instruction::SbcAbsolute:
+    case Instruction::SbcAbsoluteX:
+    case Instruction::SbcAbsoluteY:
+    case Instruction::SbcIndirectX:
+    case Instruction::SbcIndirectY:
+        result.append(create_sub_instruction(*current_opcode_));
+        break;
     case Instruction::PlaImplied:
         result.push([=]() {
             /* Do nothing. */
@@ -586,22 +596,42 @@ Pipeline Mos6502::create_dec_instruction(const Opcode opcode) {
     return result;
 }
 
+void Mos6502::adc_impl(const uint8_t addend) {
+    const uint8_t a_before = registers_->a;
+    const uint8_t carry = registers_->p & C_FLAG ? 1u : 0u;
+    const uint16_t temp_result = registers_->a + addend + carry;
+    registers_->a = static_cast<uint8_t>(temp_result);
+
+    set_carry(temp_result > 0xFF);
+    set_zero(registers_->a);
+    set_negative(registers_->a);
+    set_overflow(a_before, addend, temp_result);
+}
+
 Pipeline Mos6502::create_add_instruction(Opcode opcode) {
     const MemoryAccess memory_access = get_memory_access(opcode.family);
     Pipeline result;
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
     result.push([=]() {
-        const uint8_t a_before = registers_->a;
         const uint8_t addend = mmu_->read_byte(effective_address_);
-        const uint8_t carry = registers_->p & C_FLAG ? 1u : 0u;
-        const uint16_t temp_result = registers_->a + addend + carry;
-        registers_->a = static_cast<uint8_t>(temp_result);
+        adc_impl(addend);
+    });
 
-        set_carry(temp_result > 0xFF);
-        set_zero(registers_->a);
-        set_negative(registers_->a);
-        set_overflow(a_before, addend, temp_result);
+    return result;
+}
+
+Pipeline Mos6502::create_sub_instruction(Opcode opcode) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
+    Pipeline result;
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
+
+    result.push([=]() {
+        // SBC simply takes the ones complement of the second value and then
+        // performs an ADC See:
+        // http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
+        const uint8_t addend = mmu_->read_byte(effective_address_);
+        adc_impl(~addend);
     });
 
     return result;
