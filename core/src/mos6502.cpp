@@ -2,7 +2,6 @@
 
 #include "core/opcode.h"
 
-#include <cassert>
 #include <sstream>
 #include <stdexcept>
 
