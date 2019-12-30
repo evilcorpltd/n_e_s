@@ -58,8 +58,8 @@ std::unique_ptr<IRom> RomFactory::from_bytes(std::istream &bytestream) {
         h.prg_ram_size = 1; // For compatibility reasons, 0 ram means 1 ram.
     }
 
-    uint8_t mapper = (h.flags_6 & 0xF0) >> 4;
-    mapper |= h.flags_7 & 0xF0;
+    uint8_t mapper = (h.flags_6 & 0xF0u) >> 4u;
+    mapper |= h.flags_7 & 0xF0u;
 
     const uint32_t prg_rom_byte_count = h.prg_rom_size * 16 * 1024;
     const uint32_t chr_rom_byte_count = h.chr_rom_size * 8 * 1024;
