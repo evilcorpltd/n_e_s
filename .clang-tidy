@@ -7,6 +7,7 @@ Checks: '
   google-*,
   -google-build-using-namespace,
   -google-readability-avoid-underscore-in-googletest-name,
+  hicpp-signed-bitwise,
   misc-*,
   -misc-non-private-member-variables-in-classes,
   modernize-*,

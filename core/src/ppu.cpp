@@ -64,9 +64,11 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
         // enabled (bit 7). If this is the case and we currently are in
         // vertical blanking a NMI shall be generated.
         registers_->ctrl = byte;
-        uint16_t name_table_bits = (byte & 3);
-        registers_->temp_vram_addr &= 0b1111'0011'1111'1111;
-        registers_->temp_vram_addr |= (name_table_bits << 10);
+        uint16_t name_table_bits = (byte & 3u);
+        registers_->temp_vram_addr &=
+                static_cast<uint16_t>(0b1111'0011'1111'1111);
+        registers_->temp_vram_addr |=
+                static_cast<uint16_t>(name_table_bits << 10u);
     } else if (addr == kPpuMask) {
         registers_->mask = byte;
     } else if (addr == kOamAddr) {
@@ -77,17 +79,20 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
         }
     } else if (addr == kPpuScroll) {
         if (registers_->write_toggle) { // Second write, Y scroll
-            uint16_t y_scroll = (byte >> 3);
-            uint16_t fine_y_scroll = (byte & 7);
-            registers_->temp_vram_addr &= 0b1000'1100'0001'1111;
-            registers_->temp_vram_addr |= (y_scroll << 5);
-            registers_->temp_vram_addr |= (fine_y_scroll << 12);
+            uint16_t y_scroll = (byte >> 3u);
+            uint16_t fine_y_scroll = (byte & 7u);
+            registers_->temp_vram_addr &=
+                    static_cast<uint16_t>(0b1000'1100'0001'1111);
+            registers_->temp_vram_addr |= static_cast<uint16_t>(y_scroll << 5u);
+            registers_->temp_vram_addr |=
+                    static_cast<uint16_t>(fine_y_scroll << 12u);
             registers_->write_toggle = false;
         } else { // First write, X Scroll
-            uint16_t x_scroll = (byte >> 3);
-            registers_->temp_vram_addr &= 0b1111'1111'1110'0000;
+            uint16_t x_scroll = (byte >> 3u);
+            registers_->temp_vram_addr &=
+                    static_cast<uint16_t>(0b1111'1111'1110'0000);
             registers_->temp_vram_addr |= x_scroll;
-            registers_->fine_x_scroll = (byte & 7);
+            registers_->fine_x_scroll = (byte & 7u);
             registers_->write_toggle = true;
         }
     } else if (addr == kPpuAddr) {
@@ -97,7 +102,7 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
             registers_->write_toggle = false;
         } else { // First write, upper address byte
             uint16_t upper_addr_byte = byte;
-            registers_->temp_vram_addr = (upper_addr_byte << 8);
+            registers_->temp_vram_addr = (upper_addr_byte << 8u);
             registers_->write_toggle = true;
         }
     } else if (addr == kPpuData) {
@@ -153,7 +158,7 @@ bool Ppu::is_vblank_scanline() const {
 }
 
 bool Ppu::is_rendering_enabled() const {
-    return (registers_->mask & (1 << 3)) || (registers_->mask & (1 << 4));
+    return (registers_->mask & (1u << 3u)) || (registers_->mask & (1u << 4u));
 }
 
 bool Ppu::is_rendering_active() const {
@@ -164,7 +169,7 @@ bool Ppu::is_rendering_active() const {
 uint8_t Ppu::get_vram_address_increment() const {
     uint8_t addr_increment = 1;
 
-    if (registers_->ctrl & (1 << 2)) {
+    if (registers_->ctrl & (1u << 2u)) {
         addr_increment = 32;
     }
 
@@ -192,11 +197,11 @@ void Ppu::execute_vblank_scanline() {
 }
 
 void Ppu::set_vblank_flag() {
-    registers_->status |= (1 << 7);
+    registers_->status |= (1u << 7u);
 }
 
 void Ppu::clear_vblank_flag() {
-    registers_->status &= ~(1 << 7);
+    registers_->status &= ~(1u << 7u);
 }
 
 } // namespace n_e_s::core

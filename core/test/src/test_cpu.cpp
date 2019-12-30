@@ -307,7 +307,7 @@ public:
 
     void compare_abs_sets_n_c(uint8_t *reg, uint8_t *expected_reg) {
         *expected_reg = *reg = 0;
-        expected.p |= N_FLAG | C_FLAG;
+        expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
         registers.p |= Z_FLAG;
         expected.pc += 2;
 
@@ -323,7 +323,7 @@ public:
         registers.a = expected.a = 0x07;
         *index_reg = *index_reg_expected = 0x10;
         registers.p |= N_FLAG;
-        expected.p |= Z_FLAG | C_FLAG;
+        expected.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
 
         expected.pc += 2;
 
@@ -339,7 +339,7 @@ public:
         registers.a = expected.a = 0x07;
         *index_reg = *index_reg_expected = 0xAB;
         registers.p |= N_FLAG;
-        expected.p |= Z_FLAG | C_FLAG;
+        expected.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
 
         expected.pc += 2;
 
@@ -462,7 +462,7 @@ public:
             uint8_t *expected_reg) {
         *expected_reg = *reg = 0b10001111;
         expected.p |= N_FLAG;
-        registers.p |= Z_FLAG | C_FLAG;
+        registers.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
         memory_content = 0b00001000;
 
         run_instruction(instruction);
@@ -473,7 +473,7 @@ public:
             uint8_t *expected_reg) {
         *expected_reg = *reg = 0x02;
         expected.p |= C_FLAG;
-        registers.p |= Z_FLAG | N_FLAG;
+        registers.p |= static_cast<uint8_t>(Z_FLAG | N_FLAG);
         memory_content = 0xFA;
 
         run_instruction(instruction);
@@ -483,7 +483,7 @@ public:
             uint8_t *reg,
             uint8_t *expected_reg) {
         *expected_reg = *reg = 42;
-        expected.p |= Z_FLAG | C_FLAG;
+        expected.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
         registers.p |= N_FLAG;
         memory_content = 42;
 
@@ -494,7 +494,7 @@ public:
             uint8_t *reg,
             uint8_t *expected_reg) {
         *expected_reg = *reg = 0;
-        expected.p |= N_FLAG | C_FLAG;
+        expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
         registers.p |= Z_FLAG;
         memory_content = 127;
 
@@ -561,7 +561,7 @@ public:
             uint8_t *reg,
             uint8_t *expected_reg) {
         *expected_reg = *reg = 0;
-        expected.p |= N_FLAG | C_FLAG;
+        expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
         registers.p |= Z_FLAG;
         memory_content = 127;
 
@@ -580,8 +580,8 @@ public:
         stage_instruction(instruction);
         expected.pc += 2;
 
-        const uint8_t lower_address = effective_address & 0x00FF;
-        const uint8_t upper_address = (effective_address & 0xFF00) >> 8;
+        const uint8_t lower_address = effective_address & 0x00FFu;
+        const uint8_t upper_address = (effective_address & 0xFF00u) >> 8u;
 
         EXPECT_CALL(mmu, read_byte(start_pc + 1))
                 .WillOnce(Return(lower_address));
@@ -599,8 +599,8 @@ public:
         stage_instruction(instruction);
         expected.pc += 2;
 
-        const uint8_t lower_address = effective_address & 0x00FF;
-        const uint8_t upper_address = (effective_address & 0xFF00) >> 8;
+        const uint8_t lower_address = effective_address & 0x00FFu;
+        const uint8_t upper_address = (effective_address & 0xFF00u) >> 8u;
 
         EXPECT_CALL(mmu, read_byte(start_pc + 1))
                 .WillOnce(Return(lower_address));
@@ -616,7 +616,7 @@ public:
             uint8_t *reg,
             uint8_t *expected_reg) {
         *expected_reg = *reg = 0;
-        expected.p |= N_FLAG | C_FLAG;
+        expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
         registers.p |= Z_FLAG;
         memory_content = 127;
         run_read_instruction(instruction);
@@ -941,7 +941,7 @@ TEST_F(CpuTest, clc) {
     expected.p = registers.p = 0xFF;
 
     stage_instruction(CLC);
-    expected.p &= ~C_FLAG;
+    expected.p &= static_cast<uint8_t>(~C_FLAG);
 
     step_execution(2);
     EXPECT_EQ(expected, registers);
@@ -1041,7 +1041,7 @@ TEST_F(CpuTest, lsr_a_sets_c_and_z_flags) {
 TEST_F(CpuTest, lsr_a_clears_c_z_n_flags) {
     stage_instruction(LSR_ACC);
     registers.a = 0b00000010;
-    registers.p = Z_FLAG | C_FLAG | N_FLAG;
+    registers.p = static_cast<uint8_t>(Z_FLAG | C_FLAG) | N_FLAG;
     expected.a = 0b00000001;
     expected.p = 0;
 
@@ -1833,7 +1833,7 @@ TEST_F(CpuTest, cld) {
     expected.p = registers.p = 0xFF;
 
     stage_instruction(CLD);
-    expected.p &= ~D_FLAG;
+    expected.p &= static_cast<uint8_t>(~D_FLAG);
 
     step_execution(2);
     EXPECT_EQ(expected, registers);
@@ -1918,7 +1918,7 @@ TEST_F(CpuTest, cmp_indirect_indexed_with_pagecrossing_sets_nc) {
     registers.pc = expected.pc = 0x4321;
     registers.y = expected.y = 0xED;
     registers.a = expected.a = 0x07;
-    expected.p |= N_FLAG | C_FLAG;
+    expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
     registers.p |= Z_FLAG;
 
     stage_instruction(CMP_INDINX);
@@ -1939,7 +1939,7 @@ TEST_F(CpuTest, cmp_indirect_indexed_without_pagecrossing_sets_nc) {
     registers.pc = expected.pc = 0x4321;
     registers.y = expected.y = 0x0D;
     registers.a = expected.a = 0x07;
-    expected.p |= N_FLAG | C_FLAG;
+    expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
     registers.p |= Z_FLAG;
 
     stage_instruction(CMP_INDINX);
@@ -1959,7 +1959,7 @@ TEST_F(CpuTest, cmp_indexed_indirect_sets_nc) {
     registers.pc = expected.pc = 0x4321;
     registers.x = expected.x = 0xED;
     registers.a = expected.a = 0x07;
-    expected.p |= N_FLAG | C_FLAG;
+    expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
     registers.p |= Z_FLAG;
 
     stage_instruction(CMP_INXIND);
@@ -1980,7 +1980,7 @@ TEST_F(CpuTest, cmp_indexed_indirect_handles_wraparound_sets_nc) {
     registers.pc = expected.pc = 0x4321;
     registers.x = expected.x = 0x00;
     registers.a = expected.a = 0x07;
-    expected.p |= N_FLAG | C_FLAG;
+    expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
     registers.p |= Z_FLAG;
 
     stage_instruction(CMP_INXIND);
@@ -2013,7 +2013,7 @@ TEST_F(CpuTest, cmp_zero_x_sets_zc) {
     registers.a = expected.a = 0x07;
     registers.x = expected.x = 0xED;
     registers.p |= N_FLAG;
-    expected.p |= Z_FLAG | C_FLAG;
+    expected.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
 
     stage_instruction(CMP_ZEROX);
 
