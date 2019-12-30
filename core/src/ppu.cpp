@@ -48,7 +48,8 @@ uint8_t Ppu::read_byte(uint16_t addr) {
             read_buffer_ = byte;
             byte = tmp_buffer;
         } else {
-            read_buffer_ = mmu_->read_byte(registers_->vram_addr - 0x1000);
+            read_buffer_ = mmu_->read_byte(
+                    registers_->vram_addr - static_cast<uint16_t>(0x1000));
         }
         increment_vram_address();
     } else {
@@ -64,7 +65,7 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
         // enabled (bit 7). If this is the case and we currently are in
         // vertical blanking a NMI shall be generated.
         registers_->ctrl = byte;
-        uint16_t name_table_bits = (byte & 3u);
+        auto name_table_bits = static_cast<uint16_t>(byte & 3u);
         registers_->temp_vram_addr &=
                 static_cast<uint16_t>(0b1111'0011'1111'1111);
         registers_->temp_vram_addr |=
@@ -80,7 +81,7 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
     } else if (addr == kPpuScroll) {
         if (registers_->write_toggle) { // Second write, Y scroll
             uint16_t y_scroll = (byte >> 3u);
-            uint16_t fine_y_scroll = (byte & 7u);
+            auto fine_y_scroll = static_cast<uint16_t>(byte & 7u);
             registers_->temp_vram_addr &=
                     static_cast<uint16_t>(0b1000'1100'0001'1111);
             registers_->temp_vram_addr |= static_cast<uint16_t>(y_scroll << 5u);
@@ -92,7 +93,7 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
             registers_->temp_vram_addr &=
                     static_cast<uint16_t>(0b1111'1111'1110'0000);
             registers_->temp_vram_addr |= x_scroll;
-            registers_->fine_x_scroll = (byte & 7u);
+            registers_->fine_x_scroll = static_cast<uint8_t>(byte & 7u);
             registers_->write_toggle = true;
         }
     } else if (addr == kPpuAddr) {

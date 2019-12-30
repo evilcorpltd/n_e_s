@@ -98,7 +98,8 @@ TEST_F(CpuIntegrationTest, simple_program) {
     expected.a = 0x01;
     expected.x = 0x05;
     expected.y = 0x08;
-    expected.sp = registers.sp - 3; // PC (2 bytes) + P (1 byte)
+    expected.sp =
+            registers.sp - static_cast<uint8_t>(3); // PC (2 bytes) + P (1 byte)
     expected.pc = 0xDEAD;
 
     const int expected_cycles = 2 + 4 + 2 + 4 + 2 + 4 + 7;
@@ -143,7 +144,8 @@ TEST_F(CpuIntegrationTest, branch) {
     expected.a = 0x00;
     expected.x = 0x03;
     expected.y = 0x00;
-    expected.sp = registers.sp - 3; // PC (2 bytes) + P (1 byte)
+    expected.sp =
+            registers.sp - static_cast<uint8_t>(3); // PC (2 bytes) + P (1 byte)
     expected.pc = 0xDEAD;
     expected.p = C_FLAG | Z_FLAG;
 
@@ -207,7 +209,8 @@ TEST_F(CpuIntegrationTest, stack) {
     // address before writing to it, so we need to initialize the fake mmu with
     // some data at those addresses.
     for (uint8_t i = 0; i <= 0x20; ++i) {
-        mmu.write_byte(0x0200 + i, 0xBA);
+        mmu.write_byte(
+                static_cast<uint16_t>(0x0200) + i, static_cast<uint8_t>(0xBA));
     }
 
     set_reset_address(0x0600);
@@ -215,7 +218,8 @@ TEST_F(CpuIntegrationTest, stack) {
 
     expected.x = 0x10;
     expected.y = 0x20;
-    expected.sp = registers.sp - 3; // PC (2 bytes) + P (1 byte)
+    expected.sp =
+            registers.sp - static_cast<uint8_t>(3); // PC (2 bytes) + P (1 byte)
     expected.pc = 0xDEAD;
     expected.p = C_FLAG | Z_FLAG;
 
