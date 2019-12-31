@@ -28,10 +28,17 @@ struct CpuRegisters {
     uint8_t p; // status
 };
 
+struct CpuState {
+    std::optional<Opcode> current_opcode;
+    uint16_t start_pc{0u}; // Pc when this opcode was decoded
+    uint64_t start_cycle{0u}; // Cycle count when this opcode was decoded
+
+    uint64_t cycle{0u}; // Current cycle, increases every time the cpu executes
+};
+
 class IMos6502 : public ICpu {
 public:
-    // Returns the currently staged opcode.
-    virtual std::optional<Opcode> current_opcode() const = 0;
+    virtual CpuState state() const = 0;
 
     virtual void set_nmi(bool nmi) = 0;
 };

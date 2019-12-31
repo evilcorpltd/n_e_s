@@ -74,28 +74,33 @@ void Mos6502::execute() {
         }
         pipeline_.execute_step();
     }
+    ++state_.cycle;
 }
 
 // Most instruction timings are from https://robinli.eu/f/6502_cpu.txt
 Pipeline Mos6502::parse_next_instruction() {
-    Pipeline result;
-    const uint8_t raw_opcode{mmu_->read_byte(registers_->pc++)};
-    current_opcode_ = decode(raw_opcode);
-    const MemoryAccess memory_access =
-            get_memory_access(current_opcode_->family);
+    state_.start_pc = registers_->pc;
+    state_.start_cycle = state_.cycle;
 
-    if (current_opcode_->family == Family::Invalid) {
+    const uint8_t raw_opcode{mmu_->read_byte(registers_->pc++)};
+    state_.current_opcode = decode(raw_opcode);
+
+    const MemoryAccess memory_access =
+            get_memory_access(state_.current_opcode->family);
+
+    if (state_.current_opcode->family == Family::Invalid) {
         std::stringstream err;
         err << "Bad instruction: " << std::showbase << std::hex << +raw_opcode;
         err << " @ " << registers_->pc - 1;
         throw std::logic_error(err.str());
     }
 
-    if (current_opcode_->address_mode == AddressMode::Immediate) {
+    if (state_.current_opcode->address_mode == AddressMode::Immediate) {
         effective_address_ = registers_->pc++;
     }
 
-    switch (current_opcode_->instruction) {
+    Pipeline result;
+    switch (state_.current_opcode->instruction) {
     case Instruction::BrkImplied:
         result.push([=]() {
             // Dummy read
@@ -127,7 +132,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::BitZeropage:
     case Instruction::BitAbsolute:
         result.append(create_addressing_steps(
-                current_opcode_->address_mode, memory_access));
+                state_.current_opcode->address_mode, memory_access));
 
         result.push([=]() {
             const uint8_t value = mmu_->read_byte(effective_address_);
@@ -153,7 +158,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::AndAbsolute:
     case Instruction::AndAbsoluteX:
     case Instruction::AndAbsoluteY:
-        result.append(create_and_instruction(*current_opcode_));
+        result.append(create_and_instruction(*state_.current_opcode));
         break;
     case Instruction::ClcImplied:
         result.push([=]() { clear_flag(C_FLAG); });
@@ -210,7 +215,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::AdcAbsoluteY:
     case Instruction::AdcIndirectX:
     case Instruction::AdcIndirectY:
-        result.append(create_add_instruction(*current_opcode_));
+        result.append(create_add_instruction(*state_.current_opcode));
         break;
     case Instruction::SbcZeropage:
     case Instruction::SbcZeropageX:
@@ -220,7 +225,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::SbcAbsoluteY:
     case Instruction::SbcIndirectX:
     case Instruction::SbcIndirectY:
-        result.append(create_sub_instruction(*current_opcode_));
+        result.append(create_sub_instruction(*state_.current_opcode));
         break;
     case Instruction::PlaImplied:
         result.push([=]() {
@@ -285,7 +290,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::StyZeropage:
     case Instruction::StyAbsolute:
     case Instruction::StyZeropageX:
-        result.append(create_store_instruction(*current_opcode_));
+        result.append(create_store_instruction(*state_.current_opcode));
         break;
     case Instruction::TxsImplied:
         result.push([=]() { registers_->sp = registers_->x; });
@@ -345,7 +350,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::LdyAbsoluteX:
     case Instruction::LdaAbsoluteX:
     case Instruction::LdxAbsoluteY:
-        result.append(create_load_instruction(*current_opcode_));
+        result.append(create_load_instruction(*state_.current_opcode));
         break;
     case Instruction::BcsRelative:
         result.append(create_branch_instruction(
@@ -375,18 +380,18 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::CmpAbsoluteY:
     case Instruction::CmpIndirectX:
     case Instruction::CmpIndirectY:
-        result.append(create_compare_instruction(*current_opcode_));
+        result.append(create_compare_instruction(*state_.current_opcode));
         break;
     case Instruction::NopImplied:
         result.push([]() { /* Do nothing. */ });
         break;
     case Instruction::IncZeropage:
     case Instruction::IncZeropageX:
-        result.append(create_inc_instruction(*current_opcode_));
+        result.append(create_inc_instruction(*state_.current_opcode));
         break;
     case Instruction::DecZeropage:
     case Instruction::DecZeropageX:
-        result.append(create_dec_instruction(*current_opcode_));
+        result.append(create_dec_instruction(*state_.current_opcode));
         break;
     case Instruction::InxImplied:
         result.push([=]() {
@@ -427,7 +432,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::EorAbsolute:
     case Instruction::EorAbsoluteX:
     case Instruction::EorAbsoluteY:
-        result.append(create_eor_instruction(*current_opcode_));
+        result.append(create_eor_instruction(*state_.current_opcode));
         break;
     case RolAccumulator:
         result.push([=]() {
@@ -460,7 +465,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::OraAbsolute:
     case Instruction::OraAbsoluteY:
     case Instruction::OraAbsoluteX:
-        result.append(create_ora_instruction(*current_opcode_));
+        result.append(create_ora_instruction(*state_.current_opcode));
         break;
     }
     return result;
@@ -473,8 +478,8 @@ void Mos6502::reset() {
     registers_->pc = mmu_->read_word(kResetAddress);
 }
 
-std::optional<Opcode> Mos6502::current_opcode() const {
-    return current_opcode_;
+CpuState Mos6502::state() const {
+    return state_;
 }
 
 void Mos6502::set_nmi(bool nmi) {

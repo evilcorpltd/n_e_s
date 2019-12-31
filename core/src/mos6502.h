@@ -17,7 +17,9 @@ public:
     // ICpu
     void execute() override;
     void reset() override;
-    std::optional<Opcode> current_opcode() const override;
+
+    // IMos6502
+    CpuState state() const override;
 
     void set_nmi(bool nmi) override;
 
@@ -45,7 +47,7 @@ private:
 
     Stack stack_;
 
-    std::optional<Opcode> current_opcode_;
+    CpuState state_;
 
     // Set to true if a nmi interrupt should be exectued.
     bool nmi_{false};

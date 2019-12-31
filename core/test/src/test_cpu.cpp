@@ -688,22 +688,38 @@ TEST_F(CpuTest, reset_clears_pipeline) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, current_opcode_returns_empty) {
-    const auto opcode = cpu->current_opcode();
+TEST_F(CpuTest, state_is_initialized) {
+    const auto state = cpu->state();
 
-    EXPECT_FALSE(opcode.has_value());
+    EXPECT_FALSE(state.current_opcode.has_value());
+    EXPECT_EQ(0u, state.start_pc);
+    EXPECT_EQ(0u, state.start_cycle);
+    EXPECT_EQ(0u, state.cycle);
 }
 
-TEST_F(CpuTest, current_opcode_returns_instruction) {
+TEST_F(CpuTest, state_opcode_returns_instruction) {
+    registers.pc = 0x1234;
     stage_instruction(PHP);
     step_execution(1);
 
-    const auto opcode = cpu->current_opcode();
+    const CpuState state = cpu->state();
+    const auto opcode = state.current_opcode;
+
+    EXPECT_EQ(0u, state.start_cycle);
+    EXPECT_EQ(0x1234, state.start_pc);
+    EXPECT_EQ(1u, state.cycle);
 
     EXPECT_TRUE(opcode.has_value());
     EXPECT_EQ(Instruction::PhpImplied, opcode->instruction);
     EXPECT_EQ(Family::PHP, opcode->family);
     EXPECT_EQ(AddressMode::Implied, opcode->address_mode);
+
+    // Only cycle should change
+    step_execution(1);
+    const CpuState next_state = cpu->state();
+    EXPECT_EQ(0u, next_state.start_cycle);
+    EXPECT_EQ(0x1234, next_state.start_pc);
+    EXPECT_EQ(2u, next_state.cycle);
 }
 
 TEST_F(CpuTest, unsupported_instruction) {
