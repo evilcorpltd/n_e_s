@@ -15,7 +15,7 @@ using testing::Return;
 namespace {
 
 constexpr uint8_t u16_to_u8(uint16_t u16) {
-    return u16 % 0x100;
+    return static_cast<uint8_t>(u16 % static_cast<uint16_t>(0x100));
 }
 
 const uint16_t kStackOffset = 0x0100;
@@ -168,7 +168,7 @@ public:
             int8_t offset,
             uint8_t expected_cycles) {
         expected.p = registers.p = branch_flag;
-        expected.pc = registers.pc + 2 + offset;
+        expected.pc = registers.pc + static_cast<uint8_t>(2) + offset;
 
         EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(offset));
 
@@ -580,8 +580,10 @@ public:
         stage_instruction(instruction);
         expected.pc += 2;
 
-        const uint8_t lower_address = effective_address & 0x00FFu;
-        const uint8_t upper_address = (effective_address & 0xFF00u) >> 8u;
+        const auto lower_address = static_cast<uint8_t>(
+                effective_address & static_cast<uint16_t>(0x00FFu));
+        const auto upper_address = static_cast<uint8_t>(
+                static_cast<uint16_t>(effective_address & 0xFF00u) >> 8u);
 
         EXPECT_CALL(mmu, read_byte(start_pc + 1))
                 .WillOnce(Return(lower_address));
@@ -599,8 +601,10 @@ public:
         stage_instruction(instruction);
         expected.pc += 2;
 
-        const uint8_t lower_address = effective_address & 0x00FFu;
-        const uint8_t upper_address = (effective_address & 0xFF00u) >> 8u;
+        const auto lower_address = static_cast<uint8_t>(
+                effective_address & static_cast<uint16_t>(0x00FFu));
+        const auto upper_address =
+                static_cast<uint8_t>((effective_address & 0xFF00u) >> 8u);
 
         EXPECT_CALL(mmu, read_byte(start_pc + 1))
                 .WillOnce(Return(lower_address));
@@ -927,7 +931,7 @@ TEST_F(CpuTest, plp) {
     registers.sp = 0x0A;
     registers.p = 0xBB;
 
-    expected.sp = registers.sp + 1u;
+    expected.sp = registers.sp + static_cast<uint8_t>(1u);
     expected.p = 0x12;
 
     EXPECT_CALL(mmu, read_byte(kStackOffset + expected.sp))
@@ -951,7 +955,8 @@ TEST_F(CpuTest, jsr) {
     stage_instruction(JSR);
     expected.pc = 0xDEAD;
 
-    const uint8_t expected_pc_stack_addr = expected.sp - 1;
+    const uint8_t expected_pc_stack_addr =
+            expected.sp - static_cast<uint8_t>(1);
     expected.sp -= 2; // 1 word
 
     EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0xAD));
@@ -1421,7 +1426,7 @@ TEST_F(CpuTest, pla_sets_z_clears_n) {
     registers.a = 0xBB;
     registers.p = N_FLAG;
 
-    expected.sp = registers.sp + 1u;
+    expected.sp = registers.sp + static_cast<uint8_t>(1u);
     expected.a = 0x00;
     expected.p = Z_FLAG;
 
@@ -1438,7 +1443,7 @@ TEST_F(CpuTest, pla_sets_n_clears_z) {
     registers.a = 0xBB;
     registers.p = Z_FLAG;
 
-    expected.sp = registers.sp + 1u;
+    expected.sp = registers.sp + static_cast<uint8_t>(1u);
     expected.a = 0x92;
     expected.p = N_FLAG;
 
@@ -1481,7 +1486,7 @@ TEST_F(CpuTest, rti) {
     stage_instruction(RTI);
     registers.sp = 0x0A;
     expected.p = 0xCD;
-    expected.sp = registers.sp + 3;
+    expected.sp = registers.sp + static_cast<uint8_t>(3);
     expected.pc = 0xDEAD;
 
     // Dummy read

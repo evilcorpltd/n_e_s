@@ -11,7 +11,7 @@ Nrom::Nrom(const INesHeader &h,
         : IRom(h),
           prg_rom_(std::move(prg_rom)),
           chr_rom_(std::move(chr_rom)),
-          prg_ram_(h.prg_ram_size * 8 * 1024) {
+          prg_ram_(static_cast<size_t>(h.prg_ram_size * 8 * 1024)) {
     if (prg_rom_.size() != 16 * 1024 && prg_rom_.size() != 32 * 1024) {
         throw std::invalid_argument("Invalid prg_rom size");
     }

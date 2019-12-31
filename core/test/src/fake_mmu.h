@@ -22,7 +22,8 @@ public:
 
     uint16_t read_word(uint16_t addr) const override {
         const uint8_t low = read_byte(addr);
-        const uint16_t upper = read_byte(addr + 1) << 8u;
+        const auto upper = static_cast<uint16_t>(
+                read_byte(addr + static_cast<uint8_t>(1)) << 8u);
         return low | upper;
     }
 
@@ -31,10 +32,10 @@ public:
     }
 
     void write_word(uint16_t addr, uint16_t word) override {
-        const uint8_t low = word & 0xFFu;
-        const uint8_t upper = word >> 8u;
+        const auto low = static_cast<uint8_t>(word & 0xFFu);
+        const auto upper = static_cast<uint8_t>(word >> 8u);
         write_byte(addr, low);
-        write_byte(addr + 1, upper);
+        write_byte(static_cast<uint16_t>(addr + 1), upper);
     }
 
 private:
