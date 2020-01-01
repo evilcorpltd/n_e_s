@@ -428,7 +428,11 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::SedImplied:
         result.push([=]() { set_flag(D_FLAG); });
         break;
+    case Instruction::EorIndirectX:
+    case Instruction::EorZeropage:
+    case Instruction::EorZeropageX:
     case Instruction::EorImmediate:
+    case Instruction::EorIndirectY:
     case Instruction::EorAbsolute:
     case Instruction::EorAbsoluteX:
     case Instruction::EorAbsoluteY:

@@ -46,12 +46,16 @@ enum Opcode : uint8_t {
     AND_ABSY = 0x39,
     AND_ABSX = 0x3D,
     RTI = 0x40,
+    EOR_INXIND = 0x41,
+    EOR_ZERO = 0x45,
     LSR_ACC = 0x4A,
     PHA = 0x48,
     EOR_IMM = 0x49,
     JMP = 0x4C,
     EOR_ABS = 0x4D,
     BVC = 0x50,
+    EOR_INDINX = 0x51,
+    EOR_ZEROX = 0x55,
     CLI = 0x58,
     EOR_ABSY = 0x59,
     EOR_ABSX = 0x5D,
@@ -2767,6 +2771,76 @@ TEST_F(CpuTest, eor_absy_without_page_crossing) {
 
     EXPECT_CALL(mmu, read_word(0x4322)).WillOnce(Return(0x5678));
     EXPECT_CALL(mmu, read_byte(0x5678 + 0x10)).WillOnce(Return(0b10100101));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, eor_indexed_indirect) {
+    registers.pc = expected.pc = 0x1000;
+    registers.x = expected.x = 0xED;
+    registers.a = 0xE0;
+    expected.a = 0x00;
+    expected.p = Z_FLAG;
+
+    stage_instruction(EOR_INXIND);
+
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x1001)).WillOnce(Return(0xAB));
+    EXPECT_CALL(mmu, read_word(u16_to_u8(0xAB + 0xED)))
+            .WillOnce(Return(0x0900));
+    EXPECT_CALL(mmu, read_byte(0x0900)).WillOnce(Return(0xE0));
+
+    step_execution(6);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, eor_indirect_indexed) {
+    registers.pc = expected.pc = 0x9000;
+    registers.y = expected.y = 0x10;
+    registers.a = 0x60;
+    registers.p = C_FLAG;
+    expected.a = 0x90;
+    expected.p = N_FLAG | C_FLAG;
+
+    stage_instruction(EOR_INDINX);
+
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x9001)).WillOnce(Return(0x42));
+    EXPECT_CALL(mmu, read_word(0x42)).WillOnce(Return(0x1234));
+
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0x10)).WillOnce(Return(0xF0));
+    step_execution(5);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuZeropageTest, eor_zero) {
+    registers.a = 0xF0;
+    expected.p = N_FLAG;
+    expected.a = 0xFF;
+    memory_content = 0x0F;
+
+    run_read_instruction(EOR_ZERO);
+}
+
+TEST_F(CpuTest, eor_zero_x) {
+    registers.pc = expected.pc = 0x5678;
+    registers.a = 0b10000000;
+    registers.x = expected.x = 0xED;
+    registers.p = V_FLAG | C_FLAG;
+
+    stage_instruction(EOR_ZEROX);
+
+    expected.a = 0b10000001;
+    expected.p = registers.p | N_FLAG;
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x5679)).WillOnce(Return(0x44));
+    EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED))).WillOnce(Return(0x01));
 
     step_execution(4);
     EXPECT_EQ(expected, registers);
