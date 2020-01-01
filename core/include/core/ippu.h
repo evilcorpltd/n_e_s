@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 
 namespace n_e_s::core {
 
@@ -23,6 +24,8 @@ public:
     virtual void write_byte(uint16_t addr, uint8_t byte) = 0;
 
     virtual void execute() = 0;
+
+    virtual void set_nmi_handler(const std::function<void()> &nmi_handler) = 0;
 };
 
 } // namespace n_e_s::core

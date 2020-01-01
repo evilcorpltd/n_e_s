@@ -1,5 +1,6 @@
 #include "core/cpu_factory.h"
 
+#include "fake_ppu.h"
 #include "icpu_helpers.h"
 #include "mock_mmu.h"
 
@@ -148,7 +149,8 @@ public:
     CpuTest()
             : registers(),
               mmu(),
-              cpu{CpuFactory::create_mos6502(&registers, &mmu)},
+              ppu(),
+              cpu{CpuFactory::create_mos6502(&registers, &mmu, &ppu)},
               expected() {
         registers.sp = expected.sp = 0xFF;
     }
@@ -436,6 +438,7 @@ public:
 
     CpuRegisters registers;
     NiceMock<MockMmu> mmu;
+    FakePpu ppu;
     std::unique_ptr<IMos6502> cpu;
 
     CpuRegisters expected;

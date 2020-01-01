@@ -29,6 +29,7 @@ namespace n_e_s::core {
 Ppu::Ppu(PpuRegisters *registers, IMmu *mmu)
         : registers_(registers),
           mmu_(mmu),
+          on_nmi_([] {}),
           scanline_(0),
           cycle_(0),
           read_buffer_(0) {}
@@ -128,6 +129,10 @@ void Ppu::execute() {
     update_counters();
 }
 
+void Ppu::set_nmi_handler(const std::function<void()> &on_nmi) {
+    on_nmi_ = on_nmi;
+}
+
 void Ppu::update_counters() {
     if (cycle_ == kLastCycleInScanline) {
         cycle_ = 0;
@@ -194,6 +199,7 @@ void Ppu::execute_post_render_scanline() {}
 void Ppu::execute_vblank_scanline() {
     if (cycle_ == 1) {
         set_vblank_flag();
+        on_nmi_();
     }
 }
 
