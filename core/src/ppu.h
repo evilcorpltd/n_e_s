@@ -16,9 +16,14 @@ public:
 
     void execute() override;
 
+    void set_nmi_handler(const std::function<void()> &on_nmi) override;
+
 private:
     PpuRegisters *const registers_;
     IMmu *const mmu_;
+
+    std::function<void()> on_nmi_;
+
     uint16_t scanline_;
     uint16_t cycle_;
     uint8_t read_buffer_;

@@ -6,8 +6,12 @@ namespace n_e_s::core {
 
 std::unique_ptr<IMos6502> CpuFactory::create_mos6502(
         CpuRegisters *const registers,
-        IMmu *const mmu) {
-    return std::make_unique<Mos6502>(registers, mmu);
+        IMmu *const mmu,
+        IPpu *const ppu) {
+    auto cpu = std::make_unique<Mos6502>(registers, mmu);
+    auto ptr = cpu.get();
+    ppu->set_nmi_handler([ptr]() { ptr->set_nmi(true); });
+    return cpu;
 }
 
 } // namespace n_e_s::core

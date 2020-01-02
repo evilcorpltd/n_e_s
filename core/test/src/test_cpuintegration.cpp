@@ -1,6 +1,7 @@
 #include "core/cpu_factory.h"
 
 #include "fake_mmu.h"
+#include "fake_ppu.h"
 #include "icpu_helpers.h"
 
 #include <gtest/gtest.h>
@@ -19,7 +20,8 @@ public:
     CpuIntegrationTest()
             : registers(),
               mmu(),
-              cpu{CpuFactory::create_mos6502(&registers, &mmu)},
+              ppu(),
+              cpu{CpuFactory::create_mos6502(&registers, &mmu, &ppu)},
               expected() {
         registers.sp = expected.sp = 0xFF;
     }
@@ -59,6 +61,7 @@ public:
 
     CpuRegisters registers;
     FakeMmu mmu;
+    FakePpu ppu;
     std::unique_ptr<ICpu> cpu;
 
     CpuRegisters expected;

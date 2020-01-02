@@ -44,7 +44,9 @@ public:
               ppu(PpuFactory::create(&ppu_registers, ppu_mmu.get())),
               mmu(MmuFactory::create(
                       MemBankFactory::create_nes_mem_banks(ppu.get()))),
-              cpu(CpuFactory::create_mos6502(&cpu_registers, mmu.get())) {
+              cpu(CpuFactory::create_mos6502(&cpu_registers,
+                      mmu.get(),
+                      ppu.get())) {
         // P should be set to 0x34 according to the information here:
         // https://wiki.nesdev.com/w/index.php/CPU_power_up_state
         // However, nestest sets p to 0x24 instead. We do that for now as well.
@@ -80,7 +82,7 @@ public:
         cpu_membanks.push_back(std::move(rom));
 
         mmu = MmuFactory::create(std::move(cpu_membanks));
-        cpu = CpuFactory::create_mos6502(&cpu_registers, mmu.get());
+        cpu = CpuFactory::create_mos6502(&cpu_registers, mmu.get(), ppu.get());
 
         reset();
     }

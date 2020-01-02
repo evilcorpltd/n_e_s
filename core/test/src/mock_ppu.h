@@ -12,6 +12,9 @@ public:
     MOCK_METHOD2(write_byte, void(uint16_t addr, uint8_t byte));
 
     MOCK_METHOD0(execute, void());
+
+    MOCK_METHOD1(set_nmi_handler,
+            void(const std::function<void()> &nmi_handler));
 };
 
 } // namespace n_e_s::core::test

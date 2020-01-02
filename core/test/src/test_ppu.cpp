@@ -71,6 +71,18 @@ TEST_F(PpuTest, clear_status_when_reading_status) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(PpuTest, nmi_is_triggered_when_it_should) {
+    bool triggered = false;
+    ppu->set_nmi_handler([&]() { triggered = true; });
+
+    // Nmi shouldn't get triggered before the start of vblanking.
+    step_execution(341 * 241 + 1);
+    ASSERT_FALSE(triggered);
+
+    step_execution(1);
+    ASSERT_TRUE(triggered);
+}
+
 TEST_F(PpuTest, set_vblank_flag_during_vertical_blanking) {
     registers.status = 0x00;
     expected.status = 0x80;

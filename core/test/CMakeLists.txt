@@ -14,6 +14,7 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(${PROJECT_NAME}
     src/fake_mmu.h
+    src/fake_ppu.h
     src/hexprinter.h
     src/icpu_helpers.cpp
     src/icpu_helpers.h
