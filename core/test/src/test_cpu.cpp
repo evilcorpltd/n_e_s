@@ -27,6 +27,7 @@ const uint16_t kNmiAddress = 0xFFFA;
 // implementation. Look at a data sheet and don't cheat!
 enum Opcode : uint8_t {
     BRK = 0x00,
+    ORA_ZERO = 0x05,
     PHP = 0x08,
     ORA_IMM = 0x09,
     ORA_ABS = 0x0D,
@@ -2956,6 +2957,15 @@ TEST_F(CpuTest, ora_absx_with_page_crossing) {
 
     step_execution(5);
     EXPECT_EQ(expected, registers);
+}
+TEST_F(CpuZeropageTest, ora_zero_set_neg_clears_zero) {
+    registers.a = 0b00000000;
+    registers.p = Z_FLAG;
+    expected.a = 0b10101010;
+    expected.p = N_FLAG;
+    memory_content = 0b10101010;
+
+    run_read_instruction(ORA_ZERO);
 }
 
 } // namespace
