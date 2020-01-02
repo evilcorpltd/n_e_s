@@ -217,10 +217,18 @@ Opcode decode(const uint8_t op) {
         return {Family::SED, SbcAbsoluteY, AddressMode::AbsoluteY};
     case SbcAbsoluteX:
         return {Family::SED, SbcAbsoluteX, AddressMode::AbsoluteX};
+    case EorIndirectX:
+        return {Family::EOR, EorIndirectX, AddressMode::IndexedIndirect};
+    case EorZeropage:
+        return {Family::EOR, EorZeropage, AddressMode::Zeropage};
     case EorImmediate:
         return {Family::EOR, EorImmediate, AddressMode::Immediate};
     case EorAbsolute:
         return {Family::EOR, EorAbsolute, AddressMode::Absolute};
+    case EorIndirectY:
+        return {Family::EOR, EorIndirectY, AddressMode::IndirectIndexed};
+    case EorZeropageX:
+        return {Family::EOR, EorZeropageX, AddressMode::ZeropageX};
     case EorAbsoluteX:
         return {Family::EOR, EorAbsoluteX, AddressMode::AbsoluteX};
     case EorAbsoluteY:
