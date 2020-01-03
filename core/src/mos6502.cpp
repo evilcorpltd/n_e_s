@@ -466,6 +466,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::OraAbsoluteY:
     case Instruction::OraAbsoluteX:
     case Instruction::OraZeropage:
+    case Instruction::OraZeropageX:
         result.append(create_ora_instruction(*state_.current_opcode));
         break;
     }

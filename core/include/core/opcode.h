@@ -15,7 +15,7 @@ enum Instruction : uint8_t {
     OraAbsolute = 0x0D,
     // AslAbsolute = 0x0E,
     BplRelative = 0x10,
-    // OraZeropageX = 0x15,
+    OraZeropageX = 0x15,
     // AslZeropageX = 0x16,
     ClcImplied = 0x18,
     OraAbsoluteY = 0x19,
