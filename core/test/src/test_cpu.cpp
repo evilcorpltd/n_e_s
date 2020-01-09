@@ -2980,7 +2980,8 @@ TEST_F(CpuTest, ora_zero_x) {
     expected.a = 0b00110011;
 
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0x44))).WillOnce(Return(0b00100011));
+    EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0x44)))
+            .WillOnce(Return(0b00100011));
 
     step_execution(4);
     EXPECT_EQ(expected, registers);
