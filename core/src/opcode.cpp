@@ -245,6 +245,10 @@ Opcode decode(const uint8_t op) {
         return {Family::ORA, OraAbsoluteY, AddressMode::AbsoluteY};
     case OraAbsoluteX:
         return {Family::ORA, OraAbsoluteX, AddressMode::AbsoluteX};
+    case OraZeropage:
+        return {Family::ORA, OraZeropage, AddressMode::Zeropage};
+    case OraZeropageX:
+        return {Family::ORA, OraZeropageX, AddressMode::ZeropageX};
     default:
         // Since this is an invalid opcode the instruction and address mode
         // have no real meaning, so we just use 0, 0 for them.

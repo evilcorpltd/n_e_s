@@ -7,7 +7,7 @@ namespace n_e_s::core {
 
 enum Instruction : uint8_t {
     BrkImplied = 0x00,
-    // OraZeropage = 0x05,
+    OraZeropage = 0x05,
     // AslZeropage = 0x06,
     PhpImplied = 0x08,
     OraImmediate = 0x09,
@@ -15,7 +15,7 @@ enum Instruction : uint8_t {
     OraAbsolute = 0x0D,
     // AslAbsolute = 0x0E,
     BplRelative = 0x10,
-    // OraZeropageX = 0x15,
+    OraZeropageX = 0x15,
     // AslZeropageX = 0x16,
     ClcImplied = 0x18,
     OraAbsoluteY = 0x19,

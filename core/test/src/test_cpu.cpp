@@ -28,10 +28,12 @@ const uint16_t kNmiAddress = 0xFFFA;
 // implementation. Look at a data sheet and don't cheat!
 enum Opcode : uint8_t {
     BRK = 0x00,
+    ORA_ZERO = 0x05,
     PHP = 0x08,
     ORA_IMM = 0x09,
     ORA_ABS = 0x0D,
     BPL = 0x10,
+    ORA_ZEROX = 0x15,
     CLC = 0x18,
     ORA_ABSY = 0x19,
     ORA_ABSX = 0x1D,
@@ -3034,5 +3036,31 @@ TEST_F(CpuTest, ora_absx_with_page_crossing) {
     step_execution(5);
     EXPECT_EQ(expected, registers);
 }
+TEST_F(CpuZeropageTest, ora_zero_set_neg_clears_zero) {
+    registers.a = 0b00000000;
+    registers.p = Z_FLAG;
+    expected.a = 0b10101010;
+    expected.p = N_FLAG;
+    memory_content = 0b10101010;
 
+    run_read_instruction(ORA_ZERO);
+}
+TEST_F(CpuTest, ora_zero_x) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = 0b00110000;
+    registers.p = Z_FLAG | N_FLAG;
+    registers.x = expected.x = 0x44;
+
+    stage_instruction(ORA_ZEROX);
+
+    expected.pc += 1;
+    expected.a = 0b00110011;
+
+    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
+    EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0x44)))
+            .WillOnce(Return(0b00100011));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
 } // namespace
