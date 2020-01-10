@@ -317,14 +317,14 @@ public:
     }
 
     void compare_abs_sets_n_c(uint8_t *reg, uint8_t *expected_reg) {
-        *expected_reg = *reg = 0;
+        *expected_reg = *reg = 128;
         expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
         registers.p |= Z_FLAG;
         expected.pc += 2;
 
         EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x67));
         EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x45));
-        EXPECT_CALL(mmu, read_byte(0x4567)).WillOnce(Return(127));
+        EXPECT_CALL(mmu, read_byte(0x4567)).WillOnce(Return(0));
 
         step_execution(4);
         EXPECT_EQ(expected, registers);
@@ -479,10 +479,10 @@ public:
     void compare_sets_n_clears_z_c(uint8_t instruction,
             uint8_t *reg,
             uint8_t *expected_reg) {
-        *expected_reg = *reg = 0b10001111;
+        *expected_reg = *reg = 0b00000001;
         expected.p |= N_FLAG;
         registers.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
-        memory_content = 0b00001000;
+        memory_content = 0b10000001;
 
         run_instruction(instruction);
     }
@@ -490,10 +490,10 @@ public:
     void compare_sets_c_clears_n_z(uint8_t instruction,
             uint8_t *reg,
             uint8_t *expected_reg) {
-        *expected_reg = *reg = 0x02;
+        *expected_reg = *reg = 0x1A;
         expected.p |= C_FLAG;
         registers.p |= static_cast<uint8_t>(Z_FLAG | N_FLAG);
-        memory_content = 0xFA;
+        memory_content = 0x02;
 
         run_instruction(instruction);
     }
@@ -512,10 +512,10 @@ public:
     void compare_sets_n_c(uint8_t instruction,
             uint8_t *reg,
             uint8_t *expected_reg) {
-        *expected_reg = *reg = 0;
+        *expected_reg = *reg = 128;
         expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
         registers.p |= Z_FLAG;
-        memory_content = 127;
+        memory_content = 0;
 
         run_instruction(instruction);
     }
@@ -579,10 +579,10 @@ public:
     void compare_sets_n_c(uint8_t instruction,
             uint8_t *reg,
             uint8_t *expected_reg) {
-        *expected_reg = *reg = 0;
+        *expected_reg = *reg = 128;
         expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
         registers.p |= Z_FLAG;
-        memory_content = 127;
+        memory_content = 0;
 
         run_read_instruction(instruction);
     }
@@ -663,10 +663,10 @@ public:
     void compare_abs_sets_n_c(uint8_t instruction,
             uint8_t *reg,
             uint8_t *expected_reg) {
-        *expected_reg = *reg = 0;
+        *expected_reg = *reg = 128;
         expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
         registers.p |= Z_FLAG;
-        memory_content = 127;
+        memory_content = 0;
         run_read_instruction(instruction);
     }
 
@@ -2022,7 +2022,7 @@ TEST_F(CpuTest, cmp_absy_sets_nc_with_pagecrossing) {
 TEST_F(CpuTest, cmp_indirect_indexed_with_pagecrossing_sets_nc) {
     registers.pc = expected.pc = 0x4321;
     registers.y = expected.y = 0xED;
-    registers.a = expected.a = 0x07;
+    registers.a = expected.a = 180;
     expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
     registers.p |= Z_FLAG;
 
@@ -2034,7 +2034,7 @@ TEST_F(CpuTest, cmp_indirect_indexed_with_pagecrossing_sets_nc) {
     EXPECT_CALL(mmu, read_word(0x42)).WillOnce(Return(0x1234));
 
     EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100)).WillOnce(Return(0x00));
-    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED)).WillOnce(Return(127));
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED)).WillOnce(Return(0x07));
     step_execution(6);
 
     EXPECT_EQ(expected, registers);
@@ -2043,7 +2043,7 @@ TEST_F(CpuTest, cmp_indirect_indexed_with_pagecrossing_sets_nc) {
 TEST_F(CpuTest, cmp_indirect_indexed_without_pagecrossing_sets_nc) {
     registers.pc = expected.pc = 0x4321;
     registers.y = expected.y = 0x0D;
-    registers.a = expected.a = 0x07;
+    registers.a = expected.a = 180;
     expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
     registers.p |= Z_FLAG;
 
@@ -2054,7 +2054,7 @@ TEST_F(CpuTest, cmp_indirect_indexed_without_pagecrossing_sets_nc) {
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
     EXPECT_CALL(mmu, read_word(0x42)).WillOnce(Return(0x1234));
 
-    EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D)).WillOnce(Return(127));
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D)).WillOnce(Return(0x07));
     step_execution(5);
 
     EXPECT_EQ(expected, registers);
@@ -2063,7 +2063,7 @@ TEST_F(CpuTest, cmp_indirect_indexed_without_pagecrossing_sets_nc) {
 TEST_F(CpuTest, cmp_indexed_indirect_sets_nc) {
     registers.pc = expected.pc = 0x4321;
     registers.x = expected.x = 0xED;
-    registers.a = expected.a = 0x07;
+    registers.a = expected.a = 180;
     expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
     registers.p |= Z_FLAG;
 
@@ -2074,7 +2074,7 @@ TEST_F(CpuTest, cmp_indexed_indirect_sets_nc) {
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0xAB));
     EXPECT_CALL(mmu, read_word(u16_to_u8(0xAB + 0xED)))
             .WillOnce(Return(0x1234));
-    EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(127));
+    EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(0x07));
 
     step_execution(6);
 
@@ -2084,7 +2084,7 @@ TEST_F(CpuTest, cmp_indexed_indirect_sets_nc) {
 TEST_F(CpuTest, cmp_indexed_indirect_handles_wraparound_sets_nc) {
     registers.pc = expected.pc = 0x4321;
     registers.x = expected.x = 0x00;
-    registers.a = expected.a = 0x07;
+    registers.a = expected.a = 180;
     expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
     registers.p |= Z_FLAG;
 
@@ -2095,7 +2095,7 @@ TEST_F(CpuTest, cmp_indexed_indirect_handles_wraparound_sets_nc) {
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0xFF));
     EXPECT_CALL(mmu, read_byte(0xFF)).WillOnce(Return(0x34));
     EXPECT_CALL(mmu, read_byte(0x00)).WillOnce(Return(0x12));
-    EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(127));
+    EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(0x07));
 
     step_execution(6);
 
