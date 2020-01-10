@@ -123,7 +123,7 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() {
             /* Do nothing. */
         });
-        result.push([=]() { stack_.push_byte(registers_->p); });
+        result.push([=]() { stack_.push_byte(registers_->p | B_FLAG); });
         break;
     case Instruction::BplRelative:
         result.append(create_branch_instruction(
