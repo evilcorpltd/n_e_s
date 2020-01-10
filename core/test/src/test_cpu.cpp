@@ -952,16 +952,16 @@ TEST_F(CpuAbsoluteTest, bit_abs_sets_negative_and_overflow) {
     run_read_instruction(BIT_ABS);
 }
 
-TEST_F(CpuTest, plp) {
+TEST_F(CpuTest, plp_clears_b_and_sets_bit_5) {
     stage_instruction(PLP);
     registers.sp = 0x0A;
     registers.p = 0xBB;
 
     expected.sp = registers.sp + static_cast<uint8_t>(1u);
-    expected.p = 0x12;
+    expected.p = static_cast<uint8_t>(FLAG_5 | C_FLAG) | N_FLAG;
 
     EXPECT_CALL(mmu, read_byte(kStackOffset + expected.sp))
-            .WillOnce(Return(0x12));
+            .WillOnce(Return(static_cast<uint8_t>(B_FLAG | C_FLAG) | N_FLAG));
 
     step_execution(4);
     EXPECT_EQ(expected, registers);
