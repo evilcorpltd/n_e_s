@@ -791,15 +791,16 @@ TEST_F(CpuTest, brk) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, php) {
+TEST_F(CpuTest, php_sets_b_flag) {
     stage_instruction(PHP);
     registers.sp = 0x0A;
-    registers.p = 0xBB;
+    registers.p = N_FLAG | Z_FLAG;
 
     expected.sp = 0x09;
     expected.p = registers.p;
 
-    EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp, registers.p));
+    EXPECT_CALL(
+            mmu, write_byte(kStackOffset + registers.sp, registers.p | B_FLAG));
 
     step_execution(3);
     EXPECT_EQ(expected, registers);
