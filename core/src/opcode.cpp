@@ -20,7 +20,7 @@ Opcode decode(const uint8_t op) {
     case BitZeropage:
         return {Family::BIT, BitZeropage, AddressMode::Zeropage};
     case PlpImplied:
-        return {Family::BIT, PlpImplied, AddressMode::Implied};
+        return {Family::PLP, PlpImplied, AddressMode::Implied};
     case AndImmediate:
         return {Family::AND, AndImmediate, AddressMode::Immediate};
     case BitAbsolute:
