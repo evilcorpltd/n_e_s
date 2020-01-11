@@ -12,6 +12,7 @@ using namespace n_e_s::core::test;
 namespace {
 
 const uint16_t kStackOffset = 0x0100;
+const uint16_t kNmiAddress = 0xFFFA;
 const uint16_t kResetAddress = 0xFFFC;
 const uint16_t kBrkAddress = 0xFFFE;
 
@@ -59,10 +60,14 @@ public:
         mmu.write_word(kBrkAddress, address);
     }
 
+    void set_nmi_address(uint16_t address) {
+        mmu.write_word(kNmiAddress, address);
+    }
+
     CpuRegisters registers;
     FakeMmu mmu;
     FakePpu ppu;
-    std::unique_ptr<ICpu> cpu;
+    std::unique_ptr<IMos6502> cpu;
 
     CpuRegisters expected;
 };
@@ -252,6 +257,50 @@ TEST_F(CpuIntegrationTest, stack) {
     for (uint8_t i = 3; i < 0x10; ++i) {
         EXPECT_EQ(i, mmu.read_byte(kStackOffset + 0xFF - i));
     }
+}
+
+TEST_F(CpuIntegrationTest, nmi) {
+    // Address  Hexdump   Dissassembly
+    // -------------------------------
+    // $0600    a2 00     LDX #$00
+    // $0602    a0 00     LDY #$00
+    // $0604    e8        INX
+    // $0605    4c 04 06  JMP $0604
+    // nmi:
+    // $1000    c8        INY
+    // $1001    40        RTI
+    load_hex_dump(0x0600,
+            {0xa2, 0x00, 0xa0, 0x00, 0xe8, 0x4c, 0x04, 0x06, 0x00, 0x00});
+    load_hex_dump(0x1000, {0xc8, 0x40, 0x00, 0x00});
+
+    set_reset_address(0x0600);
+    set_break_address(0xDEAD);
+    set_nmi_address(0x1000);
+
+    expected.x = 0x05;
+    expected.y = 0x00;
+    expected.pc = 0x0604;
+
+    cpu->reset();
+    // Run the loop 5 times to increase x
+    step_execution(2 + 2 + (2 + 3) * 5); // ldx + ldy + (inx + jmp) * 5
+    EXPECT_EQ(expected, registers);
+
+    // Before jmp is finised, trigger an nmi
+    step_execution(2 + 3 - 1); // inx + jmp - 1
+    cpu->set_nmi(true);
+
+    // jmp should finish before jumping to nmi
+    expected.x = 0x06;
+    step_execution(1);
+    EXPECT_EQ(expected, registers);
+
+    // Run rti subroutine and jump back
+    expected.y = 0x01;
+    expected.pc = 0x0604;
+    expected.p |= FLAG_5;
+    step_execution(7 + 2 + 6); // nmi + iny + rti
+    EXPECT_EQ(expected, registers);
 }
 
 } // namespace

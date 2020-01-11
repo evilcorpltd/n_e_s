@@ -66,12 +66,13 @@ Mos6502::Mos6502(CpuRegisters *const registers, IMmu *const mmu)
 
 void Mos6502::execute() {
     if (pipeline_.done()) {
-        pipeline_ = parse_next_instruction();
-    } else {
         if (nmi_) {
             pipeline_ = create_nmi();
             nmi_ = false;
+        } else {
+            pipeline_ = parse_next_instruction();
         }
+    } else {
         pipeline_.execute_step();
     }
     ++state_.cycle;
@@ -547,14 +548,13 @@ void Mos6502::set_overflow(uint8_t reg_value,
 }
 
 Pipeline Mos6502::create_nmi() {
+    // Dummy read
+    mmu_->read_byte(registers_->pc);
     Pipeline result;
+
     result.push([=]() {
         // Dummy read
-        mmu_->read_byte(registers_->pc++);
-    });
-    result.push([=]() {
-        // Dummy read
-        mmu_->read_byte(registers_->pc++);
+        mmu_->read_byte(registers_->pc);
     });
     result.push([=]() {
         stack_.push_byte(static_cast<uint8_t>(registers_->pc >> 8u));

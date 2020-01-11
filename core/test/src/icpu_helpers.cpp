@@ -24,7 +24,7 @@ void PrintTo(const CpuRegisters &r, std::ostream *os) {
     *os << " P: ";
     *os << (r.p & N_FLAG ? "N" : "-");
     *os << (r.p & V_FLAG ? "V" : "-");
-    *os << "-";
+    *os << (r.p & FLAG_5 ? "5" : "-");
     *os << (r.p & B_FLAG ? "B" : "-");
     *os << (r.p & D_FLAG ? "D" : "-");
     *os << (r.p & I_FLAG ? "I" : "-");
