@@ -14,12 +14,12 @@ environment:
   - TOOLCHAIN: Msvc 2019 x86
     GENERATOR: Visual Studio 16 2019
     CMAKE_ARGS: -A Win32
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
 
   - TOOLCHAIN: Msvc 2019 x64
     GENERATOR: Visual Studio 16 2019
     CMAKE_ARGS: -A x64
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
 
   - TOOLCHAIN: Msvc 2017 x64/Ninja
     GENERATOR: Ninja
