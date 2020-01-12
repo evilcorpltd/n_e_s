@@ -454,17 +454,8 @@ Pipeline Mos6502::parse_next_instruction() {
         result.append(create_eor_instruction(*state_.current_opcode));
         break;
     case RolAccumulator:
-        result.push([=]() {
-            const uint8_t carry = registers_->p & C_FLAG
-                                          ? static_cast<uint8_t>(0x01)
-                                          : static_cast<uint8_t>(0x00);
-            const uint16_t temp_result =
-                    static_cast<uint16_t>(registers_->a << 1u) | carry;
-            registers_->a = static_cast<uint8_t>(temp_result);
-            set_carry(temp_result > 0xFF);
-            set_zero(registers_->a);
-            set_negative(registers_->a);
-        });
+        result.append(
+                create_left_shift_instruction(*state_.current_opcode, true));
         break;
     case Instruction::RorAccumulator:
         result.push([=]() {
