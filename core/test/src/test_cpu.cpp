@@ -29,9 +29,12 @@ const uint16_t kNmiAddress = 0xFFFA;
 enum Opcode : uint8_t {
     BRK = 0x00,
     ORA_ZERO = 0x05,
+    ASL_ZERO = 0x06,
     PHP = 0x08,
     ORA_IMM = 0x09,
+    ASL_ACC = 0x0A,
     ORA_ABS = 0x0D,
+    ASL_ABS = 0x0E,
     BPL = 0x10,
     ORA_ZEROX = 0x15,
     CLC = 0x18,
@@ -625,6 +628,31 @@ public:
         EXPECT_EQ(expected, registers);
     }
 
+    void run_readwrite_instruction(uint8_t instruction,
+            uint8_t new_memory_content) {
+        registers.pc = expected.pc = start_pc;
+        stage_instruction(instruction);
+        expected.pc += 2;
+
+        const auto lower_address = static_cast<uint8_t>(
+                effective_address & static_cast<uint16_t>(0x00FFu));
+        const auto upper_address =
+                static_cast<uint8_t>((effective_address & 0xFF00u) >> 8u);
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1))
+                .WillOnce(Return(lower_address));
+        EXPECT_CALL(mmu, read_byte(start_pc + 2))
+                .WillOnce(Return(upper_address));
+        EXPECT_CALL(mmu, read_byte(effective_address))
+                .WillOnce(Return(memory_content));
+        // Dummy write
+        EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
+        EXPECT_CALL(mmu, write_byte(effective_address, new_memory_content));
+
+        step_execution(6);
+        EXPECT_EQ(expected, registers);
+    }
+
     void compare_abs_sets_n_c(uint8_t instruction,
             uint8_t *reg,
             uint8_t *expected_reg) {
@@ -789,6 +817,41 @@ TEST_F(CpuTest, brk) {
     step_execution(7);
 
     EXPECT_EQ(expected, registers);
+}
+
+// ASL
+TEST_F(CpuTest, asl_acc_ignores_carry) {
+    stage_instruction(ASL_ACC);
+    registers.p = C_FLAG;
+    registers.a = 0b00110011;
+    expected.a = 0b01100110;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+TEST_F(CpuTest, asl_acc_set_c_and_z_flags_clears_n) {
+    stage_instruction(ASL_ACC);
+    registers.a = 0b10000000;
+    registers.p = N_FLAG;
+    expected.a = 0b00000000;
+    expected.p = C_FLAG | Z_FLAG;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+TEST_F(CpuZeropageTest, asl_zero_clears_c_z_sets_n) {
+    registers.p = C_FLAG | Z_FLAG;
+    expected.p = N_FLAG;
+    memory_content = 0b01010101;
+
+    run_readwrite_instruction(ASL_ZERO, 0b10101010);
+}
+TEST_F(CpuAbsoluteTest, asl_abs_sets_z_c) {
+    registers.p = N_FLAG;
+    expected.p = C_FLAG | Z_FLAG;
+    memory_content = 0b10000000;
+
+    run_readwrite_instruction(ASL_ABS, 0b00000000);
 }
 
 TEST_F(CpuTest, php_sets_b_flag) {

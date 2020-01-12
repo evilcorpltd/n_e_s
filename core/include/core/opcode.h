@@ -8,12 +8,12 @@ namespace n_e_s::core {
 enum Instruction : uint8_t {
     BrkImplied = 0x00,
     OraZeropage = 0x05,
-    // AslZeropage = 0x06,
+    AslZeropage = 0x06,
     PhpImplied = 0x08,
     OraImmediate = 0x09,
-    // AslAccumulator = 0x0A,
+    AslAccumulator = 0x0A,
     OraAbsolute = 0x0D,
-    // AslAbsolute = 0x0E,
+    AslAbsolute = 0x0E,
     BplRelative = 0x10,
     OraZeropageX = 0x15,
     // AslZeropageX = 0x16,
@@ -160,6 +160,7 @@ enum Instruction : uint8_t {
 enum class Family {
     Invalid,
     BRK,
+    ASL,
     INC,
     PHP,
     BPL,

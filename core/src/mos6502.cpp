@@ -119,6 +119,12 @@ Pipeline Mos6502::parse_next_instruction() {
             registers_->pc = pch | tmp_;
         });
         break;
+    case Instruction::AslZeropage:
+    case Instruction::AslAccumulator:
+    case Instruction::AslAbsolute:
+        result.append(
+                create_left_shift_instruction(*state_.current_opcode, false));
+        break;
     case Instruction::PhpImplied:
         result.push([=]() {
             /* Do nothing. */
@@ -168,7 +174,8 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() { clear_flag(C_FLAG); });
         break;
     case Instruction::JsrAbsolute:
-        result.append(create_absolute_addressing_steps());
+        result.append(create_absolute_addressing_steps(
+                get_memory_access(state_.current_opcode->family)));
         result.push([=]() {
             /* Do nothing. */
         });
@@ -787,6 +794,36 @@ Pipeline Mos6502::create_ora_instruction(Opcode opcode) {
     return result;
 }
 
+Pipeline Mos6502::create_left_shift_instruction(Opcode opcode,
+        bool shift_in_carry) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
+    Pipeline result;
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
+
+    result.push([=]() {
+        const uint8_t source_value =
+                opcode.address_mode == AddressMode::Accumulator ? registers_->a
+                                                                : tmp_;
+
+        uint16_t temp_result = source_value << 1u;
+        if (shift_in_carry) {
+            const uint8_t carry = registers_->p & C_FLAG ? 0x01u : 0x00u;
+            temp_result |= carry;
+        }
+        const auto result_8bit = static_cast<uint8_t>(temp_result);
+        set_carry(temp_result > 0xFF);
+        set_zero(result_8bit);
+        set_negative(result_8bit);
+
+        if (opcode.address_mode == AddressMode::Accumulator) {
+            registers_->a = result_8bit;
+        } else {
+            mmu_->write_byte(effective_address_, result_8bit);
+        }
+    });
+    return result;
+}
+
 Pipeline Mos6502::create_addressing_steps(AddressMode address_mode,
         const MemoryAccess access) {
     Pipeline result;
@@ -804,7 +841,7 @@ Pipeline Mos6502::create_addressing_steps(AddressMode address_mode,
                 &registers_->y, access));
         break;
     case AddressMode::Absolute:
-        result.append(create_absolute_addressing_steps());
+        result.append(create_absolute_addressing_steps(access));
         break;
     case AddressMode::AbsoluteX:
         result.append(create_absolute_indexed_addressing_steps(
@@ -878,17 +915,20 @@ Pipeline Mos6502::create_zeropage_indexed_addressing_steps(
     return result;
 }
 
-Pipeline Mos6502::create_absolute_addressing_steps() {
+Pipeline Mos6502::create_absolute_addressing_steps(const MemoryAccess access) {
     Pipeline result;
+    result.push([=]() { tmp_ = mmu_->read_byte(registers_->pc++); });
     result.push([=]() {
-        tmp_ = mmu_->read_byte(registers_->pc);
-        ++registers_->pc;
+        const uint16_t upper = mmu_->read_byte(registers_->pc++) << 8u;
+        effective_address_ = upper | tmp_;
     });
-    result.push([=]() {
-        const uint16_t upper = mmu_->read_byte(registers_->pc) << 8u;
-        ++registers_->pc;
-        effective_address_ = tmp_ | upper;
-    });
+    if (access == MemoryAccess::ReadWrite) {
+        result.push([=]() { tmp_ = mmu_->read_byte(effective_address_); });
+        result.push([=]() {
+            // Extra write with the old value
+            mmu_->write_byte(effective_address_, tmp_);
+        });
+    }
     return result;
 }
 
