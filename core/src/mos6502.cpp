@@ -267,7 +267,11 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() {
             /* Do nothing. */
         });
-        result.push([=]() { registers_->p = stack_.pop_byte(); });
+        result.push([=]() {
+            registers_->p = stack_.pop_byte();
+            set_flag(FLAG_5);
+            clear_flag(B_FLAG);
+        });
         result.push([=]() { tmp_ = stack_.pop_byte(); });
         result.push([=]() {
             const uint16_t pch = stack_.pop_byte() << 8u;

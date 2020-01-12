@@ -1511,7 +1511,7 @@ TEST_F(CpuTest, rti) {
     registers.pc = 0x1234;
     stage_instruction(RTI);
     registers.sp = 0x0A;
-    expected.p = 0xCD;
+    expected.p = static_cast<uint8_t>(Z_FLAG | C_FLAG) | FLAG_5;
     expected.sp = registers.sp + static_cast<uint8_t>(3);
     expected.pc = 0xDEAD;
 
@@ -1519,7 +1519,7 @@ TEST_F(CpuTest, rti) {
     EXPECT_CALL(mmu, read_byte(0x1235));
 
     EXPECT_CALL(mmu, read_byte(kStackOffset + registers.sp + 1))
-            .WillOnce(Return(expected.p));
+            .WillOnce(Return(static_cast<uint8_t>(Z_FLAG | C_FLAG) | B_FLAG));
     EXPECT_CALL(mmu, read_byte(kStackOffset + registers.sp + 2))
             .WillOnce(Return(0xAD));
     EXPECT_CALL(mmu, read_byte(kStackOffset + registers.sp + 3))
