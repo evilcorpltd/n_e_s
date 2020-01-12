@@ -152,7 +152,11 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() {
             /* Do nothing. */
         });
-        result.push([=]() { registers_->p = stack_.pop_byte(); });
+        result.push([=]() {
+            registers_->p = stack_.pop_byte();
+            set_flag(FLAG_5);
+            clear_flag(B_FLAG);
+        });
         break;
     case Instruction::AndImmediate:
     case Instruction::AndAbsolute:
