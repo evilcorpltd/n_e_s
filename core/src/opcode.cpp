@@ -137,6 +137,8 @@ Opcode decode(const uint8_t op) {
         return {Family::LDX, LdxAbsolute, AddressMode::Absolute};
     case BcsRelative:
         return {Family::BCS, BcsRelative, AddressMode::Relative};
+    case LdaIndirectY:
+        return {Family::LDA, LdaIndirectY, AddressMode::IndirectIndexed};
     case LdyZeropageX:
         return {Family::LDY, LdyZeropageX, AddressMode::ZeropageX};
     case LdaZeropageX:

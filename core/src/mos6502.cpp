@@ -372,6 +372,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::LdaImmediate:
     case Instruction::LdaAbsolute:
     case Instruction::LdaZeropageX:
+    case Instruction::LdaIndirectY:
     case Instruction::LdxImmediate:
     case Instruction::LdxZeropage:
     case Instruction::LdxAbsolute:

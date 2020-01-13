@@ -107,7 +107,7 @@ enum Instruction : uint8_t {
     LdaAbsolute = 0xAD,
     LdxAbsolute = 0xAE,
     BcsRelative = 0xB0,
-    // LdaIndirectY = 0xB1,
+    LdaIndirectY = 0xB1,
     LdyZeropageX = 0xB4,
     LdaZeropageX = 0xB5,
     LdxZeropageY = 0xB6,
