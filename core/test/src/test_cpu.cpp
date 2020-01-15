@@ -799,6 +799,46 @@ public:
     uint8_t memory_content{0x42};
 };
 
+class CpuIndexedIndirectTest : public CpuTest {
+public:
+    void run_instruction(uint8_t instruction) {
+        registers.pc = expected.pc = start_pc;
+        registers.x = expected.x = 0xED;
+        stage_instruction(instruction);
+        expected.pc += 1;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0xAB));
+        EXPECT_CALL(mmu, read_byte(0xAB)).WillOnce(Return(0x68)); // Dummy read
+        EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED)))
+                .WillOnce(Return(0x34));
+        EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED + 1u)))
+                .WillOnce(Return(0x12));
+        EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(memory_content));
+
+        step_execution(6);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void run_instruction_with_wraparound(uint8_t instruction) {
+        registers.pc = expected.pc = start_pc;
+        registers.x = expected.x = 0x00;
+        stage_instruction(instruction);
+        expected.pc += 1;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0xFF));
+        EXPECT_CALL(mmu, read_byte(0xFF)).WillOnce(Return(0x68)); // Dummy read
+        EXPECT_CALL(mmu, read_byte(0xFF)).WillOnce(Return(0x34));
+        EXPECT_CALL(mmu, read_byte(0x00)).WillOnce(Return(0x12));
+        EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(memory_content));
+
+        step_execution(6);
+        EXPECT_EQ(expected, registers);
+    }
+
+    uint16_t start_pc{0x4322};
+    uint8_t memory_content{0x42};
+};
+
 TEST_F(CpuTest, reset) {
     expected.pc = 0xDEAD;
     EXPECT_CALL(mmu, read_byte(kResetAddress)).WillOnce(Return(0xAD));
@@ -1593,28 +1633,23 @@ TEST_F(CpuTest, sbc_zero_x) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, sbc_indexed_indirect) {
-    registers.pc = expected.pc = 0x4321;
-    registers.x = expected.x = 0xED;
+TEST_F(CpuIndexedIndirectTest, sbc) {
     registers.a = 0xD0;
     registers.p = C_FLAG;
     expected.a = 0xE0;
     expected.p = N_FLAG;
+    memory_content = 0xF0;
 
-    stage_instruction(SBC_INXIND);
+    run_instruction(SBC_INXIND);
+}
+TEST_F(CpuIndexedIndirectTest, sbc_handles_wraparound) {
+    registers.a = 0xD0;
+    registers.p = C_FLAG;
+    expected.a = 0xE0;
+    expected.p = N_FLAG;
+    memory_content = 0xF0;
 
-    expected.pc += 1;
-
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0xAB));
-    EXPECT_CALL(mmu, read_byte(0xAB)).WillOnce(Return(0x00)); // Dummy read
-    EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED))).WillOnce(Return(0x34));
-    EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED + 1u)))
-            .WillOnce(Return(0x12));
-    EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(0xF0));
-
-    step_execution(6);
-
-    EXPECT_EQ(expected, registers);
+    run_instruction_with_wraparound(SBC_INXIND);
 }
 
 TEST_F(CpuTest, sbc_indirect_indexed) {
@@ -1991,26 +2026,11 @@ TEST_F(CpuTest, ldx_abs_y_sets_n) {
             LDX_ABSY, &expected.x, &registers.y, &expected.y);
 }
 // LDA indexed indirect
-TEST_F(CpuTest, lda_indexed_indirect) {
-    registers.pc = expected.pc = 0x4321;
-    registers.x = expected.x = 0xED;
-    registers.a = 0xD0;
+TEST_F(CpuIndexedIndirectTest, lda_indexed_indirect) {
     expected.a = 0x52;
+    memory_content = 0x52;
 
-    stage_instruction(LDA_INXIND);
-
-    expected.pc += 1;
-
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0xAB));
-    EXPECT_CALL(mmu, read_byte(0xAB)).WillOnce(Return(0x00)); // Dummy read
-    EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED))).WillOnce(Return(0x34));
-    EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED + 1u)))
-            .WillOnce(Return(0x12));
-    EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(0x52));
-
-    step_execution(6);
-
-    EXPECT_EQ(expected, registers);
+    run_instruction(LDA_INXIND);
 }
 // LDA indirect indexed
 TEST_F(CpuTest, lda_indirect_indexed) {
@@ -2221,49 +2241,22 @@ TEST_F(CpuTest, cmp_indirect_indexed_without_pagecrossing_sets_nc) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, cmp_indexed_indirect_sets_nc) {
-    registers.pc = expected.pc = 0x4321;
-    registers.x = expected.x = 0xED;
+TEST_F(CpuIndexedIndirectTest, cmp_indexed_indirect_sets_nc) {
     registers.a = expected.a = 180;
     expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
     registers.p |= Z_FLAG;
+    memory_content = 0x07;
 
-    stage_instruction(CMP_INXIND);
-
-    expected.pc += 1;
-
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0xAB));
-    EXPECT_CALL(mmu, read_byte(0xAB)).WillOnce(Return(0x00)); // Dummy read
-    EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED))).WillOnce(Return(0x34));
-    EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED + 1u)))
-            .WillOnce(Return(0x12));
-    EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(0x07));
-
-    step_execution(6);
-
-    EXPECT_EQ(expected, registers);
+    run_instruction(CMP_INXIND);
 }
-
-TEST_F(CpuTest, cmp_indexed_indirect_handles_wraparound_sets_nc) {
-    registers.pc = expected.pc = 0x4321;
-    registers.x = expected.x = 0x00;
+TEST_F(CpuIndexedIndirectTest,
+        cmp_indexed_indirect_handles_wraparound_sets_nc) {
     registers.a = expected.a = 180;
     expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
     registers.p |= Z_FLAG;
+    memory_content = 0x07;
 
-    stage_instruction(CMP_INXIND);
-
-    expected.pc += 1;
-
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0xFF));
-    EXPECT_CALL(mmu, read_byte(0xFF)).WillOnce(Return(0x00)); // Dummy read
-    EXPECT_CALL(mmu, read_byte(0xFF)).WillOnce(Return(0x34));
-    EXPECT_CALL(mmu, read_byte(0x00)).WillOnce(Return(0x12));
-    EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(0x07));
-
-    step_execution(6);
-
-    EXPECT_EQ(expected, registers);
+    run_instruction_with_wraparound(CMP_INXIND);
 }
 
 // CPX, CPY, CMP Zeropage mode
