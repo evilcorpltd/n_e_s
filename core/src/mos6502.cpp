@@ -1013,22 +1013,20 @@ Pipeline Mos6502::create_absolute_indexed_addressing_steps(
 
 Pipeline Mos6502::create_indexed_indirect_addressing_steps() {
     Pipeline result;
-    result.push([=]() { /* Empty */ });
-    result.push([=]() { /* Empty */ });
-    result.push([=]() { /* Empty */ });
+    result.push([=]() { tmp_ = mmu_->read_byte(registers_->pc++); });
     result.push([=]() {
-        const uint8_t ptr_address = mmu_->read_byte(registers_->pc++);
+        // Dummy read
+        mmu_->read_byte(tmp_);
+    });
+    result.push([=]() {
+        const uint8_t address = tmp_ + registers_->x;
+        tmp2_ = mmu_->read_byte(address);
+    });
+    result.push([=]() {
         // Effective address is always fetched from zero page
-        const uint8_t address = ptr_address + registers_->x;
-        if (address == 0xFF) {
-            // Special case where the effective address should come from
-            // 0x00 and 0xFF, not 0x0100 and 0x00FF.
-            const uint8_t lower = mmu_->read_byte(address);
-            const uint16_t upper = mmu_->read_byte(0x00) << 8u;
-            effective_address_ = upper | lower;
-        } else {
-            effective_address_ = mmu_->read_word(address);
-        }
+        const uint8_t address = tmp_ + registers_->x + 1u;
+        const uint16_t upper = mmu_->read_byte(address) << 8u;
+        effective_address_ = upper | tmp2_;
     });
     return result;
 }
