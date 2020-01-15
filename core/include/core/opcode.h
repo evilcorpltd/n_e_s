@@ -95,7 +95,7 @@ enum Instruction : uint8_t {
     TxsImplied = 0x9A,
     StaAbsoluteX = 0x9D,
     LdyImmediate = 0xA0,
-    // LdaIndirectX = 0xA1,
+    LdaIndirectX = 0xA1,
     LdxImmediate = 0xA2,
     LdyZeropage = 0xA4,
     LdaZeropage = 0xA5,

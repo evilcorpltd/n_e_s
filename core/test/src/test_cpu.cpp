@@ -98,6 +98,7 @@ enum Opcode : uint8_t {
     TXS = 0x9A,
     STA_ABSX = 0x9D,
     LDY_IMM = 0xA0,
+    LDA_INXIND = 0xA1,
     LDX_IMM = 0xA2,
     LDY_ZERO = 0xA4,
     LDA_ZERO = 0xA5,
@@ -1984,6 +1985,26 @@ TEST_F(CpuTest, ldx_abs_y_sets_z_flag) {
 TEST_F(CpuTest, ldx_abs_y_sets_n) {
     absolute_indexed_load_sets_register(
             LDX_ABSY, &expected.x, &registers.y, &expected.y);
+}
+// LDA indexed indirect
+TEST_F(CpuTest, lda_indexed_indirect) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0xED;
+    registers.a = 0xD0;
+    expected.a = 0x52;
+
+    stage_instruction(LDA_INXIND);
+
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0xAB));
+    EXPECT_CALL(mmu, read_word(u16_to_u8(0xAB + 0xED)))
+            .WillOnce(Return(0x1234));
+    EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(0x52));
+
+    step_execution(6);
+
+    EXPECT_EQ(expected, registers);
 }
 // LDA indirect indexed
 TEST_F(CpuTest, lda_indirect_indexed) {

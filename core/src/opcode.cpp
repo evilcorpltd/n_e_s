@@ -115,6 +115,8 @@ Opcode decode(const uint8_t op) {
         return {Family::STA, StaAbsoluteX, AddressMode::AbsoluteX};
     case LdyImmediate:
         return {Family::LDY, LdyImmediate, AddressMode::Immediate};
+    case LdaIndirectX:
+        return {Family::LDA, LdaIndirectX, AddressMode::IndexedIndirect};
     case LdxImmediate:
         return {Family::LDX, LdxImmediate, AddressMode::Immediate};
     case LdyZeropage:
