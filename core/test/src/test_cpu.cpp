@@ -1461,7 +1461,8 @@ TEST_F(CpuTest, adc_indirect_indexed) {
     expected.pc += 1;
 
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
-    EXPECT_CALL(mmu, read_word(0x42)).WillOnce(Return(0x1234));
+    EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
 
     EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D)).WillOnce(Return(0x12));
     step_execution(5);
@@ -1624,7 +1625,8 @@ TEST_F(CpuTest, sbc_indirect_indexed) {
     expected.pc += 1;
 
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
-    EXPECT_CALL(mmu, read_word(0x42)).WillOnce(Return(0x1234));
+    EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
 
     EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D)).WillOnce(Return(0xF0));
     step_execution(5);
@@ -1996,7 +1998,8 @@ TEST_F(CpuTest, lda_indirect_indexed) {
     expected.pc += 1;
 
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
-    EXPECT_CALL(mmu, read_word(0x42)).WillOnce(Return(0x1234));
+    EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
 
     EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D)).WillOnce(Return(0xE0));
     step_execution(5);
@@ -2160,7 +2163,8 @@ TEST_F(CpuTest, cmp_indirect_indexed_with_pagecrossing_sets_nc) {
     expected.pc += 1;
 
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
-    EXPECT_CALL(mmu, read_word(0x42)).WillOnce(Return(0x1234));
+    EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
 
     EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100)).WillOnce(Return(0x00));
     EXPECT_CALL(mmu, read_byte(0x1234 + 0xED)).WillOnce(Return(0x07));
@@ -2181,7 +2185,8 @@ TEST_F(CpuTest, cmp_indirect_indexed_without_pagecrossing_sets_nc) {
     expected.pc += 1;
 
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
-    EXPECT_CALL(mmu, read_word(0x42)).WillOnce(Return(0x1234));
+    EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
 
     EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D)).WillOnce(Return(0x07));
     step_execution(5);
@@ -2603,7 +2608,8 @@ TEST_F(CpuTest, sta_indirect_indexed_with_pagecrossing) {
     expected.pc += 1;
 
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
-    EXPECT_CALL(mmu, read_word(0x42)).WillOnce(Return(0x1234));
+    EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
 
     EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100));
     EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
@@ -2622,7 +2628,8 @@ TEST_F(CpuTest, sta_indirect_indexed_without_pagecrossing) {
     expected.pc += 1;
 
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
-    EXPECT_CALL(mmu, read_word(0x42)).WillOnce(Return(0x1234));
+    EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
 
     EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D));
     EXPECT_CALL(mmu, write_byte(0x1234 + 0x0D, 0x07));
@@ -2997,7 +3004,8 @@ TEST_F(CpuTest, eor_indirect_indexed) {
     expected.pc += 1;
 
     EXPECT_CALL(mmu, read_byte(0x9001)).WillOnce(Return(0x42));
-    EXPECT_CALL(mmu, read_word(0x42)).WillOnce(Return(0x1234));
+    EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
 
     EXPECT_CALL(mmu, read_byte(0x1234 + 0x10)).WillOnce(Return(0xF0));
     step_execution(5);

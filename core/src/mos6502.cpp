@@ -1034,11 +1034,13 @@ Pipeline Mos6502::create_indexed_indirect_addressing_steps() {
 
 Pipeline Mos6502::create_indirect_indexed_addressing_steps(bool is_write) {
     Pipeline result;
-    result.push([=]() { /* Empty */ });
-    result.push([=]() { /* Empty */ });
+    result.push([=]() { tmp_ = mmu_->read_byte(registers_->pc++); });
+    result.push([=]() { tmp2_ = mmu_->read_byte(tmp_); });
     result.push([=]() {
-        const uint8_t ptr_address = mmu_->read_byte(registers_->pc++);
-        const uint16_t address = mmu_->read_word(ptr_address);
+        // The effective address is always fetched from zero page
+        const uint16_t upper = mmu_->read_byte(static_cast<uint8_t>(tmp_ + 1u))
+                               << 8u;
+        const uint16_t address = upper | tmp2_;
         const uint8_t offset = registers_->y;
 
         is_crossing_page_boundary_ = cross_page(address, offset);
