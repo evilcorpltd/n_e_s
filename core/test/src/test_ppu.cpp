@@ -78,9 +78,13 @@ TEST_F(PpuTest, nmi_is_triggered_when_it_should) {
     // Nmi shouldn't get triggered before the start of vblanking.
     step_execution(341 * 241 + 1);
     ASSERT_FALSE(triggered);
+    EXPECT_EQ(241, ppu->scanline());
+    EXPECT_EQ(1, ppu->cycle());
 
     step_execution(1);
     ASSERT_TRUE(triggered);
+    EXPECT_EQ(241, ppu->scanline());
+    EXPECT_EQ(2, ppu->cycle());
 }
 
 TEST_F(PpuTest, set_vblank_flag_during_vertical_blanking) {
