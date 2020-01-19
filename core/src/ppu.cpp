@@ -132,6 +132,13 @@ void Ppu::execute() {
 void Ppu::set_nmi_handler(const std::function<void()> &on_nmi) {
     on_nmi_ = on_nmi;
 }
+uint16_t Ppu::scanline() const {
+    return scanline_;
+}
+
+uint16_t Ppu::cycle() const {
+    return cycle_;
+}
 
 void Ppu::update_counters() {
     if (cycle_ == kLastCycleInScanline) {
