@@ -206,7 +206,9 @@ void Ppu::execute_post_render_scanline() {}
 void Ppu::execute_vblank_scanline() {
     if (cycle_ == 1) {
         set_vblank_flag();
-        on_nmi_();
+        if (registers_->ctrl & (1u << 7u)) {
+            on_nmi_();
+        }
     }
 }
 
