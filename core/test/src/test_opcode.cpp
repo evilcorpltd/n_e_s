@@ -10,6 +10,7 @@ namespace {
 TEST(Opcode, Family) {
     EXPECT_EQ("Invalid", to_string(Family::Invalid));
     EXPECT_EQ("BRK", to_string(Family::BRK));
+    EXPECT_EQ("ASL", to_string(Family::ASL));
     EXPECT_EQ("INC", to_string(Family::INC));
     EXPECT_EQ("PHP", to_string(Family::PHP));
     EXPECT_EQ("BPL", to_string(Family::BPL));

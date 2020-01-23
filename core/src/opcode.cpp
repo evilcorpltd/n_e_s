@@ -9,8 +9,14 @@ Opcode decode(const uint8_t op) {
     switch (op) {
     case BrkImplied:
         return {Family::BRK, BrkImplied, AddressMode::Implied};
+    case AslZeropage:
+        return {Family::ASL, AslZeropage, AddressMode::Zeropage};
     case PhpImplied:
         return {Family::PHP, PhpImplied, AddressMode::Implied};
+    case AslAccumulator:
+        return {Family::ASL, AslAccumulator, AddressMode::Accumulator};
+    case AslAbsolute:
+        return {Family::ASL, AslAbsolute, AddressMode::Absolute};
     case BplRelative:
         return {Family::BPL, BplRelative, AddressMode::Relative};
     case ClcImplied:
@@ -318,6 +324,7 @@ MemoryAccess get_memory_access(const Family family) {
     case Family::DEC:
     case Family::ROL:
     case Family::ROR:
+    case Family::ASL:
         return MemoryAccess::ReadWrite;
     }
     // Should not happen
@@ -330,6 +337,8 @@ std::string to_string(const Family family) {
         return "Invalid";
     case Family::BRK:
         return "BRK";
+    case Family::ASL:
+        return "ASL";
     case Family::INC:
         return "INC";
     case Family::PHP:
