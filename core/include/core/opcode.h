@@ -65,7 +65,7 @@ enum Instruction : uint8_t {
     PlaImplied = 0x68,
     AdcImmediate = 0x69,
     RorAccumulator = 0x6A,
-    // JmpIndirect = 0x6C,
+    JmpIndirect = 0x6C,
     AdcAbsolute = 0x6D,
     // RorAbsolute = 0x6E,
     BvsRelative = 0x70,
@@ -229,7 +229,8 @@ enum class AddressMode {
     AbsoluteY,
     Accumulator,
     IndexedIndirect,
-    IndirectIndexed
+    IndirectIndexed,
+    Indirect
 };
 
 enum class MemoryAccess { Read, Write, ReadWrite };

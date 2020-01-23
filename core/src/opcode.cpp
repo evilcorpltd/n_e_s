@@ -243,6 +243,8 @@ Opcode decode(const uint8_t op) {
         return {Family::ROL, RolAccumulator, AddressMode::Accumulator};
     case RorAccumulator:
         return {Family::ROR, RorAccumulator, AddressMode::Accumulator};
+    case JmpIndirect:
+        return {Family::JMP, JmpIndirect, AddressMode::Indirect};
     case OraImmediate:
         return {Family::ORA, OraImmediate, AddressMode::Immediate};
     case OraAbsolute:

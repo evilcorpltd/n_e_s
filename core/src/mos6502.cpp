@@ -212,6 +212,24 @@ Pipeline Mos6502::parse_next_instruction() {
                     mmu_->read_word(registers_->pc - static_cast<uint16_t>(1));
         });
         break;
+    case Instruction::JmpIndirect:
+        result.push([=]() { tmp_ = mmu_->read_byte(registers_->pc++); });
+        result.push([=]() { tmp2_ = mmu_->read_byte(registers_->pc++); });
+        result.push([=]() {
+            const uint16_t ptraddress =
+                    static_cast<uint16_t>(tmp2_ << 8u) | tmp_;
+            effective_address_ = mmu_->read_byte(ptraddress);
+        });
+        result.push([=]() {
+            // The PCH will always be fetched from the same page
+            // as PCL, i.e. page boundary crossing is not handled.
+            const uint8_t low_address = tmp_ + 1u;
+            const uint16_t ptraddress =
+                    static_cast<uint16_t>(tmp2_ << 8u) | low_address;
+            const uint16_t pch = mmu_->read_byte(ptraddress) << 8u;
+            registers_->pc = effective_address_ | pch;
+        });
+        break;
     case Instruction::BvcRelative:
         result.append(create_branch_instruction(
                 [=]() { return !(registers_->p & V_FLAG); }));

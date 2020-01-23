@@ -71,6 +71,7 @@ enum Opcode : uint8_t {
     PLA = 0x68,
     ADC_IMM = 0x69,
     ROR_ACC = 0x6A,
+    JMP_IND = 0x6C,
     ADC_ABS = 0x6D,
     BVS = 0x70,
     ADC_INDY = 0x71,
@@ -1159,6 +1160,37 @@ TEST_F(CpuTest, jmp) {
     EXPECT_CALL(mmu, read_word(registers.pc + 1)).WillOnce(Return(0x1234));
 
     step_execution(3);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, jmp_indirect) {
+    registers.pc = 0x1000;
+    stage_instruction(JMP_IND);
+    expected.pc = 0x6789;
+
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x12));
+    EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(0x89));
+    EXPECT_CALL(mmu, read_byte(0x1235)).WillOnce(Return(0x67));
+
+    step_execution(5);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuTest, jmp_indirect_fetches_address_from_same_page) {
+    registers.pc = 0x1000;
+    stage_instruction(JMP_IND);
+    expected.pc = 0x6789;
+
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0xFF));
+    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x12));
+    // Address is fetched from 0x12FF and 0x1200 instead of 0x12FF and 0x1300
+    EXPECT_CALL(mmu, read_byte(0x12FF)).WillOnce(Return(0x89));
+    EXPECT_CALL(mmu, read_byte(0x1200)).WillOnce(Return(0x67));
+
+    step_execution(5);
 
     EXPECT_EQ(expected, registers);
 }
