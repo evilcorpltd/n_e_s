@@ -767,31 +767,25 @@ TEST_F(CpuTest, unsupported_instruction) {
 
 TEST_F(CpuTest, nmi) {
     registers.pc = 0x1234;
-    stage_instruction(LDA_ZERO);
     cpu->set_nmi(true);
 
     expected.sp -= 2 + 1; // 1 word and 1 byte
 
     // Dummy reads
-    // Read from 0x1234 is done when parsing the LDA instruction, so PC is at
-    // 0x1235 when nmi is run.
-    EXPECT_CALL(mmu, read_byte(0x1235));
-    EXPECT_CALL(mmu, read_byte(0x1236));
+    EXPECT_CALL(mmu, read_byte(0x1234)).Times(2);
 
     expected.pc = 0x5678; // nmi vector
 
     // First the return address is pushed and then the registers.
     EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp, 0x12));
-    EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp - 1, 0x37));
+    EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp - 1, 0x34));
     EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp - 2, registers.p));
 
     // Read nmi vector 0x5678
     EXPECT_CALL(mmu, read_byte(kNmiAddress)).WillOnce(Return(0x78));
     EXPECT_CALL(mmu, read_byte(kNmiAddress + 1)).WillOnce(Return(0x56));
 
-    // 1 instruction to decode LDA, 7 for nmi
-    step_execution(1 + 7);
-
+    step_execution(7);
     EXPECT_EQ(expected, registers);
 }
 
