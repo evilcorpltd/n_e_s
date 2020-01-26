@@ -929,11 +929,10 @@ Pipeline Mos6502::create_absolute_indexed_addressing_steps(
         const uint8_t *index_reg,
         bool is_write) {
     Pipeline result;
-    result.push([=]() { ++registers_->pc; });
+    result.push([=]() { tmp_ = mmu_->read_byte(registers_->pc++); });
     result.push([=]() {
-        ++registers_->pc;
-        const uint16_t abs_address =
-                mmu_->read_word(registers_->pc - static_cast<uint16_t>(2));
+        const uint16_t address_high = mmu_->read_byte(registers_->pc++) << 8u;
+        const uint16_t abs_address = address_high | tmp_;
         const uint8_t offset = *index_reg;
 
         is_crossing_page_boundary_ = cross_page(abs_address, offset);
