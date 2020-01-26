@@ -206,10 +206,10 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() { stack_.push_byte(registers_->a); });
         break;
     case Instruction::JmpAbsolute:
-        result.push([=]() { ++registers_->pc; });
+        result.push([=]() { tmp_ = mmu_->read_byte(registers_->pc++); });
         result.push([=]() {
-            registers_->pc =
-                    mmu_->read_word(registers_->pc - static_cast<uint16_t>(1));
+            const uint16_t pch = mmu_->read_byte(registers_->pc) << 8u;
+            registers_->pc = pch | tmp_;
         });
         break;
     case Instruction::BvcRelative:

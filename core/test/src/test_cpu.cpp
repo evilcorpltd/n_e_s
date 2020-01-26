@@ -1156,7 +1156,8 @@ TEST_F(CpuTest, jmp) {
     stage_instruction(JMP);
     expected.pc = 0x1234;
 
-    EXPECT_CALL(mmu, read_word(registers.pc + 1)).WillOnce(Return(0x1234));
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x12));
 
     step_execution(3);
 
