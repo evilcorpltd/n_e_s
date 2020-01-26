@@ -4,11 +4,6 @@ configuration:
   - Debug
   - Release
 
-matrix:
-  allow_failures:
-    - TOOLCHAIN: Msvc 2019 x86
-    - TOOLCHAIN: Msvc 2019 x64
-
 environment:
   matrix:
   - TOOLCHAIN: Msvc 2019 x86
