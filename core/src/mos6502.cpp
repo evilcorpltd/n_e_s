@@ -488,7 +488,9 @@ void Mos6502::reset() {
     pipeline_.clear();
     nmi_ = false;
 
-    registers_->pc = mmu_->read_word(kResetAddress);
+    const uint16_t lower = mmu_->read_byte(kResetAddress);
+    const uint16_t upper = mmu_->read_byte(kResetAddress + 1u) << 8u;
+    registers_->pc = upper | lower;
 }
 
 CpuState Mos6502::state() const {
