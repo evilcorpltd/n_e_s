@@ -1,7 +1,6 @@
 shallow_clone: true
 
 configuration:
-  - Debug
   - Release
 
 environment:
