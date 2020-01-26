@@ -704,7 +704,8 @@ public:
 
 TEST_F(CpuTest, reset) {
     expected.pc = 0xDEAD;
-    EXPECT_CALL(mmu, read_word(kResetAddress)).WillOnce(Return(0xDEAD));
+    EXPECT_CALL(mmu, read_byte(kResetAddress)).WillOnce(Return(0xAD));
+    EXPECT_CALL(mmu, read_byte(kResetAddress + 1u)).WillOnce(Return(0xDE));
 
     cpu->reset();
 
@@ -713,7 +714,8 @@ TEST_F(CpuTest, reset) {
 
 TEST_F(CpuTest, reset_clears_pipeline) {
     stage_instruction(SEC);
-    EXPECT_CALL(mmu, read_word(kResetAddress)).WillOnce(Return(0xDEAD));
+    EXPECT_CALL(mmu, read_byte(kResetAddress)).WillOnce(Return(0xAD));
+    EXPECT_CALL(mmu, read_byte(kResetAddress + 1u)).WillOnce(Return(0xDE));
     EXPECT_CALL(mmu, read_byte(0xDEAD)).WillOnce(Return(0x00));
     expected.pc = 0xDEAD + 1;
 
