@@ -14,6 +14,7 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(${PROJECT_NAME}
     src/main.cpp
+    src/test_nes.cpp
 )
 
 target_compile_features(${PROJECT_NAME}
