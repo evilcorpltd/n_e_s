@@ -403,10 +403,12 @@ Pipeline Mos6502::parse_next_instruction() {
         break;
     case Instruction::IncZeropage:
     case Instruction::IncZeropageX:
+    case Instruction::IncAbsoluteX:
         result.append(create_inc_instruction(*state_.current_opcode));
         break;
     case Instruction::DecZeropage:
     case Instruction::DecZeropageX:
+    case Instruction::DecAbsoluteX:
         result.append(create_dec_instruction(*state_.current_opcode));
         break;
     case Instruction::InxImplied:
@@ -838,11 +840,11 @@ Pipeline Mos6502::create_addressing_steps(AddressMode address_mode,
         break;
     case AddressMode::AbsoluteX:
         result.append(create_absolute_indexed_addressing_steps(
-                &registers_->x, access == MemoryAccess::Write));
+                &registers_->x, access));
         break;
     case AddressMode::AbsoluteY:
         result.append(create_absolute_indexed_addressing_steps(
-                &registers_->y, access == MemoryAccess::Write));
+                &registers_->y, access));
         break;
     case AddressMode::IndexedIndirect:
         result.append(create_indexed_indirect_addressing_steps());
@@ -927,7 +929,7 @@ Pipeline Mos6502::create_absolute_addressing_steps(const MemoryAccess access) {
 
 Pipeline Mos6502::create_absolute_indexed_addressing_steps(
         const uint8_t *index_reg,
-        bool is_write) {
+        const MemoryAccess access) {
     Pipeline result;
     result.push([=]() { tmp_ = mmu_->read_byte(registers_->pc++); });
     result.push([=]() {
@@ -939,7 +941,7 @@ Pipeline Mos6502::create_absolute_indexed_addressing_steps(
         effective_address_ = abs_address + offset;
     });
 
-    if (is_write) {
+    if (access == MemoryAccess::Write) {
         result.push([=]() {
             if (is_crossing_page_boundary_) {
                 // The high byte of the effective address is invalid
@@ -952,7 +954,7 @@ Pipeline Mos6502::create_absolute_indexed_addressing_steps(
                 mmu_->read_byte(effective_address_);
             }
         });
-    } else {
+    } else if (access == MemoryAccess::Read) {
         result.push_conditional([=]() {
             if (is_crossing_page_boundary_) {
                 // The high byte of the effective address is invalid
@@ -963,6 +965,27 @@ Pipeline Mos6502::create_absolute_indexed_addressing_steps(
                 return StepResult::Continue;
             }
             return StepResult::Skip;
+        });
+    } else {
+        result.push([=]() {
+            if (is_crossing_page_boundary_) {
+                // The high byte of the effective address is invalid
+                // at this time (smaller by $100), but a read is still
+                // performed.
+                mmu_->read_byte(
+                        effective_address_ - static_cast<uint16_t>(0x0100));
+            } else {
+                // Extra read from effective address.
+                mmu_->read_byte(effective_address_);
+            }
+        });
+        result.push([=]() {
+            // Extra read from effective address.
+            tmp_ = mmu_->read_byte(effective_address_);
+        });
+        result.push([=]() {
+            // Extra write.
+            mmu_->write_byte(effective_address_, tmp_);
         });
     }
     return result;
