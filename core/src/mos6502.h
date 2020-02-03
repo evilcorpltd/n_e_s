@@ -109,7 +109,7 @@ private:
             MemoryAccess access);
     Pipeline create_absolute_addressing_steps(MemoryAccess access);
     Pipeline create_absolute_indexed_addressing_steps(const uint8_t *index_reg,
-            bool is_write);
+            MemoryAccess access);
     Pipeline create_indexed_indirect_addressing_steps();
     Pipeline create_indirect_indexed_addressing_steps(bool is_write);
 };

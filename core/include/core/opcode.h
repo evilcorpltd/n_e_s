@@ -135,7 +135,7 @@ enum Instruction : uint8_t {
     CldImplied = 0xD8,
     CmpAbsoluteY = 0xD9,
     CmpAbsoluteX = 0xDD,
-    // DecAbsoluteX = 0xDE,
+    DecAbsoluteX = 0xDE,
     CpxImmediate = 0xE0,
     SbcIndirectX = 0xE1,
     CpxZeropage = 0xE4,
@@ -154,7 +154,7 @@ enum Instruction : uint8_t {
     SedImplied = 0xF8,
     SbcAbsoluteY = 0xF9,
     SbcAbsoluteX = 0xFD,
-    // IncAbsoluteX = 0xFE,
+    IncAbsoluteX = 0xFE,
 };
 
 enum class Family {

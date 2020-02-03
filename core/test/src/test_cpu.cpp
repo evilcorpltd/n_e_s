@@ -134,6 +134,7 @@ enum Opcode : uint8_t {
     CLD = 0xD8,
     CMP_ABSY = 0xD9,
     CMP_ABSX = 0xDD,
+    DEC_ABSX = 0xDE,
     CPX_IMM = 0xE0,
     SBC_INXIND = 0xE1,
     CPX_ZERO = 0xE4,
@@ -151,6 +152,7 @@ enum Opcode : uint8_t {
     SED = 0xF8,
     SBC_ABSY = 0xF9,
     SBC_ABSX = 0xFD,
+    INC_ABSX = 0xFE,
 };
 
 class CpuTest : public ::testing::Test {
@@ -707,6 +709,50 @@ public:
     uint16_t start_pc{0x1121};
     uint8_t memory_content{0x42};
     uint16_t effective_address{0x4567};
+};
+
+class CpuAbsoluteIndexedTest : public CpuTest {
+public:
+    enum class IndexReg { X, Y };
+    void run_readwrite_instruction(uint8_t instruction,
+            IndexReg index_reg,
+            uint8_t new_memory_content) {
+        registers.pc = expected.pc = start_pc;
+        stage_instruction(instruction);
+        expected.pc += 2;
+
+        const uint8_t index_reg_value{0x91};
+        set_index_reg(index_reg, index_reg_value);
+
+        const uint16_t effective_address = 0x5678 + index_reg_value;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x78));
+        EXPECT_CALL(mmu, read_byte(start_pc + 2u)).WillOnce(Return(0x56));
+        EXPECT_CALL(mmu, read_byte(0x5609))
+                .WillOnce(Return(
+                        0xCD)); // Dummy read with on wrong page (0x5678 + 0x91)
+        EXPECT_CALL(mmu, read_byte(effective_address))
+                .WillOnce(Return(memory_content));
+        EXPECT_CALL(mmu,
+                write_byte(effective_address, memory_content)); // Dummy write
+        EXPECT_CALL(mmu, write_byte(effective_address, new_memory_content));
+
+        step_execution(7);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void set_index_reg(const IndexReg index_reg, const uint8_t value) {
+        if (index_reg == IndexReg::X) {
+            registers.x = value;
+            expected.x = value;
+        } else {
+            registers.y = value;
+            expected.y = value;
+        }
+    }
+
+    uint16_t start_pc{0x1121};
+    uint8_t memory_content{0x42};
 };
 
 TEST_F(CpuTest, reset) {
@@ -2206,6 +2252,12 @@ TEST_F(CpuTest, inc_zerox_increments) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(CpuAbsoluteIndexedTest, inc_absx_clears_n_flag) {
+    registers.p = N_FLAG;
+    memory_content = 125u;
+    run_readwrite_instruction(INC_ABSX, IndexReg::X, 126u);
+}
+
 // DEC
 TEST_F(CpuZeropageTest, dec_zero_decrements) {
     memory_content = 0x06;
@@ -2245,6 +2297,12 @@ TEST_F(CpuTest, dec_zerox_decrements) {
 
     step_execution(6);
     EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuAbsoluteIndexedTest, dec_absx_clears_n_flag) {
+    registers.p = N_FLAG;
+    memory_content = 126;
+    run_readwrite_instruction(DEC_ABSX, IndexReg::X, 125);
 }
 
 // INX
