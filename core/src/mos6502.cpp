@@ -886,20 +886,20 @@ Pipeline Mos6502::create_zeropage_indexed_addressing_steps(
         MemoryAccess access) {
     Pipeline result;
     if (access == MemoryAccess::Read || access == MemoryAccess::Write) {
-        result.push([=]() { /* Empty */ });
+        result.push([=]() { tmp_ = mmu_->read_byte(registers_->pc++); });
         result.push([=]() {
-            const uint8_t address = mmu_->read_byte(registers_->pc);
-            const uint8_t effective_address_low = address + *index_reg;
+            // Dummy read
+            mmu_->read_byte(tmp_);
+            const uint8_t effective_address_low = tmp_ + *index_reg;
             effective_address_ = effective_address_low;
-            ++registers_->pc;
         });
     } else if (access == MemoryAccess::ReadWrite) {
-        result.push([=]() { /* Empty */ });
+        result.push([=]() { tmp_ = mmu_->read_byte(registers_->pc++); });
         result.push([=]() {
-            const uint8_t address = mmu_->read_byte(registers_->pc);
-            const uint8_t effective_address_low = address + *index_reg;
+            // Dummy read
+            mmu_->read_byte(tmp_);
+            const uint8_t effective_address_low = tmp_ + *index_reg;
             effective_address_ = effective_address_low;
-            ++registers_->pc;
         });
         result.push([=]() { tmp_ = mmu_->read_byte(effective_address_); });
         result.push([=]() {

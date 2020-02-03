@@ -298,26 +298,6 @@ public:
         EXPECT_EQ(expected, registers);
     }
 
-    void load_zeropage_reg_sets_reg(uint8_t instruction,
-            uint8_t *target_reg,
-            uint8_t *index_reg,
-            uint8_t *expected_index_reg) {
-        registers.pc = expected.pc = 0x4321;
-        *index_reg = *expected_index_reg = 0xED;
-
-        stage_instruction(instruction);
-
-        *target_reg = 0x42;
-        expected.pc += 1;
-
-        EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
-        EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED)))
-                .WillOnce(Return(0x42));
-
-        step_execution(4);
-        EXPECT_EQ(expected, registers);
-    }
-
     void compare_abs_sets_n_c(uint8_t *reg, uint8_t *expected_reg) {
         *expected_reg = *reg = 0;
         expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
@@ -592,6 +572,67 @@ public:
     uint16_t start_pc{0x4321};
     uint8_t memory_content{0x42};
     uint8_t effective_address{0x44};
+};
+
+class CpuZeropageIndexedTest : public CpuTest {
+public:
+    enum class IndexReg { X, Y };
+
+    void run_read_instruction(uint8_t instruction, IndexReg index_reg) {
+        effective_address = u16_to_u8(index_value + reg_value);
+        set_index_reg(index_reg, reg_value);
+        registers.pc = expected.pc = start_pc;
+        stage_instruction(instruction);
+        expected.pc += 1;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1)).WillOnce(Return(index_value));
+        EXPECT_CALL(mmu, read_byte(index_value))
+                .WillOnce(Return(0xCD)); // Dummy read
+        EXPECT_CALL(mmu, read_byte(effective_address))
+                .WillOnce(Return(memory_value));
+
+        step_execution(4);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void run_write_instruction(uint8_t instruction, IndexReg index_reg) {
+        effective_address = u16_to_u8(index_value + reg_value);
+        set_index_reg(index_reg, reg_value);
+        registers.pc = expected.pc = start_pc;
+        stage_instruction(instruction);
+        expected.pc += 1;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1)).WillOnce(Return(index_value));
+        EXPECT_CALL(mmu, read_byte(index_value))
+                .WillOnce(Return(0xCD)); // Dummy read
+        EXPECT_CALL(mmu, write_byte(effective_address, memory_value));
+
+        step_execution(4);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void load_sets_reg(uint8_t instruction,
+            uint8_t *target_reg,
+            IndexReg index_reg) {
+        *target_reg = memory_value;
+        run_read_instruction(instruction, index_reg);
+    }
+
+    void set_index_reg(const IndexReg index_reg, const uint8_t value) {
+        if (index_reg == IndexReg::X) {
+            registers.x = value;
+            expected.x = value;
+        } else {
+            registers.y = value;
+            expected.y = value;
+        }
+    }
+
+    uint16_t start_pc{0x4321};
+    uint8_t memory_value{0x39};
+    uint8_t reg_value{0xED};
+    uint8_t index_value{0x44};
+    uint8_t effective_address{};
 };
 
 class CpuAbsoluteTest : public CpuTest {
@@ -1347,22 +1388,13 @@ TEST_F(CpuTest, adc_absy_no_carry_or_overflow_with_pagecrossing) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, adc_zero_x) {
-    registers.pc = expected.pc = 0x4321;
+TEST_F(CpuZeropageIndexedTest, adc_zero_x) {
+    memory_value = 0x07;
     registers.a = 0x50;
-    registers.x = expected.x = 0xED;
+    expected.a = 0x57;
     registers.p = V_FLAG;
 
-    stage_instruction(ADC_ZEROX);
-
-    expected.a = 0x57;
-    expected.pc += 1;
-
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED))).WillOnce(Return(0x07));
-
-    step_execution(4);
-    EXPECT_EQ(expected, registers);
+    run_read_instruction(ADC_ZEROX, IndexReg::X);
 }
 
 TEST_F(CpuTest, adc_indexed_indirect) {
@@ -1517,6 +1549,7 @@ TEST_F(CpuTest, sbc_zero_x) {
     expected.pc += 1;
 
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
+    EXPECT_CALL(mmu, read_byte(0x44)).WillOnce(Return(0xCD)); // Dummy read
     EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED))).WillOnce(Return(0x07));
 
     step_execution(4);
@@ -1836,19 +1869,16 @@ TEST_F(CpuZeropageTest, ldy_zeropage_sets_reg) {
 }
 
 // LD Zeropage X
-TEST_F(CpuTest, lda_zeropagex_sets_reg) {
-    load_zeropage_reg_sets_reg(
-            LDA_ZEROX, &expected.a, &registers.x, &expected.x);
+TEST_F(CpuZeropageIndexedTest, lda_zeropagex_sets_reg) {
+    load_sets_reg(LDA_ZEROX, &expected.a, IndexReg::X);
 }
-TEST_F(CpuTest, ldy_zeropagex_sets_reg) {
-    load_zeropage_reg_sets_reg(
-            LDY_ZEROX, &expected.y, &registers.x, &expected.x);
+TEST_F(CpuZeropageIndexedTest, ldy_zeropagex_sets_reg) {
+    load_sets_reg(LDY_ZEROX, &expected.y, IndexReg::X);
 }
 
 // LD Zeropage Y
-TEST_F(CpuTest, ldx_zeropagey_sets_reg) {
-    load_zeropage_reg_sets_reg(
-            LDX_ZEROY, &expected.x, &registers.y, &expected.y);
+TEST_F(CpuZeropageIndexedTest, ldx_zeropagey_sets_reg) {
+    load_sets_reg(LDX_ZEROY, &expected.x, IndexReg::Y);
 }
 
 // LD absolute indexed
@@ -2159,23 +2189,13 @@ TEST_F(CpuZeropageTest, cmp_zeropage_sets_nc) {
     compare_sets_n_c(CMP_ZERO, &registers.a, &expected.a);
 }
 
-TEST_F(CpuTest, cmp_zero_x_sets_zc) {
-    registers.pc = expected.pc = 0x4321;
-    registers.a = expected.a = 0x07;
-    registers.x = expected.x = 0xED;
+TEST_F(CpuZeropageIndexedTest, cmp_zero_x_sets_zc) {
+    memory_value = 0x07;
+    registers.a = expected.a = memory_value;
     registers.p |= N_FLAG;
     expected.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
 
-    stage_instruction(CMP_ZEROX);
-
-    expected.pc += 1;
-
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED))).WillOnce(Return(0x07));
-
-    step_execution(4);
-
-    EXPECT_EQ(expected, registers);
+    run_read_instruction(CMP_ZEROX, IndexReg::X);
 }
 
 // NOP
@@ -2244,8 +2264,9 @@ TEST_F(CpuTest, inc_zerox_increments) {
     expected.pc += 1;
 
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
+    EXPECT_CALL(mmu, read_byte(0x44)).WillOnce(Return(0xCD)); // Dummy read
     EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED))).WillOnce(Return(0x05));
-    EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x05));
+    EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x05)); // Dummy write
     EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x06));
 
     step_execution(6);
@@ -2291,8 +2312,9 @@ TEST_F(CpuTest, dec_zerox_decrements) {
     expected.pc += 1;
 
     EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
+    EXPECT_CALL(mmu, read_byte(0x44)).WillOnce(Return(0xCD)); // Dummy read
     EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED))).WillOnce(Return(0x05));
-    EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x05));
+    EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x05)); // Dummy write
     EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x04));
 
     step_execution(6);
@@ -2417,21 +2439,10 @@ TEST_F(CpuZeropageTest, sta_zero) {
     run_write_instruction(STA_ZERO);
 }
 
-TEST_F(CpuTest, sta_zero_x_indexed) {
-    registers.pc = expected.pc = 0x4321;
-    registers.a = expected.a = 0x07;
-    registers.x = expected.x = 0xED;
+TEST_F(CpuZeropageIndexedTest, sta_zero_x_indexed) {
+    registers.a = expected.a = memory_value;
 
-    stage_instruction(STA_ZEROX);
-
-    expected.pc += 1;
-
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x07));
-
-    step_execution(4);
-
-    EXPECT_EQ(expected, registers);
+    run_write_instruction(STA_ZEROX, IndexReg::X);
 }
 
 TEST_F(CpuAbsoluteTest, stx_abs) {
@@ -2444,21 +2455,11 @@ TEST_F(CpuZeropageTest, stx_zero) {
     run_write_instruction(STX_ZERO);
 }
 
-TEST_F(CpuTest, stx_zero_y_indexed) {
-    registers.pc = expected.pc = 0x4321;
+TEST_F(CpuZeropageIndexedTest, stx_zero_y_indexed) {
+    memory_value = 0x07;
     registers.x = expected.x = 0x07;
-    registers.y = expected.y = 0xED;
 
-    stage_instruction(STX_ZEROY);
-
-    expected.pc += 1;
-
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x07));
-
-    step_execution(4);
-
-    EXPECT_EQ(expected, registers);
+    run_write_instruction(STX_ZEROY, IndexReg::Y);
 }
 
 TEST_F(CpuTest, sta_abs_x_indexed) {
@@ -2598,21 +2599,11 @@ TEST_F(CpuZeropageTest, sty_zero) {
     run_write_instruction(STY_ZERO);
 }
 
-TEST_F(CpuTest, sty_zero_x_indexed) {
-    registers.pc = expected.pc = 0x4321;
+TEST_F(CpuZeropageIndexedTest, sty_zero_x_indexed) {
+    memory_value = 0x07;
     registers.y = expected.y = 0x07;
-    registers.x = expected.x = 0xED;
 
-    stage_instruction(STY_ZEROX);
-
-    expected.pc += 1;
-
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, write_byte(u16_to_u8(0x44 + 0xED), 0x07));
-
-    step_execution(4);
-
-    EXPECT_EQ(expected, registers);
+    run_write_instruction(STY_ZEROX, IndexReg::X);
 }
 
 // TSX
@@ -2970,23 +2961,13 @@ TEST_F(CpuZeropageTest, eor_zero) {
     run_read_instruction(EOR_ZERO);
 }
 
-TEST_F(CpuTest, eor_zero_x) {
-    registers.pc = expected.pc = 0x5678;
+TEST_F(CpuZeropageIndexedTest, eor_zero_x) {
+    memory_value = 0x01;
     registers.a = 0b10000000;
-    registers.x = expected.x = 0xED;
     registers.p = V_FLAG | C_FLAG;
-
-    stage_instruction(EOR_ZEROX);
-
     expected.a = 0b10000001;
     expected.p = registers.p | N_FLAG;
-    expected.pc += 1;
-
-    EXPECT_CALL(mmu, read_byte(0x5679)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED))).WillOnce(Return(0x01));
-
-    step_execution(4);
-    EXPECT_EQ(expected, registers);
+    run_read_instruction(EOR_ZEROX, IndexReg::X);
 }
 
 // ROL, ACC
@@ -3186,22 +3167,11 @@ TEST_F(CpuZeropageTest, ora_zero_set_neg_clears_zero) {
 
     run_read_instruction(ORA_ZERO);
 }
-TEST_F(CpuTest, ora_zero_x) {
-    registers.pc = expected.pc = 0x4321;
+TEST_F(CpuZeropageIndexedTest, ora_zero_x) {
+    memory_value = 0b00100011;
     registers.a = 0b00110000;
     registers.p = Z_FLAG | N_FLAG;
-    registers.x = expected.x = 0x44;
-
-    stage_instruction(ORA_ZEROX);
-
-    expected.pc += 1;
     expected.a = 0b00110011;
-
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0x44)))
-            .WillOnce(Return(0b00100011));
-
-    step_execution(4);
-    EXPECT_EQ(expected, registers);
+    run_read_instruction(ORA_ZEROX, IndexReg::X);
 }
 } // namespace
