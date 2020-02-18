@@ -66,6 +66,16 @@ matrix:
             - g++-8
       env: MATRIX_EVAL="CXX=g++-8 BUILD_TYPE=Debug"
 
+    - name: "gcc 9"
+      addons: &gcc9
+        apt:
+          sources:
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
+          packages:
+            - *common-apt-packages
+            - g++-9
+      env: MATRIX_EVAL="CXX=g++-9 BUILD_TYPE=Debug"
+
     - name: "clang 7"
       addons: &clang7
         apt:
@@ -110,7 +120,7 @@ matrix:
 
 install:
   - python3 -m pip install pip==19.3.1 --upgrade
-  - python3 -m pip install cmake==3.15.3 ninja==1.9.0.post1 --upgrade --user
+  - python3 -m pip install cmake==3.16.3 ninja==1.9.0.post1 --upgrade --user
 
 before_script:
   - cmake --version
