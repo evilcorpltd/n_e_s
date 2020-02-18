@@ -79,14 +79,6 @@ matrix:
       addons: *clang7
       env: MATRIX_EVAL="CXX=clang++-7 BUILD_TYPE=Release"
 
-    - name: "clang 7 sanitizers"
-      addons: *clang7
-      env:
-        - MATRIX_EVAL="CXX=clang++-7 BUILD_TYPE=Debug"
-        - CMAKE_EXTRA_OPTIONS="-DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON"
-        - UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=1"
-        - LLVM_SYMBOLIZER_PATH="$(which llvm-symbolizer)"
-
     - name: "clang 8"
       addons: &clang8
         apt:
@@ -107,6 +99,14 @@ matrix:
             - clang-9
             - libstdc++-8-dev
       env: MATRIX_EVAL="CXX=clang++-9 BUILD_TYPE=Debug"
+
+    - name: "clang 9 sanitizers"
+      addons: *clang9
+      env:
+        - MATRIX_EVAL="CXX=clang++-9 BUILD_TYPE=Debug"
+        - CMAKE_EXTRA_OPTIONS="-DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON"
+        - UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=1"
+        - LLVM_SYMBOLIZER_PATH="$(which llvm-symbolizer)"
 
 install:
   - python3 -m pip install pip==19.3.1 --upgrade
