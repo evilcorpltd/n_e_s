@@ -61,6 +61,7 @@ private:
 
     // Holds data for the CPU between pipeline steps.
     uint8_t tmp_{};
+    uint8_t tmp2_{};
 
     // Set to true if accessing a memory location will require a page boundary
     // crossing.
