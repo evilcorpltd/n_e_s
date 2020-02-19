@@ -750,7 +750,7 @@ Pipeline Mos6502::create_compare_instruction(Opcode opcode) {
         // Compare instructions are not affected be the
         // carry flag when executing the subtraction.
         const int16_t temp_result = *reg - value;
-        set_carry(temp_result <= 0);
+        set_carry(*reg >= value);
         set_zero(static_cast<uint8_t>(temp_result));
         set_negative(static_cast<uint8_t>(temp_result));
     });
