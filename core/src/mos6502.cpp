@@ -194,14 +194,13 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::SecImplied:
         result.push([=]() { set_flag(C_FLAG); });
         break;
+    case Instruction::LsrZeropage:
+    case Instruction::LsrAbsolute:
     case Instruction::LsrAccumulator:
-        result.push([=]() {
-            set_carry((registers_->a & 1u) != 0);
-            registers_->a &= ~1u;
-            registers_->a >>= 1u;
-            set_zero(registers_->a);
-            clear_flag(N_FLAG);
-        });
+    case Instruction::LsrAbsoluteX:
+    case Instruction::LsrZeropageX:
+        result.append(
+                create_right_shift_instruction(*state_.current_opcode, false));
         break;
     case Instruction::PhaImplied:
         result.push([=]() {
@@ -482,23 +481,17 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::EorAbsoluteY:
         result.append(create_eor_instruction(*state_.current_opcode));
         break;
-    case RolAccumulator:
+    case Instruction::RolAccumulator:
         result.append(
                 create_left_shift_instruction(*state_.current_opcode, true));
         break;
+    case Instruction::RorZeropage:
+    case Instruction::RorAbsolute:
     case Instruction::RorAccumulator:
-        result.push([=]() {
-            const uint8_t carry_in = registers_->p & C_FLAG
-                                             ? static_cast<uint8_t>(0x80)
-                                             : static_cast<uint8_t>(0x00);
-            const bool carry_out = (registers_->a & 0x01u) == 0x01;
-            const uint16_t temp_result =
-                    static_cast<uint16_t>(registers_->a >> 1u) | carry_in;
-            registers_->a = static_cast<uint8_t>(temp_result);
-            set_carry(carry_out);
-            set_zero(registers_->a);
-            set_negative(registers_->a);
-        });
+    case Instruction::RorZeropageX:
+    case Instruction::RorAbsoluteX:
+        result.append(
+                create_right_shift_instruction(*state_.current_opcode, true));
         break;
     case Instruction::OraImmediate:
     case Instruction::OraAbsolute:
@@ -840,6 +833,37 @@ Pipeline Mos6502::create_left_shift_instruction(Opcode opcode,
             registers_->a = result_8bit;
         } else {
             mmu_->write_byte(effective_address_, result_8bit);
+        }
+    });
+    return result;
+}
+
+Pipeline Mos6502::create_right_shift_instruction(Opcode opcode,
+        bool shift_in_carry) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
+    Pipeline result;
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
+
+    result.push([=]() {
+        const uint8_t source_value =
+                opcode.address_mode == AddressMode::Accumulator ? registers_->a
+                                                                : tmp_;
+
+        uint8_t shifted_value = source_value >> 1u;
+        if (shift_in_carry) {
+            const auto carry = registers_->p & C_FLAG
+                                       ? static_cast<uint8_t>(0b1000'0000)
+                                       : static_cast<uint8_t>(0x00);
+            shifted_value |= carry;
+        }
+        set_carry(source_value & 0x01u);
+        set_zero(shifted_value);
+        set_negative(shifted_value);
+
+        if (opcode.address_mode == AddressMode::Accumulator) {
+            registers_->a = shifted_value;
+        } else {
+            mmu_->write_byte(effective_address_, shifted_value);
         }
     });
     return result;
