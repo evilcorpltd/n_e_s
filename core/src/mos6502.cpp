@@ -424,11 +424,13 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::IncZeropage:
     case Instruction::IncZeropageX:
     case Instruction::IncAbsoluteX:
+    case Instruction::IncAbsolute:
         result.append(create_inc_instruction(*state_.current_opcode));
         break;
     case Instruction::DecZeropage:
     case Instruction::DecZeropageX:
     case Instruction::DecAbsoluteX:
+    case Instruction::DecAbsolute:
         result.append(create_dec_instruction(*state_.current_opcode));
         break;
     case Instruction::InxImplied:

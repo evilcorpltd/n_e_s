@@ -179,6 +179,8 @@ Opcode decode(const uint8_t op) {
         return {Family::CPY, CpyAbsolute, AddressMode::Absolute};
     case CmpAbsolute:
         return {Family::CMP, CmpAbsolute, AddressMode::Absolute};
+    case DecAbsolute:
+        return {Family::DEC, DecAbsolute, AddressMode::Absolute};
     case BneRelative:
         return {Family::BNE, BneRelative, AddressMode::Relative};
     case CmpIndirectY:
@@ -215,6 +217,8 @@ Opcode decode(const uint8_t op) {
         return {Family::CPX, CpxAbsolute, AddressMode::Absolute};
     case SbcAbsolute:
         return {Family::SBC, SbcAbsolute, AddressMode::Absolute};
+    case IncAbsolute:
+        return {Family::INC, IncAbsolute, AddressMode::Absolute};
     case BeqRelative:
         return {Family::BEQ, BeqRelative, AddressMode::Relative};
     case SbcIndirectY:
