@@ -37,9 +37,11 @@ enum Opcode : uint8_t {
     ASL_ABS = 0x0E,
     BPL = 0x10,
     ORA_ZEROX = 0x15,
+    ASL_ZEROX = 0x16,
     CLC = 0x18,
     ORA_ABSY = 0x19,
     ORA_ABSX = 0x1D,
+    ASL_ABSX = 0x1E,
     JSR = 0x20,
     BIT_ZERO = 0x24,
     PLP = 0x28,
@@ -1012,12 +1014,22 @@ TEST_F(CpuZeropageTest, asl_zero_clears_c_z_sets_n) {
 
     run_readwrite_instruction(ASL_ZERO, 0b10101010);
 }
+TEST_F(CpuZeropageIndexedTest, asl_zerox_shifts) {
+    memory_value = 0b00100101;
+
+    run_readwrite_instruction(ASL_ZEROX, IndexReg::X, 0b01001010);
+}
 TEST_F(CpuAbsoluteTest, asl_abs_sets_z_c) {
     registers.p = N_FLAG;
     expected.p = C_FLAG | Z_FLAG;
     memory_content = 0b10000000;
 
     run_readwrite_instruction(ASL_ABS, 0b00000000);
+}
+TEST_F(CpuAbsoluteIndexedTest, asl_absx_shifts) {
+    memory_content = 0b00100101;
+
+    run_readwrite_instruction(ASL_ABSX, IndexReg::X, 0b01001010);
 }
 
 TEST_F(CpuTest, php_sets_b_flag) {
