@@ -39,7 +39,11 @@ public:
         for (int cycles = 1; cycles < max_cycles; ++cycles) {
             step_execution(1);
 
-            if (registers.pc == mmu.read_word(kBrkAddress)) {
+            const uint16_t break_pc =
+                    mmu.read_byte(kBrkAddress) |
+                    static_cast<uint16_t>(
+                            mmu.read_byte(kBrkAddress + 1u) << 8u);
+            if (registers.pc == break_pc) {
                 return cycles;
             }
         }
@@ -53,15 +57,22 @@ public:
     }
 
     void set_reset_address(uint16_t address) {
-        mmu.write_word(kResetAddress, address);
+        write_word(kResetAddress, address);
     }
 
     void set_break_address(uint16_t address) {
-        mmu.write_word(kBrkAddress, address);
+        write_word(kBrkAddress, address);
     }
 
     void set_nmi_address(uint16_t address) {
-        mmu.write_word(kNmiAddress, address);
+        write_word(kNmiAddress, address);
+    }
+
+    void write_word(uint16_t address, uint16_t value) {
+        const auto low = static_cast<uint8_t>(value & 0xFFu);
+        const auto upper = static_cast<uint8_t>(value >> 8u);
+        mmu.write_byte(address, low);
+        mmu.write_byte(address + 1u, upper);
     }
 
     CpuRegisters registers;
