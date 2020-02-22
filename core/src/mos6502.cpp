@@ -422,6 +422,11 @@ Pipeline Mos6502::parse_next_instruction() {
         result.append(create_compare_instruction(*state_.current_opcode));
         break;
     case Instruction::NopImplied:
+    case Instruction::NopZeropage04:
+    case Instruction::NopZeropage44:
+    case Instruction::NopZeropage64:
+        result.append(create_addressing_steps(
+                state_.current_opcode->address_mode, memory_access));
         result.push([]() { /* Do nothing. */ });
         break;
     case Instruction::IncZeropage:

@@ -7,6 +7,7 @@ namespace n_e_s::core {
 
 enum Instruction : uint8_t {
     BrkImplied = 0x00,
+    NopZeropage04 = 0x04, // Undocumented
     OraZeropage = 0x05,
     AslZeropage = 0x06,
     PhpImplied = 0x08,
@@ -42,6 +43,7 @@ enum Instruction : uint8_t {
     // RolAbsoluteX = 0x3E,
     RtiImplied = 0x40,
     EorIndirectX = 0x41,
+    NopZeropage44 = 0x44, // Undocumented
     EorZeropage = 0x45,
     LsrZeropage = 0x46,
     PhaImplied = 0x48,
@@ -60,6 +62,7 @@ enum Instruction : uint8_t {
     LsrAbsoluteX = 0x5E,
     RtsImplied = 0x60,
     AdcIndirectX = 0x61,
+    NopZeropage64 = 0x64, // Undocumented
     AdcZeropage = 0x65,
     RorZeropage = 0x66,
     PlaImplied = 0x68,
