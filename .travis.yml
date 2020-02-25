@@ -21,7 +21,7 @@ matrix:
             - clang-tidy-9
             - libstdc++-8-dev
       script:
-        - CXX=clang++-9 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+        - CXX=clang++-9 cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
         - travis_wait run-clang-tidy-9.py -q -p . "application|core|nes" -header-filter=".*"
 
     - name: "clang-format"
@@ -71,7 +71,7 @@ matrix:
       addons: *gcc9
       before_install: pip install gcovr --user
       script:
-        - CXX=g++-9 CXXFLAGS="--coverage" LDFLAGS="--coverage" cmake ..
+        - CXX=g++-9 CXXFLAGS="--coverage" LDFLAGS="--coverage" cmake -DCMAKE_BUILD_TYPE=Debug ..
         - make
         - ctest --output-on-failure
         - gcovr --gcov-executable gcov-9 -p --root .. --fail-under-line=94 --exclude 'CMakeFiles/' --exclude '_deps/' --exclude '(.+/)?test/' --exclude '.+/application/'
@@ -120,7 +120,8 @@ matrix:
 
 install:
   - python3 -m pip install pip==19.3.1 --upgrade
-  - python3 -m pip install cmake==3.16.3 ninja==1.9.0.post1 --upgrade --user
+  - python3 -m pip install setuptools --upgrade --user
+  - python3 -m pip install cmake==3.16.3 ninja==1.9.0.post1 conan --upgrade --user
 
 before_script:
   - cmake --version
