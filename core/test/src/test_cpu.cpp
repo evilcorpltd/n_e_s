@@ -1179,19 +1179,15 @@ TEST_F(CpuTest, clc) {
 }
 
 TEST_F(CpuTest, jsr) {
+    registers.pc = 0x1234;
     stage_instruction(JSR);
     expected.pc = 0xDEAD;
+    expected.sp -= 2; // pc (2 bytes)
 
-    const uint8_t expected_pc_stack_addr =
-            expected.sp - static_cast<uint8_t>(1);
-    expected.sp -= 2; // 1 word
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0xAD));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2)).WillOnce(Return(0xDE));
-
-    EXPECT_CALL(mmu,
-            write_word(
-                    kStackOffset + expected_pc_stack_addr, registers.pc + 2));
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0xAD));
+    EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp, 0x12));
+    EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp - 1u, 0x36));
+    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0xDE));
 
     step_execution(6);
     EXPECT_EQ(expected, registers);

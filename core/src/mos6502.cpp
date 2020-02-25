@@ -53,11 +53,6 @@ void Mos6502::Stack::push_byte(uint8_t byte) {
     mmu_->write_byte(ram_offset_ + registers_->sp--, byte);
 }
 
-void Mos6502::Stack::push_word(uint16_t word) {
-    mmu_->write_word(ram_offset_ + --registers_->sp, word);
-    --registers_->sp;
-}
-
 Mos6502::Mos6502(CpuRegisters *const registers, IMmu *const mmu)
         : registers_(registers),
           mmu_(mmu),
@@ -175,13 +170,22 @@ Pipeline Mos6502::parse_next_instruction() {
         result.push([=]() { clear_flag(C_FLAG); });
         break;
     case Instruction::JsrAbsolute:
-        result.append(create_absolute_addressing_steps(
-                get_memory_access(state_.current_opcode->family)));
+        result.push([=]() { tmp_ = mmu_->read_byte(registers_->pc++); });
         result.push([=]() {
-            /* Do nothing. */
+            /* Internal operation. Do nothing. */
         });
-        result.push([=]() { stack_.push_word(--registers_->pc); });
-        result.push([=]() { registers_->pc = effective_address_; });
+        result.push([=]() {
+            const auto pch = static_cast<uint8_t>(registers_->pc >> 8u);
+            stack_.push_byte(pch);
+        });
+        result.push([=]() {
+            const auto pcl = static_cast<uint8_t>(registers_->pc);
+            stack_.push_byte(pcl);
+        });
+        result.push([=]() {
+            const uint16_t pch = mmu_->read_byte(registers_->pc) << 8u;
+            registers_->pc = pch | tmp_;
+        });
         break;
     case Instruction::BmiRelative:
         result.append(create_branch_instruction(
