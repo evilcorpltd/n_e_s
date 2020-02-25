@@ -1,0 +1,25 @@
+cc_library(
+    name = "core",
+    srcs = glob([
+        "src/**",
+    ]),
+    hdrs = glob([
+        "include/**/*.h",
+    ]),
+    copts = ["-Icore/src"],
+    strip_include_prefix = "include/",
+    visibility = ["//visibility:public"],
+)
+
+cc_test(
+    name = "core_test",
+    size = "small",
+    srcs = glob([
+        "test/src/*.cpp",
+        "test/src/*.h",
+    ]),
+    deps = [
+        ":core",
+        "@gtest",
+    ],
+)

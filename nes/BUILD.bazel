@@ -1,0 +1,24 @@
+cc_library(
+    name = "nes",
+    srcs = glob([
+        "src/**",
+    ]),
+    hdrs = glob([
+        "include/**/*.h",
+    ]),
+    strip_include_prefix = "include/",
+    visibility = ["//visibility:public"],
+    deps = ["//core"],
+)
+
+cc_test(
+    name = "nes_test",
+    size = "small",
+    srcs = glob([
+        "test/src/*.cpp",
+    ]),
+    deps = [
+        ":nes",
+        "@gtest",
+    ],
+)
