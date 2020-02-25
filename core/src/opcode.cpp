@@ -230,9 +230,9 @@ Opcode decode(const uint8_t op) {
     case SedImplied:
         return {Family::SED, SedImplied, AddressMode::Implied};
     case SbcAbsoluteY:
-        return {Family::SED, SbcAbsoluteY, AddressMode::AbsoluteY};
+        return {Family::SBC, SbcAbsoluteY, AddressMode::AbsoluteY};
     case SbcAbsoluteX:
-        return {Family::SED, SbcAbsoluteX, AddressMode::AbsoluteX};
+        return {Family::SBC, SbcAbsoluteX, AddressMode::AbsoluteX};
     case IncAbsoluteX:
         return {Family::INC, IncAbsoluteX, AddressMode::AbsoluteX};
     case EorIndirectX:
