@@ -15,11 +15,13 @@ conan_add_remote(NAME bincrafters URL
 
 conan_cmake_run(
   REQUIRES
-  ${CONAN_EXTRA_REQUIRES}
-  fmt/6.0.0
+     ${CONAN_EXTRA_REQUIRES}
+     fmt/6.0.0
+     gtest/1.10.0
   OPTIONS
   BASIC_SETUP
   CMAKE_TARGETS # individual targets to link to
   BUILD
-  missing)
+    missing
+)
 endmacro()

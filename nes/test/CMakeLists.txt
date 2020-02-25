@@ -3,15 +3,6 @@ include(GoogleTest)
 
 project(test_n_e_s_nes)
 
-FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG        703bd9caab50b139428cea1aaff9974ebee5742e
-)
-
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
 add_executable(${PROJECT_NAME}
     src/main.cpp
     src/test_nes.cpp
@@ -33,7 +24,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
         n_e_s::nes
         n_e_s::warnings
-        gmock
+        CONAN_PKG::gtest
 )
 
 gtest_discover_tests(${PROJECT_NAME})
