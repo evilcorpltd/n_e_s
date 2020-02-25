@@ -130,6 +130,7 @@ enum Opcode : uint8_t {
     DEX = 0xCA,
     CPY_ABS = 0xCC,
     CMP_ABS = 0xCD,
+    DEC_ABS = 0xCE,
     BNE = 0xD0,
     CMP_INDINX = 0xD1,
     CMP_ZEROX = 0xD5,
@@ -148,6 +149,7 @@ enum Opcode : uint8_t {
     NOP = 0xEA,
     CPX_ABS = 0xEC,
     SBC_ABS = 0xED,
+    INC_ABS = 0xEE,
     BEQ = 0xF0,
     SBC_INDINX = 0xF1,
     SBC_ZEROX = 0xF5,
@@ -2353,7 +2355,10 @@ TEST_F(CpuTest, inc_zerox_increments) {
     step_execution(6);
     EXPECT_EQ(expected, registers);
 }
-
+TEST_F(CpuAbsoluteTest, inc_abs_increments) {
+    memory_content = 0x09;
+    run_readwrite_instruction(INC_ABS, 0x0A);
+}
 TEST_F(CpuAbsoluteIndexedTest, inc_absx_clears_n_flag) {
     registers.p = N_FLAG;
     memory_content = 125u;
@@ -2401,7 +2406,10 @@ TEST_F(CpuTest, dec_zerox_decrements) {
     step_execution(6);
     EXPECT_EQ(expected, registers);
 }
-
+TEST_F(CpuAbsoluteTest, dec_abs_decrements) {
+    memory_content = 0x09;
+    run_readwrite_instruction(DEC_ABS, 0x08);
+}
 TEST_F(CpuAbsoluteIndexedTest, dec_absx_clears_n_flag) {
     registers.p = N_FLAG;
     memory_content = 126;
