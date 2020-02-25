@@ -9,6 +9,8 @@
 #include "core/opcode.h"
 #include "nes/nes.h"
 
+#include <fmt/format.h>
+
 namespace {
 
 constexpr bool is_negative(uint8_t byte) {
@@ -150,14 +152,12 @@ std::string get_memory_string(const n_e_s::core::Opcode &opcode,
 }
 
 std::string get_reg_string(const n_e_s::core::CpuRegisters &reg) {
-    std::stringstream ss;
-    ss << std::hex << std::uppercase;
-    ss << "A:" << std::setfill('0') << std::setw(2) << +reg.a << " "
-       << "X:" << std::setfill('0') << std::setw(2) << +reg.x << " "
-       << "Y:" << std::setfill('0') << std::setw(2) << +reg.y << " "
-       << "P:" << std::setfill('0') << std::setw(2) << +reg.p << " "
-       << "SP:" << std::setfill('0') << std::setw(2) << +reg.sp;
-    return ss.str();
+    return fmt::format("A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X}",
+            reg.a,
+            reg.x,
+            reg.y,
+            reg.p,
+            reg.sp);
 }
 
 std::string get_execution_string(const n_e_s::nes::Nes &nes) {

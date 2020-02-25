@@ -45,4 +45,5 @@ target_link_libraries(nestest
         n_e_s::nes
         n_e_s::core
         n_e_s::warnings
+        CONAN_PKG::fmt
 )
