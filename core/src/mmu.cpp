@@ -39,30 +39,9 @@ uint8_t Mmu::read_byte(uint16_t addr) const {
     throw InvalidAddress(addr);
 }
 
-uint16_t Mmu::read_word(uint16_t addr) const {
-    if (const IMemBank *mem_bank = get_mem_bank(addr)) {
-        auto low = mem_bank->read_byte(addr);
-        auto high = static_cast<uint16_t>(
-                mem_bank->read_byte(addr + static_cast<uint16_t>(1)) << 8u);
-        return high | low;
-    }
-
-    throw InvalidAddress(addr);
-}
-
 void Mmu::write_byte(uint16_t addr, uint8_t byte) {
     if (IMemBank *mem_bank = get_mem_bank(addr)) {
         mem_bank->write_byte(addr, byte);
-    } else {
-        throw InvalidAddress(addr);
-    }
-}
-
-void Mmu::write_word(uint16_t addr, uint16_t word) {
-    if (IMemBank *mem_bank = get_mem_bank(addr)) {
-        mem_bank->write_byte(addr, static_cast<uint8_t>(word & 0xFFu));
-        mem_bank->write_byte(addr + static_cast<uint16_t>(1),
-                static_cast<uint8_t>(word >> 8u));
     } else {
         throw InvalidAddress(addr);
     }

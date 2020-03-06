@@ -42,15 +42,6 @@ TEST_F(MmuTest, read_write_byte) {
     }
 }
 
-TEST_F(MmuTest, read_write_word) {
-    const uint16_t word = 0xF00D;
-
-    for (uint16_t addr : get_addr_list()) {
-        mmu->write_word(addr, word);
-        EXPECT_EQ(word, mmu->read_word(addr));
-    }
-}
-
 TEST_F(MmuTest, read_write_byte_to_ppu) {
     const uint8_t byte = 0xAB;
 
@@ -65,40 +56,9 @@ TEST_F(MmuTest, read_write_byte_to_ppu) {
     EXPECT_EQ(byte, mmu->read_byte(0x3000));
 }
 
-TEST_F(MmuTest, read_write_word_to_ppu) {
-    const uint16_t word = 0xF00D;
-
-    EXPECT_CALL(ppu, write_byte(0x2000, 0x0D));
-    EXPECT_CALL(ppu, read_byte(0x2000)).WillOnce(testing::Return(0x0D));
-    EXPECT_CALL(ppu, write_byte(0x2001, 0xF0));
-    EXPECT_CALL(ppu, read_byte(0x2001)).WillOnce(testing::Return(0xF0));
-    EXPECT_CALL(ppu, write_byte(0x3000, 0x0D));
-    EXPECT_CALL(ppu, read_byte(0x3000)).WillOnce(testing::Return(0x0D));
-    EXPECT_CALL(ppu, write_byte(0x3001, 0xF0));
-    EXPECT_CALL(ppu, read_byte(0x3001)).WillOnce(testing::Return(0xF0));
-
-    mmu->write_word(0x2000, word);
-    EXPECT_EQ(word, mmu->read_word(0x2000));
-    mmu->write_word(0x3000, word);
-    EXPECT_EQ(word, mmu->read_word(0x3000));
-}
-
 TEST_F(MmuTest, read_write_byte_io_dev_bank) {
     mmu->write_byte(0x4018, 0x33);
     EXPECT_EQ(0x33, mmu->read_byte(0x4018));
-}
-
-TEST_F(MmuTest, byte_order) {
-    const uint8_t byte0d = 0x0D;
-    const uint8_t bytef0 = 0xF0;
-
-    mmu->write_word(0, 0xF00D);
-    EXPECT_EQ(byte0d, mmu->read_byte(0));
-    EXPECT_EQ(bytef0, mmu->read_byte(1));
-
-    mmu->write_byte(0, bytef0);
-    mmu->write_byte(1, byte0d);
-    EXPECT_EQ(0x0DF0, mmu->read_word(0));
 }
 
 TEST_F(MmuTest, ram_bank_mirroring) {
@@ -118,16 +78,8 @@ TEST_F(MmuInvalidAddressTest, read_byte_invalid_address) {
     EXPECT_THROW(mmu->read_byte(0x3333), InvalidAddress);
 }
 
-TEST_F(MmuInvalidAddressTest, read_word_invalid_address) {
-    EXPECT_THROW(mmu->read_word(0x2244), InvalidAddress);
-}
-
 TEST_F(MmuInvalidAddressTest, write_byte_invalid_address) {
     EXPECT_THROW(mmu->write_byte(0x1234, 0xFF), InvalidAddress);
-}
-
-TEST_F(MmuInvalidAddressTest, write_word_invalid_address) {
-    EXPECT_THROW(mmu->write_word(0x1111, 0xFFAA), InvalidAddress);
 }
 
 } // namespace
