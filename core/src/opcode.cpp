@@ -59,24 +59,32 @@ Opcode decode(const uint8_t op) {
         return {Family::ADC, AdcIndirectX, AddressMode::IndexedIndirect};
     case AdcZeropage:
         return {Family::ADC, AdcZeropage, AddressMode::Zeropage};
+    case RorZeropage:
+        return {Family::ROR, RorZeropage, AddressMode::Zeropage};
     case PlaImplied:
         return {Family::PLA, PlaImplied, AddressMode::Implied};
     case AdcImmediate:
         return {Family::ADC, AdcImmediate, AddressMode::Immediate};
     case AdcAbsolute:
         return {Family::ADC, AdcAbsolute, AddressMode::Absolute};
+    case RorAbsolute:
+        return {Family::ROR, RorAbsolute, AddressMode::Absolute};
     case BvsRelative:
         return {Family::BVS, BvsRelative, AddressMode::Relative};
     case AdcIndirectY:
         return {Family::ADC, AdcIndirectY, AddressMode::IndirectIndexed};
     case AdcZeropageX:
         return {Family::ADC, AdcZeropageX, AddressMode::ZeropageX};
+    case RorZeropageX:
+        return {Family::ROR, RorZeropageX, AddressMode::ZeropageX};
     case SeiImplied:
         return {Family::SEI, SeiImplied, AddressMode::Implied};
     case AdcAbsoluteY:
         return {Family::ADC, AdcAbsoluteY, AddressMode::AbsoluteY};
     case AdcAbsoluteX:
         return {Family::ADC, AdcAbsoluteX, AddressMode::AbsoluteX};
+    case RorAbsoluteX:
+        return {Family::ROR, RorAbsoluteX, AddressMode::AbsoluteX};
     case StaIndexedIndirect:
         return {Family::STA, StaIndexedIndirect, AddressMode::IndexedIndirect};
     case StyZeropage:
@@ -239,16 +247,24 @@ Opcode decode(const uint8_t op) {
         return {Family::EOR, EorIndirectX, AddressMode::IndexedIndirect};
     case EorZeropage:
         return {Family::EOR, EorZeropage, AddressMode::Zeropage};
+    case LsrZeropage:
+        return {Family::LSR, LsrZeropage, AddressMode::Zeropage};
     case EorImmediate:
         return {Family::EOR, EorImmediate, AddressMode::Immediate};
     case EorAbsolute:
         return {Family::EOR, EorAbsolute, AddressMode::Absolute};
+    case LsrAbsolute:
+        return {Family::LSR, LsrAbsolute, AddressMode::Absolute};
     case EorIndirectY:
         return {Family::EOR, EorIndirectY, AddressMode::IndirectIndexed};
     case EorZeropageX:
         return {Family::EOR, EorZeropageX, AddressMode::ZeropageX};
+    case LsrZeropageX:
+        return {Family::LSR, LsrZeropageX, AddressMode::ZeropageX};
     case EorAbsoluteX:
         return {Family::EOR, EorAbsoluteX, AddressMode::AbsoluteX};
+    case LsrAbsoluteX:
+        return {Family::LSR, LsrAbsoluteX, AddressMode::AbsoluteX};
     case EorAbsoluteY:
         return {Family::EOR, EorAbsoluteY, AddressMode::AbsoluteY};
     case RolAccumulator:
@@ -292,7 +308,6 @@ MemoryAccess get_memory_access(const Family family) {
     case Family::JSR:
     case Family::BMI:
     case Family::SEC:
-    case Family::LSR:
     case Family::PHA:
     case Family::JMP:
     case Family::BVC:
@@ -339,6 +354,7 @@ MemoryAccess get_memory_access(const Family family) {
     case Family::ROL:
     case Family::ROR:
     case Family::ASL:
+    case Family::LSR:
         return MemoryAccess::ReadWrite;
     }
     // Should not happen

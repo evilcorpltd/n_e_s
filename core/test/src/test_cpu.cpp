@@ -54,31 +54,39 @@ enum Opcode : uint8_t {
     RTI = 0x40,
     EOR_INXIND = 0x41,
     EOR_ZERO = 0x45,
-    LSR_ACC = 0x4A,
+    LSR_ZERO = 0x46,
     PHA = 0x48,
     EOR_IMM = 0x49,
+    LSR_ACC = 0x4A,
     JMP = 0x4C,
     EOR_ABS = 0x4D,
+    LSR_ABS = 0x4E,
     BVC = 0x50,
     EOR_INDINX = 0x51,
     EOR_ZEROX = 0x55,
+    LSR_ZEROX = 0x56,
     CLI = 0x58,
     EOR_ABSY = 0x59,
     EOR_ABSX = 0x5D,
+    LSR_ABSX = 0x5E,
     RTS = 0x60,
     ADC_INDX = 0x61,
     ADC_ZERO = 0x65,
+    ROR_ZERO = 0x66,
     PLA = 0x68,
     ADC_IMM = 0x69,
     ROR_ACC = 0x6A,
     JMP_IND = 0x6C,
     ADC_ABS = 0x6D,
+    ROR_ABS = 0x6E,
     BVS = 0x70,
     ADC_INDY = 0x71,
     ADC_ZEROX = 0x75,
+    ROR_ZEROX = 0x76,
     SEI = 0x78,
     ADC_ABSY = 0x79,
     ADC_ABSX = 0x7D,
+    ROR_ABSX = 0x7E,
     STA_INXIND = 0x81,
     TXA = 0x8A,
     STY_ABS = 0x8C,
@@ -613,6 +621,29 @@ public:
         EXPECT_CALL(mmu, write_byte(effective_address, memory_value));
 
         step_execution(4);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void run_readwrite_instruction(uint8_t instruction,
+            IndexReg index_reg,
+            uint8_t new_memory_content) {
+        effective_address = u16_to_u8(index_value + reg_value);
+        set_index_reg(index_reg, reg_value);
+        registers.pc = expected.pc = start_pc;
+        stage_instruction(instruction);
+        expected.pc += 1;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1)).WillOnce(Return(index_value));
+        EXPECT_CALL(mmu, read_byte(index_value))
+                .WillOnce(Return(0xCD)); // Dummy read
+        EXPECT_CALL(mmu, read_byte(effective_address))
+                .WillOnce(Return(memory_value));
+        EXPECT_CALL(mmu,
+                write_byte(effective_address,
+                        memory_value)); // Extra write with old value
+        EXPECT_CALL(mmu, write_byte(effective_address, new_memory_content));
+
+        step_execution(6);
         EXPECT_EQ(expected, registers);
     }
 
@@ -1274,6 +1305,47 @@ TEST_F(CpuTest, lsr_a_clears_c_z_n_flags) {
     expected.p = 0;
 
     step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(CpuZeropageTest, lsr_zeropage_shifts) {
+    memory_content = 0b01001000;
+    run_readwrite_instruction(LSR_ZERO, 0b00100100);
+}
+TEST_F(CpuZeropageIndexedTest, lsr_zeropagex_sets_reg) {
+    memory_value = 0b01001000;
+    run_readwrite_instruction(LSR_ZEROX, IndexReg::X, 0b00100100);
+}
+TEST_F(CpuAbsoluteTest, lsr_abs_shifts) {
+    memory_content = 0b01001000;
+    run_readwrite_instruction(LSR_ABS, 0b00100100);
+}
+TEST_F(CpuAbsoluteTest, lsr_abs_shifts_in_zero) {
+    memory_content = 0b01001000;
+    registers.p = C_FLAG;
+    run_readwrite_instruction(LSR_ABS, 0b00100100);
+}
+TEST_F(CpuAbsoluteTest, lsr_abs_shifts_out_carry) {
+    memory_content = 0b01001001;
+    expected.p = C_FLAG;
+    run_readwrite_instruction(LSR_ABS, 0b00100100);
+}
+TEST_F(CpuTest, lsr_absx_shifts) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0xED;
+
+    stage_instruction(LSR_ABSX);
+    expected.pc += 2;
+
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x12));
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
+            .WillOnce(Return(0xDEAD));
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED)).WillOnce(Return(0b01001000));
+    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0b01001000));
+    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0b00100100));
+
+    step_execution(7);
     EXPECT_EQ(expected, registers);
 }
 
@@ -3164,6 +3236,49 @@ TEST_F(CpuTest, ror_a_set_neg_retain_c) {
     step_execution(2);
     EXPECT_EQ(expected, registers);
 }
+
+TEST_F(CpuZeropageTest, ror_zeropage_shifts) {
+    memory_content = 0b01001000;
+    run_readwrite_instruction(ROR_ZERO, 0b00100100);
+}
+TEST_F(CpuZeropageIndexedTest, ror_zeropagex_sets_reg) {
+    memory_value = 0b01001000;
+    run_readwrite_instruction(ROR_ZEROX, IndexReg::X, 0b00100100);
+}
+TEST_F(CpuAbsoluteTest, ror_abs_shifts) {
+    memory_content = 0b01001000;
+    run_readwrite_instruction(ROR_ABS, 0b00100100);
+}
+TEST_F(CpuAbsoluteTest, ror_abs_shifts_in_carry) {
+    memory_content = 0b01001000;
+    registers.p = C_FLAG;
+    expected.p = N_FLAG;
+    run_readwrite_instruction(ROR_ABS, 0b10100100);
+}
+TEST_F(CpuAbsoluteTest, ror_abs_shifts_out_carry) {
+    memory_content = 0b01001001;
+    expected.p = C_FLAG;
+    run_readwrite_instruction(ROR_ABS, 0b00100100);
+}
+TEST_F(CpuTest, ror_absx_shifts) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0xED;
+
+    stage_instruction(ROR_ABSX);
+    expected.pc += 2;
+
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x12));
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
+            .WillOnce(Return(0xDEAD));
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED)).WillOnce(Return(0b01001000));
+    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0b01001000));
+    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0b00100100));
+
+    step_execution(7);
+    EXPECT_EQ(expected, registers);
+}
+
 // ORA, IMM
 TEST_F(CpuTest, ora_imm) {
     registers.pc = expected.pc = 0x3210;
