@@ -28,6 +28,7 @@ const uint16_t kNmiAddress = 0xFFFA;
 // implementation. Look at a data sheet and don't cheat!
 enum Opcode : uint8_t {
     BRK = 0x00,
+    NOP_ZERO04 = 0x04,
     ORA_ZERO = 0x05,
     ASL_ZERO = 0x06,
     PHP = 0x08,
@@ -53,6 +54,7 @@ enum Opcode : uint8_t {
     AND_ABSX = 0x3D,
     RTI = 0x40,
     EOR_INXIND = 0x41,
+    NOP_ZERO44 = 0x44,
     EOR_ZERO = 0x45,
     LSR_ZERO = 0x46,
     PHA = 0x48,
@@ -71,6 +73,7 @@ enum Opcode : uint8_t {
     LSR_ABSX = 0x5E,
     RTS = 0x60,
     ADC_INDX = 0x61,
+    NOP_ZERO64 = 0x64,
     ADC_ZERO = 0x65,
     ROR_ZERO = 0x66,
     PLA = 0x68,
@@ -2354,6 +2357,30 @@ TEST_F(CpuTest, nop) {
     stage_instruction(NOP);
 
     step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+TEST_F(CpuTest, nop04_zero) {
+    stage_instruction(NOP_ZERO04);
+    expected.pc += 1;
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0xCD));
+
+    step_execution(3);
+    EXPECT_EQ(expected, registers);
+}
+TEST_F(CpuTest, nop44_zero) {
+    stage_instruction(NOP_ZERO44);
+    expected.pc += 1;
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0xCD));
+
+    step_execution(3);
+    EXPECT_EQ(expected, registers);
+}
+TEST_F(CpuTest, nop64_zero) {
+    stage_instruction(NOP_ZERO44);
+    expected.pc += 1;
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0xCD));
+
+    step_execution(3);
     EXPECT_EQ(expected, registers);
 }
 

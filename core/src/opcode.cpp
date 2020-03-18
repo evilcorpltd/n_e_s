@@ -9,6 +9,8 @@ Opcode decode(const uint8_t op) {
     switch (op) {
     case BrkImplied:
         return {Family::BRK, BrkImplied, AddressMode::Implied};
+    case NopZeropage04:
+        return {Family::NOP, NopZeropage04, AddressMode::Zeropage};
     case AslZeropage:
         return {Family::ASL, AslZeropage, AddressMode::Zeropage};
     case PhpImplied:
@@ -57,6 +59,8 @@ Opcode decode(const uint8_t op) {
         return {Family::RTS, RtsImplied, AddressMode::Implied};
     case AdcIndirectX:
         return {Family::ADC, AdcIndirectX, AddressMode::IndexedIndirect};
+    case NopZeropage64:
+        return {Family::NOP, NopZeropage64, AddressMode::Zeropage};
     case AdcZeropage:
         return {Family::ADC, AdcZeropage, AddressMode::Zeropage};
     case RorZeropage:
@@ -245,6 +249,8 @@ Opcode decode(const uint8_t op) {
         return {Family::INC, IncAbsoluteX, AddressMode::AbsoluteX};
     case EorIndirectX:
         return {Family::EOR, EorIndirectX, AddressMode::IndexedIndirect};
+    case NopZeropage44:
+        return {Family::NOP, NopZeropage44, AddressMode::Zeropage};
     case EorZeropage:
         return {Family::EOR, EorZeropage, AddressMode::Zeropage};
     case LsrZeropage:
