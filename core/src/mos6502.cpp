@@ -500,6 +500,8 @@ Pipeline Mos6502::parse_next_instruction() {
         result.append(
                 create_right_shift_instruction(*state_.current_opcode, true));
         break;
+    case Instruction::OraIndexedIndirect:
+    case Instruction::OraIndirectIndexed:
     case Instruction::OraImmediate:
     case Instruction::OraAbsolute:
     case Instruction::OraAbsoluteY:
