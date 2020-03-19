@@ -9,6 +9,8 @@ Opcode decode(const uint8_t op) {
     switch (op) {
     case BrkImplied:
         return {Family::BRK, BrkImplied, AddressMode::Implied};
+    case OraIndexedIndirect:
+        return {Family::ORA, OraIndexedIndirect, AddressMode::IndexedIndirect};
     case NopZeropage04:
         return {Family::NOP, NopZeropage04, AddressMode::Zeropage};
     case AslZeropage:
@@ -295,6 +297,8 @@ Opcode decode(const uint8_t op) {
         return {Family::ORA, OraZeropage, AddressMode::Zeropage};
     case OraZeropageX:
         return {Family::ORA, OraZeropageX, AddressMode::ZeropageX};
+    case OraIndirectIndexed:
+        return {Family::ORA, OraIndirectIndexed, AddressMode::IndirectIndexed};
     default:
         // Since this is an invalid opcode the instruction and address mode
         // have no real meaning, so we just use 0, 0 for them.

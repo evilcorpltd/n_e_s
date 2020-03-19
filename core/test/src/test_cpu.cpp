@@ -28,11 +28,13 @@ const uint16_t kNmiAddress = 0xFFFA;
 // implementation. Look at a data sheet and don't cheat!
 enum Opcode : uint8_t {
     BRK = 0x00,
+    ORA_INXIND = 0x01,
     NOP_ZERO04 = 0x04,
     ORA_ZERO = 0x05,
     ASL_ZERO = 0x06,
     PHP = 0x08,
     ORA_IMM = 0x09,
+    ORA_INDINX = 0x11,
     ASL_ACC = 0x0A,
     ORA_ABS = 0x0D,
     ASL_ABS = 0x0E,
@@ -3437,4 +3439,33 @@ TEST_F(CpuZeropageIndexedTest, ora_zero_x) {
     expected.a = 0b00110011;
     run_read_instruction(ORA_ZEROX, IndexReg::X);
 }
+TEST_F(CpuIndexedIndirectTest, ora) {
+    memory_content = 0b00100011;
+    registers.a = 0b00110000;
+    registers.p = Z_FLAG | N_FLAG;
+    expected.a = 0b00110011;
+
+    run_instruction(ORA_INXIND);
+}
+TEST_F(CpuTest, ora_indirect_indexed) {
+    registers.pc = expected.pc = 0x9000;
+    registers.y = expected.y = 0x10;
+    registers.a = 0b00110000;
+    registers.p = Z_FLAG | N_FLAG;
+    expected.a = 0b00110011;
+
+    stage_instruction(ORA_INDINX);
+
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x9001)).WillOnce(Return(0x42));
+    EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
+
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0x10)).WillOnce(Return(0b00100011));
+    step_execution(5);
+
+    EXPECT_EQ(expected, registers);
+}
+
 } // namespace
