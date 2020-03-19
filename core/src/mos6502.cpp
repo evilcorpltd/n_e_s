@@ -162,10 +162,14 @@ Pipeline Mos6502::parse_next_instruction() {
             clear_flag(B_FLAG);
         });
         break;
+    case Instruction::AndIndirectX:
     case Instruction::AndImmediate:
     case Instruction::AndAbsolute:
     case Instruction::AndAbsoluteX:
     case Instruction::AndAbsoluteY:
+    case Instruction::AndZeropage:
+    case Instruction::AndIndirectY:
+    case Instruction::AndZeropageX:
         result.append(create_and_instruction(*state_.current_opcode));
         break;
     case Instruction::ClcImplied:
