@@ -19,10 +19,14 @@ Opcode decode(const uint8_t op) {
         return {Family::PHP, PhpImplied, AddressMode::Implied};
     case AslAccumulator:
         return {Family::ASL, AslAccumulator, AddressMode::Accumulator};
+    case NopAbsolute0c:
+        return {Family::NOP, NopAbsolute0c, AddressMode::Absolute};
     case AslAbsolute:
         return {Family::ASL, AslAbsolute, AddressMode::Absolute};
     case BplRelative:
         return {Family::BPL, BplRelative, AddressMode::Relative};
+    case NopZeropageX14:
+        return {Family::NOP, NopZeropageX14, AddressMode::ZeropageX};
     case AslZeropageX:
         return {Family::ASL, AslZeropageX, AddressMode::ZeropageX};
     case ClcImplied:
@@ -53,6 +57,8 @@ Opcode decode(const uint8_t op) {
         return {Family::BMI, BmiRelative, AddressMode::Relative};
     case AndIndirectY:
         return {Family::AND, AndIndirectY, AddressMode::IndirectIndexed};
+    case NopZeropageX34:
+        return {Family::NOP, NopZeropageX34, AddressMode::ZeropageX};
     case AndZeropageX:
         return {Family::AND, AndZeropageX, AddressMode::ZeropageX};
     case RolZeropageX:
@@ -61,6 +67,8 @@ Opcode decode(const uint8_t op) {
         return {Family::SEC, SecImplied, AddressMode::Implied};
     case AndAbsoluteY:
         return {Family::AND, AndAbsoluteY, AddressMode::AbsoluteY};
+    case NopImplied3a:
+        return {Family::NOP, NopImplied3a, AddressMode::Implied};
     case AndAbsoluteX:
         return {Family::AND, AndAbsoluteX, AddressMode::AbsoluteX};
     case RolAbsoluteX:
@@ -99,6 +107,8 @@ Opcode decode(const uint8_t op) {
         return {Family::BVS, BvsRelative, AddressMode::Relative};
     case AdcIndirectY:
         return {Family::ADC, AdcIndirectY, AddressMode::IndirectIndexed};
+    case NopZeropageX74:
+        return {Family::NOP, NopZeropageX74, AddressMode::ZeropageX};
     case AdcZeropageX:
         return {Family::ADC, AdcZeropageX, AddressMode::ZeropageX};
     case RorZeropageX:
@@ -107,10 +117,14 @@ Opcode decode(const uint8_t op) {
         return {Family::SEI, SeiImplied, AddressMode::Implied};
     case AdcAbsoluteY:
         return {Family::ADC, AdcAbsoluteY, AddressMode::AbsoluteY};
+    case NopImplied7a:
+        return {Family::NOP, NopImplied7a, AddressMode::Implied};
     case AdcAbsoluteX:
         return {Family::ADC, AdcAbsoluteX, AddressMode::AbsoluteX};
     case RorAbsoluteX:
         return {Family::ROR, RorAbsoluteX, AddressMode::AbsoluteX};
+    case NopImmediate80:
+        return {Family::NOP, NopImmediate80, AddressMode::Immediate};
     case StaIndexedIndirect:
         return {Family::STA, StaIndexedIndirect, AddressMode::IndexedIndirect};
     case StyZeropage:
@@ -219,6 +233,8 @@ Opcode decode(const uint8_t op) {
         return {Family::BNE, BneRelative, AddressMode::Relative};
     case CmpIndirectY:
         return {Family::CMP, CmpIndirectY, AddressMode::IndirectIndexed};
+    case NopZeropageXd4:
+        return {Family::NOP, NopZeropageXd4, AddressMode::ZeropageX};
     case CmpZeropageX:
         return {Family::CMP, CmpZeropageX, AddressMode::ZeropageX};
     case DecZeropageX:
@@ -227,6 +243,8 @@ Opcode decode(const uint8_t op) {
         return {Family::CLD, CldImplied, AddressMode::Implied};
     case CmpAbsoluteY:
         return {Family::CMP, CmpAbsoluteY, AddressMode::AbsoluteY};
+    case NopImpliedDA:
+        return {Family::NOP, NopImpliedDA, AddressMode::Implied};
     case CmpAbsoluteX:
         return {Family::CMP, CmpAbsoluteX, AddressMode::AbsoluteX};
     case DecAbsoluteX:
@@ -257,6 +275,8 @@ Opcode decode(const uint8_t op) {
         return {Family::BEQ, BeqRelative, AddressMode::Relative};
     case SbcIndirectY:
         return {Family::SBC, SbcIndirectY, AddressMode::IndirectIndexed};
+    case NopZeropageXf4:
+        return {Family::NOP, NopZeropageXf4, AddressMode::ZeropageX};
     case SbcZeropageX:
         return {Family::SBC, SbcZeropageX, AddressMode::ZeropageX};
     case IncZeropageX:
@@ -265,6 +285,8 @@ Opcode decode(const uint8_t op) {
         return {Family::SED, SedImplied, AddressMode::Implied};
     case SbcAbsoluteY:
         return {Family::SBC, SbcAbsoluteY, AddressMode::AbsoluteY};
+    case NopImpliedFA:
+        return {Family::NOP, NopImpliedFA, AddressMode::Implied};
     case SbcAbsoluteX:
         return {Family::SBC, SbcAbsoluteX, AddressMode::AbsoluteX};
     case IncAbsoluteX:
@@ -285,6 +307,8 @@ Opcode decode(const uint8_t op) {
         return {Family::LSR, LsrAbsolute, AddressMode::Absolute};
     case EorIndirectY:
         return {Family::EOR, EorIndirectY, AddressMode::IndirectIndexed};
+    case NopZeropageX54:
+        return {Family::NOP, NopZeropageX54, AddressMode::ZeropageX};
     case EorZeropageX:
         return {Family::EOR, EorZeropageX, AddressMode::ZeropageX};
     case LsrZeropageX:
@@ -295,6 +319,8 @@ Opcode decode(const uint8_t op) {
         return {Family::LSR, LsrAbsoluteX, AddressMode::AbsoluteX};
     case EorAbsoluteY:
         return {Family::EOR, EorAbsoluteY, AddressMode::AbsoluteY};
+    case NopImplied5a:
+        return {Family::NOP, NopImplied5a, AddressMode::Implied};
     case RolAccumulator:
         return {Family::ROL, RolAccumulator, AddressMode::Accumulator};
     case RorAccumulator:
@@ -307,6 +333,8 @@ Opcode decode(const uint8_t op) {
         return {Family::ORA, OraAbsolute, AddressMode::Absolute};
     case OraAbsoluteY:
         return {Family::ORA, OraAbsoluteY, AddressMode::AbsoluteY};
+    case NopImplied1a:
+        return {Family::NOP, NopImplied1a, AddressMode::Implied};
     case OraAbsoluteX:
         return {Family::ORA, OraAbsoluteX, AddressMode::AbsoluteX};
     case OraZeropage:

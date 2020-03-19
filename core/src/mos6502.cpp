@@ -428,9 +428,23 @@ Pipeline Mos6502::parse_next_instruction() {
         result.append(create_compare_instruction(*state_.current_opcode));
         break;
     case Instruction::NopImplied:
+    case Instruction::NopImplied1a:
+    case Instruction::NopImplied3a:
+    case Instruction::NopImplied5a:
+    case Instruction::NopImplied7a:
+    case Instruction::NopImpliedDA:
+    case Instruction::NopImpliedFA:
+    case Instruction::NopImmediate80:
     case Instruction::NopZeropage04:
+    case Instruction::NopZeropageX14:
+    case Instruction::NopZeropageX34:
+    case Instruction::NopZeropageX54:
+    case Instruction::NopZeropageX74:
+    case Instruction::NopZeropageXd4:
+    case Instruction::NopZeropageXf4:
     case Instruction::NopZeropage44:
     case Instruction::NopZeropage64:
+    case Instruction::NopAbsolute0c:
         result.append(create_addressing_steps(
                 state_.current_opcode->address_mode, memory_access));
         result.push([]() { /* Do nothing. */ });
