@@ -21,8 +21,12 @@ Opcode decode(const uint8_t op) {
         return {Family::ASL, AslAbsolute, AddressMode::Absolute};
     case BplRelative:
         return {Family::BPL, BplRelative, AddressMode::Relative};
+    case AslZeropageX:
+        return {Family::ASL, AslZeropageX, AddressMode::ZeropageX};
     case ClcImplied:
         return {Family::CLC, ClcImplied, AddressMode::Implied};
+    case AslAbsoluteX:
+        return {Family::ASL, AslAbsoluteX, AddressMode::AbsoluteX};
     case JsrAbsolute:
         return {Family::JSR, JsrAbsolute, AddressMode::Absolute};
     case BitZeropage:

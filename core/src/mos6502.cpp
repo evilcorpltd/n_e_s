@@ -118,6 +118,8 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::AslZeropage:
     case Instruction::AslAccumulator:
     case Instruction::AslAbsolute:
+    case Instruction::AslZeropageX:
+    case Instruction::AslAbsoluteX:
         result.append(
                 create_left_shift_instruction(*state_.current_opcode, false));
         break;
