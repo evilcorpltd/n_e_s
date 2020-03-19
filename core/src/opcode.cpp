@@ -29,8 +29,12 @@ Opcode decode(const uint8_t op) {
         return {Family::ASL, AslAbsoluteX, AddressMode::AbsoluteX};
     case JsrAbsolute:
         return {Family::JSR, JsrAbsolute, AddressMode::Absolute};
+    case AndIndirectX:
+        return {Family::AND, AndIndirectX, AddressMode::IndexedIndirect};
     case BitZeropage:
         return {Family::BIT, BitZeropage, AddressMode::Zeropage};
+    case AndZeropage:
+        return {Family::AND, AndZeropage, AddressMode::Zeropage};
     case PlpImplied:
         return {Family::PLP, PlpImplied, AddressMode::Implied};
     case AndImmediate:
@@ -41,6 +45,10 @@ Opcode decode(const uint8_t op) {
         return {Family::AND, AndAbsolute, AddressMode::Absolute};
     case BmiRelative:
         return {Family::BMI, BmiRelative, AddressMode::Relative};
+    case AndIndirectY:
+        return {Family::AND, AndIndirectY, AddressMode::IndirectIndexed};
+    case AndZeropageX:
+        return {Family::AND, AndZeropageX, AddressMode::ZeropageX};
     case SecImplied:
         return {Family::SEC, SecImplied, AddressMode::Implied};
     case AndAbsoluteY:

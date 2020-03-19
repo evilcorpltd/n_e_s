@@ -44,13 +44,17 @@ enum Opcode : uint8_t {
     ORA_ABSX = 0x1D,
     ASL_ABSX = 0x1E,
     JSR = 0x20,
+    AND_INXIND = 0x21,
     BIT_ZERO = 0x24,
+    AND_ZERO = 0x25,
     PLP = 0x28,
     AND_IMM = 0x29,
     ROL_ACC = 0x2A,
     BIT_ABS = 0x2C,
     AND_ABS = 0x2D,
     BMI = 0x30,
+    AND_INDINX = 0x31,
+    AND_ZEROX = 0x35,
     SEC = 0x38,
     AND_ABSY = 0x39,
     AND_ABSX = 0x3D,
@@ -1129,7 +1133,23 @@ TEST_F(CpuImmediateTest, and_imm) {
 
     run_instruction(AND_IMM);
 }
+TEST_F(CpuZeropageTest, and) {
+    registers.a = 0b10101010;
+    registers.p = Z_FLAG | N_FLAG;
+    expected.a = 0b00001010;
+    memory_content = 0b00001111;
 
+    run_read_instruction(AND_ZERO);
+}
+TEST_F(CpuZeropageIndexedTest, and_zerox_sets_neg) {
+    registers.a = 0b10101010;
+    registers.p = Z_FLAG;
+    expected.a = 0b10001010;
+    expected.p = N_FLAG;
+    memory_value = 0b10001111;
+
+    run_read_instruction(AND_ZEROX, IndexReg::X);
+}
 TEST_F(CpuAbsoluteTest, and_abs_sets_zero_clears_neg) {
     registers.a = 0b10101010;
     registers.p = N_FLAG;
@@ -1181,6 +1201,34 @@ TEST_F(CpuAbsoluteIndexedTest, and_absy_with_page_crossing) {
     memory_content = 0b00001111;
 
     run_read_instruction_with_pagecrossing(AND_ABSY, IndexReg::Y);
+}
+TEST_F(CpuIndexedIndirectTest, and) {
+    memory_content = 0b00001111;
+    registers.a = 0b11101101;
+    registers.p = Z_FLAG | N_FLAG;
+    expected.a = 0b00001101;
+
+    run_instruction(AND_INXIND);
+}
+TEST_F(CpuTest, and_indirect_indexed) {
+    registers.pc = expected.pc = 0x9000;
+    registers.y = expected.y = 0x10;
+    registers.a = 0b01110000;
+    registers.p = Z_FLAG | N_FLAG;
+    expected.a = 0b01110000;
+
+    stage_instruction(AND_INDINX);
+
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x9001)).WillOnce(Return(0x42));
+    EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
+
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0x10)).WillOnce(Return(0b11111111));
+    step_execution(5);
+
+    EXPECT_EQ(expected, registers);
 }
 
 TEST_F(CpuZeropageTest, bit_zero_sets_zero) {
