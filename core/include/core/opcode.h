@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
+#include <string_view>
 
 namespace n_e_s::core {
 
@@ -250,6 +250,6 @@ Opcode decode(const uint8_t op);
 
 MemoryAccess get_memory_access(const Family family);
 
-std::string to_string(const Family family);
+std::string_view to_string(const Family family);
 
 } // namespace n_e_s::core
