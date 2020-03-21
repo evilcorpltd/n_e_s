@@ -49,17 +49,21 @@ enum Opcode : uint8_t {
     AND_INXIND = 0x21,
     BIT_ZERO = 0x24,
     AND_ZERO = 0x25,
+    ROL_ZERO = 0x26,
     PLP = 0x28,
     AND_IMM = 0x29,
     ROL_ACC = 0x2A,
     BIT_ABS = 0x2C,
     AND_ABS = 0x2D,
+    ROL_ABS = 0x2E,
     BMI = 0x30,
     AND_INDINX = 0x31,
     AND_ZEROX = 0x35,
+    ROL_ZEROX = 0x36,
     SEC = 0x38,
     AND_ABSY = 0x39,
     AND_ABSX = 0x3D,
+    ROL_ABSX = 0x3E,
     RTI = 0x40,
     EOR_INXIND = 0x41,
     NOP_ZERO44 = 0x44,
@@ -3287,6 +3291,51 @@ TEST_F(CpuTest, rol_a_clear_neg_retain_c) {
     expected.p = C_FLAG;
 
     step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+TEST_F(CpuZeropageTest, rol_zeropage_shifts) {
+    memory_content = 0b01001000;
+    expected.p = N_FLAG;
+    run_readwrite_instruction(ROL_ZERO, 0b10010000);
+}
+TEST_F(CpuZeropageIndexedTest, rol_zeropagex_sets_reg) {
+    memory_value = 0b01001000;
+    expected.p = N_FLAG;
+    run_readwrite_instruction(ROL_ZEROX, IndexReg::X, 0b10010000);
+}
+TEST_F(CpuAbsoluteTest, rol_abs_shifts) {
+    memory_content = 0b01001000;
+    expected.p = N_FLAG;
+    run_readwrite_instruction(ROL_ABS, 0b10010000);
+}
+TEST_F(CpuAbsoluteTest, rol_abs_shifts_in_carry) {
+    memory_content = 0b01001000;
+    registers.p = C_FLAG;
+    expected.p = N_FLAG;
+    run_readwrite_instruction(ROL_ABS, 0b10010001);
+}
+TEST_F(CpuAbsoluteTest, rol_abs_shifts_out_carry) {
+    memory_content = 0b10001001;
+    expected.p = C_FLAG;
+    run_readwrite_instruction(ROL_ABS, 0b00010010);
+}
+TEST_F(CpuTest, rol_absx_shifts) {
+    registers.pc = expected.pc = 0x4321;
+    registers.x = expected.x = 0xED;
+    expected.p = N_FLAG;
+
+    stage_instruction(ROL_ABSX);
+    expected.pc += 2;
+
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x12));
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
+            .WillOnce(Return(0xDEAD));
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED)).WillOnce(Return(0b01001000));
+    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0b01001000));
+    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0b10010000));
+
+    step_execution(7);
     EXPECT_EQ(expected, registers);
 }
 
