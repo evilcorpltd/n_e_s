@@ -4,7 +4,7 @@ add_library(${PROJECT_NAME} INTERFACE)
 add_library(n_e_s::warnings ALIAS ${PROJECT_NAME})
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    if("${CMAKE_CXX_SIMULATE_ID}" STREQUAL "MSVC")
+    if("${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "MSVC")
         set(CLANGCL ON)
     else()
         set(CLANG ON)
