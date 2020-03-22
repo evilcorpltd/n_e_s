@@ -37,6 +37,7 @@ target_compile_options(${PROJECT_NAME} INTERFACE
     $<$<BOOL:${CLANG}>:
         -Wmissing-variable-declarations;
         -Wno-unknown-warning-option;
+        -Wno-gnu-zero-variadic-macro-arguments; # Required for gtest 1.10.
     >
     $<$<OR:$<BOOL:${CLANGCL}>,$<CXX_COMPILER_ID:MSVC>>:
         /permissive-;
