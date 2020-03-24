@@ -3,6 +3,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include <fmt/format.h>
+
 #include "core/immu.h"
 #include "core/imos6502.h"
 #include "core/ippu.h"
@@ -150,55 +152,61 @@ std::string get_memory_string(const n_e_s::core::Opcode &opcode,
 }
 
 std::string get_reg_string(const n_e_s::core::CpuRegisters &reg) {
-    std::stringstream ss;
-    ss << std::hex << std::uppercase;
-    ss << "A:" << std::setfill('0') << std::setw(2) << +reg.a << " "
-       << "X:" << std::setfill('0') << std::setw(2) << +reg.x << " "
-       << "Y:" << std::setfill('0') << std::setw(2) << +reg.y << " "
-       << "P:" << std::setfill('0') << std::setw(2) << +reg.p << " "
-       << "SP:" << std::setfill('0') << std::setw(2) << +reg.sp;
-    return ss.str();
+    return fmt::format("A:{:02X} X:{:02X} Y:{:02X} P:{:02X} SP:{:02X}",
+            reg.a,
+            reg.x,
+            reg.y,
+            reg.p,
+            reg.sp);
 }
 
-std::string get_execution_string(const n_e_s::nes::Nes &nes) {
-    std::stringstream ss;
-    ss << std::hex << std::uppercase;
-
+std::string get_opcode_string(const n_e_s::nes::Nes &nes) {
     const n_e_s::core::IMos6502 &cpu = nes.cpu();
     const auto state = cpu.state();
-
     const std::uint8_t raw_opcode = nes.mmu().read_byte(state.start_pc);
-    const std::uint8_t op1 = nes.mmu().read_byte(state.start_pc + 1);
-    const std::uint8_t op2 = nes.mmu().read_byte(state.start_pc + 2);
+    const std::uint8_t op1 = nes.mmu().read_byte(state.start_pc + 1u);
+    const std::uint8_t op2 = nes.mmu().read_byte(state.start_pc + 2u);
 
-    std::cout << std::hex << std::uppercase << std::setw(4) << state.start_pc
-              << "  " << std::setfill('0') << std::setw(2) << +raw_opcode;
+    std::string result =
+            fmt::format("{:04X}  {:02X}", state.start_pc, raw_opcode);
 
     const int arg_count = get_arg_count(state.current_opcode->address_mode);
     if (arg_count >= 1) {
-        ss << " " << std::setfill('0') << std::setw(2) << +op1;
+        result += fmt::format(" {:02X}", op1);
         if (arg_count >= 2) {
-            ss << " " << std::setfill('0') << std::setw(2) << +op2;
+            result += fmt::format(" {:02X}", op2);
         } else {
-            ss << "   ";
+            result += fmt::format("   ");
         }
     } else {
-        ss << "      ";
+        result += fmt::format("      ");
     }
-    ss << "  " << n_e_s::core::to_string(state.current_opcode->family);
+    result += fmt::format(
+            "  {}", n_e_s::core::to_string(state.current_opcode->family));
 
+    return result;
+}
+
+std::string get_execution_string(const n_e_s::nes::Nes &nes) {
+    const n_e_s::core::IMos6502 &cpu = nes.cpu();
+    const auto state = cpu.state();
+    const std::string opcode_string = get_opcode_string(nes);
+    const std::uint8_t op1 = nes.mmu().read_byte(state.start_pc + 1u);
+    const std::uint8_t op2 = nes.mmu().read_byte(state.start_pc + 2u);
     const std::string memory_string =
             get_memory_string(*state.current_opcode, op1, op2, nes);
 
-    ss << " " << memory_string;
-    ss << std::string(28 - memory_string.length(), ' ');
-
     const std::string reg_string = get_reg_string(nes.cpu_registers());
-    ss << reg_string << " PPU:" << std::dec << std::setfill(' ') << std::setw(3)
-       << nes.ppu().cycle() - 1 << "," << std::setw(3) << nes.ppu().scanline()
-       << " CYC:" << nes.current_cycle() / 3 + 7;
 
-    return ss.str();
+    const std::string result = fmt::format("{} {:<28}{} PPU:{:3},{:3} CYC:{}",
+            opcode_string,
+            memory_string,
+            reg_string,
+            nes.ppu().cycle() - 1,
+            nes.ppu().scanline(),
+            nes.current_cycle() / 3 + 7);
+
+    return result;
 }
 
 } // namespace
