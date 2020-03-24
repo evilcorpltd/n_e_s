@@ -37,6 +37,8 @@ Opcode decode(const uint8_t op) {
         return {Family::BIT, BitZeropage, AddressMode::Zeropage};
     case AndZeropage:
         return {Family::AND, AndZeropage, AddressMode::Zeropage};
+    case RolZeropage:
+        return {Family::ROL, RolZeropage, AddressMode::Zeropage};
     case PlpImplied:
         return {Family::PLP, PlpImplied, AddressMode::Implied};
     case AndImmediate:
@@ -45,18 +47,24 @@ Opcode decode(const uint8_t op) {
         return {Family::BIT, BitAbsolute, AddressMode::Absolute};
     case AndAbsolute:
         return {Family::AND, AndAbsolute, AddressMode::Absolute};
+    case RolAbsolute:
+        return {Family::ROL, RolAbsolute, AddressMode::Absolute};
     case BmiRelative:
         return {Family::BMI, BmiRelative, AddressMode::Relative};
     case AndIndirectY:
         return {Family::AND, AndIndirectY, AddressMode::IndirectIndexed};
     case AndZeropageX:
         return {Family::AND, AndZeropageX, AddressMode::ZeropageX};
+    case RolZeropageX:
+        return {Family::ROL, RolZeropageX, AddressMode::ZeropageX};
     case SecImplied:
         return {Family::SEC, SecImplied, AddressMode::Implied};
     case AndAbsoluteY:
         return {Family::AND, AndAbsoluteY, AddressMode::AbsoluteY};
     case AndAbsoluteX:
         return {Family::AND, AndAbsoluteX, AddressMode::AbsoluteX};
+    case RolAbsoluteX:
+        return {Family::ROL, RolAbsoluteX, AddressMode::AbsoluteX};
     case RtiImplied:
         return {Family::RTI, RtiImplied, AddressMode::Implied};
     case PhaImplied:

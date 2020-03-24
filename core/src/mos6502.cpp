@@ -493,6 +493,10 @@ Pipeline Mos6502::parse_next_instruction() {
         result.append(create_eor_instruction(*state_.current_opcode));
         break;
     case Instruction::RolAccumulator:
+    case Instruction::RolZeropage:
+    case Instruction::RolAbsolute:
+    case Instruction::RolZeropageX:
+    case Instruction::RolAbsoluteX:
         result.append(
                 create_left_shift_instruction(*state_.current_opcode, true));
         break;
