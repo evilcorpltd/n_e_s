@@ -383,7 +383,7 @@ MemoryAccess get_memory_access(const Family family) {
     throw std::logic_error("Unknown family");
 }
 
-std::string to_string(const Family family) {
+std::string_view to_string(const Family family) {
     switch (family) {
     case Family::Invalid:
         return "Invalid";
