@@ -22,7 +22,7 @@ matrix:
             - libstdc++-8-dev
       script:
         - CXX=clang++-9 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-        - travis_wait run-clang-tidy-9.py -q -p . "application|core|nes" -header-filter=".*"
+        - travis_wait run-clang-tidy-9.py -q -p . "application|core|nes" -header-filter="(nes|core)/"
 
     - name: "clang-format"
       addons:
