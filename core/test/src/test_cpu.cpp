@@ -36,13 +36,16 @@ enum Opcode : uint8_t {
     ORA_IMM = 0x09,
     ORA_INDINX = 0x11,
     ASL_ACC = 0x0A,
+    NOP_ABS0C = 0x0C,
     ORA_ABS = 0x0D,
     ASL_ABS = 0x0E,
     BPL = 0x10,
+    NOP_ZEROX14 = 0x14,
     ORA_ZEROX = 0x15,
     ASL_ZEROX = 0x16,
     CLC = 0x18,
     ORA_ABSY = 0x19,
+    NOP_IMP1A = 0x1A,
     ORA_ABSX = 0x1D,
     ASL_ABSX = 0x1E,
     JSR = 0x20,
@@ -58,10 +61,12 @@ enum Opcode : uint8_t {
     ROL_ABS = 0x2E,
     BMI = 0x30,
     AND_INDINX = 0x31,
+    NOP_ZEROX34 = 0x34,
     AND_ZEROX = 0x35,
     ROL_ZEROX = 0x36,
     SEC = 0x38,
     AND_ABSY = 0x39,
+    NOP_IMP3A = 0x3A,
     AND_ABSX = 0x3D,
     ROL_ABSX = 0x3E,
     RTI = 0x40,
@@ -77,10 +82,12 @@ enum Opcode : uint8_t {
     LSR_ABS = 0x4E,
     BVC = 0x50,
     EOR_INDINX = 0x51,
+    NOP_ZEROX54 = 0x54,
     EOR_ZEROX = 0x55,
     LSR_ZEROX = 0x56,
     CLI = 0x58,
     EOR_ABSY = 0x59,
+    NOP_IMP5A = 0x5A,
     EOR_ABSX = 0x5D,
     LSR_ABSX = 0x5E,
     RTS = 0x60,
@@ -96,12 +103,15 @@ enum Opcode : uint8_t {
     ROR_ABS = 0x6E,
     BVS = 0x70,
     ADC_INDY = 0x71,
+    NOP_ZEROX74 = 0x74,
     ADC_ZEROX = 0x75,
     ROR_ZEROX = 0x76,
     SEI = 0x78,
     ADC_ABSY = 0x79,
+    NOP_IMP7A = 0x7A,
     ADC_ABSX = 0x7D,
     ROR_ABSX = 0x7E,
+    NOP_IMM80 = 0x80,
     STA_INXIND = 0x81,
     TXA = 0x8A,
     STY_ABS = 0x8C,
@@ -156,10 +166,12 @@ enum Opcode : uint8_t {
     DEC_ABS = 0xCE,
     BNE = 0xD0,
     CMP_INDINX = 0xD1,
+    NOP_ZEROXD4 = 0xD4,
     CMP_ZEROX = 0xD5,
     DEC_ZEROX = 0xD6,
     CLD = 0xD8,
     CMP_ABSY = 0xD9,
+    NOP_IMPDA = 0xDA,
     CMP_ABSX = 0xDD,
     DEC_ABSX = 0xDE,
     CPX_IMM = 0xE0,
@@ -175,10 +187,12 @@ enum Opcode : uint8_t {
     INC_ABS = 0xEE,
     BEQ = 0xF0,
     SBC_INDINX = 0xF1,
+    NOP_ZEROXF4 = 0xF4,
     SBC_ZEROX = 0xF5,
     INC_ZEROX = 0xF6,
     SED = 0xF8,
     SBC_ABSY = 0xF9,
+    NOP_IMPFA = 0xFA,
     SBC_ABSX = 0xFD,
     INC_ABSX = 0xFE,
 };
@@ -2435,8 +2449,28 @@ TEST_F(CpuZeropageIndexedTest, cmp_zero_x_sets_zc) {
 }
 
 // NOP
-TEST_F(CpuTest, nop) {
-    stage_instruction(NOP);
+class NopImpliedFixture : public CpuTest,
+                          public testing::WithParamInterface<uint8_t> {};
+
+TEST_P(NopImpliedFixture, nop_implied) {
+    stage_instruction(GetParam());
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
+INSTANTIATE_TEST_SUITE_P(NopImplied,
+        NopImpliedFixture,
+        testing::Values(NOP,
+                NOP_IMP1A,
+                NOP_IMP3A,
+                NOP_IMP5A,
+                NOP_IMP7A,
+                NOP_IMPDA,
+                NOP_IMPFA));
+
+TEST_F(CpuTest, nop80_immediated) {
+    stage_instruction(NOP_IMM80);
+    expected.pc += 1;
 
     step_execution(2);
     EXPECT_EQ(expected, registers);
@@ -2449,6 +2483,37 @@ TEST_F(CpuTest, nop04_zero) {
     step_execution(3);
     EXPECT_EQ(expected, registers);
 }
+TEST_F(CpuTest, nop0c_abs) {
+    stage_instruction(NOP_ABS0C);
+    expected.pc += 2;
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0xCD));
+    EXPECT_CALL(mmu, read_byte(registers.pc + 2)).WillOnce(Return(0xEF));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
+class NopZeroXFixture : public CpuTest,
+                        public testing::WithParamInterface<uint8_t> {};
+
+TEST_P(NopZeroXFixture, nop_zerox) {
+    stage_instruction(GetParam());
+    expected.x = registers.x = 0x01;
+    expected.pc += 1;
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0xCD));
+    EXPECT_CALL(mmu, read_byte(0xCD)).WillOnce(Return(0xFD)); // Dummy read
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
+INSTANTIATE_TEST_SUITE_P(NopZeroX,
+        NopZeroXFixture,
+        testing::Values(NOP_ZEROX14,
+                NOP_ZEROX34,
+                NOP_ZEROX54,
+                NOP_ZEROX74,
+                NOP_ZEROXD4,
+                NOP_ZEROXF4));
+
 TEST_F(CpuTest, nop44_zero) {
     stage_instruction(NOP_ZERO44);
     expected.pc += 1;
