@@ -29,7 +29,12 @@ constexpr int8_t to_signed(uint8_t byte) {
     return low_bits(byte);
 }
 
-int get_arg_count(n_e_s::core::AddressMode mode) {
+constexpr bool is_undocumented(const n_e_s::core::Opcode &opcode) {
+    return (opcode.family == n_e_s::core::Family::NOP &&
+            opcode.instruction != n_e_s::core::Instruction::NopImplied);
+}
+
+constexpr int get_arg_count(n_e_s::core::AddressMode mode) {
     switch (mode) {
     case n_e_s::core::AddressMode::Implied:
     case n_e_s::core::AddressMode::Accumulator:
@@ -181,8 +186,9 @@ std::string get_opcode_string(const n_e_s::nes::Nes &nes) {
     } else {
         result += fmt::format("      ");
     }
-    result += fmt::format(
-            "  {}", n_e_s::core::to_string(state.current_opcode->family));
+    result += fmt::format(" {}{}",
+            is_undocumented(*state.current_opcode) ? "*" : " ",
+            n_e_s::core::to_string(state.current_opcode->family));
 
     return result;
 }
