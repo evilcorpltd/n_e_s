@@ -9,7 +9,7 @@ namespace n_e_s::core {
 
 class MmuFactory {
 public:
-    static std::unique_ptr<IMmu> create(MemBankList mem_banks);
+    [[nodiscard]] static std::unique_ptr<IMmu> create(MemBankList mem_banks);
 };
 
 } // namespace n_e_s::core

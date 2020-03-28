@@ -260,10 +260,10 @@ struct Opcode {
     AddressMode address_mode;
 };
 
-Opcode decode(const uint8_t op);
+[[nodiscard]] Opcode decode(const uint8_t op);
 
-MemoryAccess get_memory_access(const Family family);
+[[nodiscard]] MemoryAccess get_memory_access(const Family family);
 
-std::string_view to_string(const Family family);
+[[nodiscard]] std::string_view to_string(const Family family);
 
 } // namespace n_e_s::core

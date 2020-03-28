@@ -10,7 +10,8 @@ namespace n_e_s::core {
 
 class CpuFactory {
 public:
-    static std::unique_ptr<IMos6502> create_mos6502(CpuRegisters *registers,
+    [[nodiscard]] static std::unique_ptr<IMos6502> create_mos6502(
+            CpuRegisters *registers,
             IMmu *mmu,
             IPpu *ppu);
 };

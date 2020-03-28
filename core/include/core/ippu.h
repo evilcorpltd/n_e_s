@@ -27,8 +27,8 @@ public:
 
     virtual void set_nmi_handler(const std::function<void()> &nmi_handler) = 0;
 
-    virtual uint16_t scanline() const = 0;
-    virtual uint16_t cycle() const = 0;
+    [[nodiscard]] virtual uint16_t scanline() const = 0;
+    [[nodiscard]] virtual uint16_t cycle() const = 0;
 };
 
 } // namespace n_e_s::core
