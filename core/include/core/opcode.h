@@ -25,6 +25,7 @@ enum Instruction : uint8_t {
     ClcImplied = 0x18,
     OraAbsoluteY = 0x19,
     NopImplied1a = 0x1A, // Undocumented
+    NopAbsoluteX1C = 0x1C, // Undocumented
     OraAbsoluteX = 0x1D,
     AslAbsoluteX = 0x1E,
     JsrAbsolute = 0x20,
@@ -46,6 +47,7 @@ enum Instruction : uint8_t {
     SecImplied = 0x38,
     AndAbsoluteY = 0x39,
     NopImplied3a = 0x3A, // Undocumented
+    NopAbsoluteX3C = 0x3C, // Undocumented
     AndAbsoluteX = 0x3D,
     RolAbsoluteX = 0x3E,
     RtiImplied = 0x40,
@@ -67,6 +69,7 @@ enum Instruction : uint8_t {
     CliImplied = 0x58,
     EorAbsoluteY = 0x59,
     NopImplied5a = 0x5A, // Undocumented
+    NopAbsoluteX5C = 0x5C, // Undocumented
     EorAbsoluteX = 0x5D,
     LsrAbsoluteX = 0x5E,
     RtsImplied = 0x60,
@@ -88,6 +91,7 @@ enum Instruction : uint8_t {
     SeiImplied = 0x78,
     AdcAbsoluteY = 0x79,
     NopImplied7a = 0x7A, // Undocumented
+    NopAbsoluteX7C = 0x7C, // Undocumented
     AdcAbsoluteX = 0x7D,
     RorAbsoluteX = 0x7E,
     NopImmediate80 = 0x80, // Undocumented
@@ -151,6 +155,7 @@ enum Instruction : uint8_t {
     CldImplied = 0xD8,
     CmpAbsoluteY = 0xD9,
     NopImpliedDA = 0xDA, // Undocumented
+    NopAbsoluteXDC = 0xDC, // Undocumented
     CmpAbsoluteX = 0xDD,
     DecAbsoluteX = 0xDE,
     CpxImmediate = 0xE0,
@@ -172,6 +177,7 @@ enum Instruction : uint8_t {
     SedImplied = 0xF8,
     SbcAbsoluteY = 0xF9,
     NopImpliedFA = 0xFA, // Undocumented
+    NopAbsoluteXFC = 0xFC, // Undocumented
     SbcAbsoluteX = 0xFD,
     IncAbsoluteX = 0xFE,
 };

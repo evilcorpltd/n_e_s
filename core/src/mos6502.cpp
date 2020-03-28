@@ -445,6 +445,12 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::NopZeropage44:
     case Instruction::NopZeropage64:
     case Instruction::NopAbsolute0c:
+    case Instruction::NopAbsoluteX1C:
+    case Instruction::NopAbsoluteX3C:
+    case Instruction::NopAbsoluteX5C:
+    case Instruction::NopAbsoluteX7C:
+    case Instruction::NopAbsoluteXDC:
+    case Instruction::NopAbsoluteXFC:
         result.append(create_addressing_steps(
                 state_.current_opcode->address_mode, memory_access));
         result.push([]() { /* Do nothing. */ });

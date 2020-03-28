@@ -335,6 +335,18 @@ Opcode decode(const uint8_t op) {
         return {Family::ORA, OraAbsoluteY, AddressMode::AbsoluteY};
     case NopImplied1a:
         return {Family::NOP, NopImplied1a, AddressMode::Implied};
+    case NopAbsoluteX1C:
+        return {Family::NOP, NopAbsoluteX1C, AddressMode::AbsoluteX};
+    case NopAbsoluteX3C:
+        return {Family::NOP, NopAbsoluteX3C, AddressMode::AbsoluteX};
+    case NopAbsoluteX5C:
+        return {Family::NOP, NopAbsoluteX5C, AddressMode::AbsoluteX};
+    case NopAbsoluteX7C:
+        return {Family::NOP, NopAbsoluteX7C, AddressMode::AbsoluteX};
+    case NopAbsoluteXDC:
+        return {Family::NOP, NopAbsoluteXDC, AddressMode::AbsoluteX};
+    case NopAbsoluteXFC:
+        return {Family::NOP, NopAbsoluteXFC, AddressMode::AbsoluteX};
     case OraAbsoluteX:
         return {Family::ORA, OraAbsoluteX, AddressMode::AbsoluteX};
     case OraZeropage:
