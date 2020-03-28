@@ -14,7 +14,7 @@ enum Instruction : uint8_t {
     PhpImplied = 0x08,
     OraImmediate = 0x09,
     AslAccumulator = 0x0A,
-    NopAbsolute0c = 0x0C, // Undocumented
+    NopAbsolute0C = 0x0C, // Undocumented
     OraAbsolute = 0x0D,
     AslAbsolute = 0x0E,
     BplRelative = 0x10,
@@ -24,7 +24,7 @@ enum Instruction : uint8_t {
     AslZeropageX = 0x16,
     ClcImplied = 0x18,
     OraAbsoluteY = 0x19,
-    NopImplied1a = 0x1A, // Undocumented
+    NopImplied1A = 0x1A, // Undocumented
     NopAbsoluteX1C = 0x1C, // Undocumented
     OraAbsoluteX = 0x1D,
     AslAbsoluteX = 0x1E,
@@ -46,7 +46,7 @@ enum Instruction : uint8_t {
     RolZeropageX = 0x36,
     SecImplied = 0x38,
     AndAbsoluteY = 0x39,
-    NopImplied3a = 0x3A, // Undocumented
+    NopImplied3A = 0x3A, // Undocumented
     NopAbsoluteX3C = 0x3C, // Undocumented
     AndAbsoluteX = 0x3D,
     RolAbsoluteX = 0x3E,
@@ -68,7 +68,7 @@ enum Instruction : uint8_t {
     LsrZeropageX = 0x56,
     CliImplied = 0x58,
     EorAbsoluteY = 0x59,
-    NopImplied5a = 0x5A, // Undocumented
+    NopImplied5A = 0x5A, // Undocumented
     NopAbsoluteX5C = 0x5C, // Undocumented
     EorAbsoluteX = 0x5D,
     LsrAbsoluteX = 0x5E,
@@ -90,7 +90,7 @@ enum Instruction : uint8_t {
     RorZeropageX = 0x76,
     SeiImplied = 0x78,
     AdcAbsoluteY = 0x79,
-    NopImplied7a = 0x7A, // Undocumented
+    NopImplied7A = 0x7A, // Undocumented
     NopAbsoluteX7C = 0x7C, // Undocumented
     AdcAbsoluteX = 0x7D,
     RorAbsoluteX = 0x7E,
@@ -149,7 +149,7 @@ enum Instruction : uint8_t {
     DecAbsolute = 0xCE,
     BneRelative = 0xD0,
     CmpIndirectY = 0xD1,
-    NopZeropageXd4 = 0xD4, // Undocumented
+    NopZeropageXD4 = 0xD4, // Undocumented
     CmpZeropageX = 0xD5,
     DecZeropageX = 0xD6,
     CldImplied = 0xD8,
@@ -171,7 +171,7 @@ enum Instruction : uint8_t {
     IncAbsolute = 0xEE,
     BeqRelative = 0xF0,
     SbcIndirectY = 0xF1,
-    NopZeropageXf4 = 0xF4, // Undocumented
+    NopZeropageXF4 = 0xF4, // Undocumented
     SbcZeropageX = 0xF5,
     IncZeropageX = 0xF6,
     SedImplied = 0xF8,

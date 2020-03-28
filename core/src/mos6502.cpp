@@ -428,10 +428,10 @@ Pipeline Mos6502::parse_next_instruction() {
         result.append(create_compare_instruction(*state_.current_opcode));
         break;
     case Instruction::NopImplied:
-    case Instruction::NopImplied1a:
-    case Instruction::NopImplied3a:
-    case Instruction::NopImplied5a:
-    case Instruction::NopImplied7a:
+    case Instruction::NopImplied1A:
+    case Instruction::NopImplied3A:
+    case Instruction::NopImplied5A:
+    case Instruction::NopImplied7A:
     case Instruction::NopImpliedDA:
     case Instruction::NopImpliedFA:
     case Instruction::NopImmediate80:
@@ -440,11 +440,11 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::NopZeropageX34:
     case Instruction::NopZeropageX54:
     case Instruction::NopZeropageX74:
-    case Instruction::NopZeropageXd4:
-    case Instruction::NopZeropageXf4:
+    case Instruction::NopZeropageXD4:
+    case Instruction::NopZeropageXF4:
     case Instruction::NopZeropage44:
     case Instruction::NopZeropage64:
-    case Instruction::NopAbsolute0c:
+    case Instruction::NopAbsolute0C:
     case Instruction::NopAbsoluteX1C:
     case Instruction::NopAbsoluteX3C:
     case Instruction::NopAbsoluteX5C:
