@@ -532,6 +532,14 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::OraZeropageX:
         result.append(create_ora_instruction(*state_.current_opcode));
         break;
+    case Instruction::LaxZeropage:
+    case Instruction::LaxZeropageY:
+    case Instruction::LaxAbsolute:
+    case Instruction::LaxAbsoluteY:
+    case Instruction::LaxIndirectX:
+    case Instruction::LaxIndirectY:
+        result.append(create_load_instruction(*state_.current_opcode));
+        break;
     }
     return result;
 } // namespace n_e_s::core
@@ -761,12 +769,16 @@ Pipeline Mos6502::create_store_instruction(Opcode opcode) {
 
 Pipeline Mos6502::create_load_instruction(Opcode opcode) {
     uint8_t *reg{};
+    uint8_t *reg2{};
     if (opcode.family == Family::LDX) {
         reg = &registers_->x;
     } else if (opcode.family == Family::LDY) {
         reg = &registers_->y;
     } else if (opcode.family == Family::LDA) {
         reg = &registers_->a;
+    } else if (opcode.family == Family::LAX) {
+        reg = &registers_->a;
+        reg2 = &registers_->x;
     }
 
     const MemoryAccess memory_access = get_memory_access(opcode.family);
@@ -774,9 +786,13 @@ Pipeline Mos6502::create_load_instruction(Opcode opcode) {
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
     result.push([=]() {
-        *reg = mmu_->read_byte(effective_address_);
-        set_zero(*reg);
-        set_negative(*reg);
+        const uint8_t value = mmu_->read_byte(effective_address_);
+        *reg = value;
+        set_zero(value);
+        set_negative(value);
+        if (reg2) {
+            *reg2 = value;
+        }
     });
 
     return result;

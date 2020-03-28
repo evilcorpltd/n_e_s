@@ -65,6 +65,7 @@ TEST(Opcode, Family) {
     EXPECT_EQ("ROR", to_string(Family::ROR));
     EXPECT_EQ("ORA", to_string(Family::ORA));
     EXPECT_EQ("SBC", to_string(Family::SBC));
+    EXPECT_EQ("LAX", to_string(Family::LAX));
 }
 
 } // namespace
