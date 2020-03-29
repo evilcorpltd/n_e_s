@@ -47,6 +47,7 @@ enum Opcode : uint8_t {
     ORA_ABSY = 0x19,
     NOP_IMP1A = 0x1A,
     ORA_ABSX = 0x1D,
+    NOP_ABSX1C = 0x1C,
     ASL_ABSX = 0x1E,
     JSR = 0x20,
     AND_INXIND = 0x21,
@@ -67,6 +68,7 @@ enum Opcode : uint8_t {
     SEC = 0x38,
     AND_ABSY = 0x39,
     NOP_IMP3A = 0x3A,
+    NOP_ABSX3C = 0x3C,
     AND_ABSX = 0x3D,
     ROL_ABSX = 0x3E,
     RTI = 0x40,
@@ -88,6 +90,7 @@ enum Opcode : uint8_t {
     CLI = 0x58,
     EOR_ABSY = 0x59,
     NOP_IMP5A = 0x5A,
+    NOP_ABSX5C = 0x5C,
     EOR_ABSX = 0x5D,
     LSR_ABSX = 0x5E,
     RTS = 0x60,
@@ -109,6 +112,7 @@ enum Opcode : uint8_t {
     SEI = 0x78,
     ADC_ABSY = 0x79,
     NOP_IMP7A = 0x7A,
+    NOP_ABSX7C = 0x7C,
     ADC_ABSX = 0x7D,
     ROR_ABSX = 0x7E,
     NOP_IMM80 = 0x80,
@@ -172,6 +176,7 @@ enum Opcode : uint8_t {
     CLD = 0xD8,
     CMP_ABSY = 0xD9,
     NOP_IMPDA = 0xDA,
+    NOP_ABSXDC = 0xDC,
     CMP_ABSX = 0xDD,
     DEC_ABSX = 0xDE,
     CPX_IMM = 0xE0,
@@ -193,6 +198,7 @@ enum Opcode : uint8_t {
     SED = 0xF8,
     SBC_ABSY = 0xF9,
     NOP_IMPFA = 0xFA,
+    NOP_ABSXFC = 0xFC,
     SBC_ABSX = 0xFD,
     INC_ABSX = 0xFE,
 };
@@ -2530,6 +2536,27 @@ TEST_F(CpuTest, nop64_zero) {
     step_execution(3);
     EXPECT_EQ(expected, registers);
 }
+class NopAbsoluteXFixture : public CpuTest,
+                            public testing::WithParamInterface<uint8_t> {};
+
+TEST_P(NopAbsoluteXFixture, nop_absx) {
+    stage_instruction(GetParam());
+    expected.pc += 2;
+
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(registers.pc + 2)).WillOnce(Return(0x12));
+
+    step_execution(4);
+    EXPECT_EQ(expected, registers);
+}
+INSTANTIATE_TEST_SUITE_P(NopAbsoluteX,
+        NopAbsoluteXFixture,
+        testing::Values(NOP_ABSX1C,
+                NOP_ABSX3C,
+                NOP_ABSX5C,
+                NOP_ABSX7C,
+                NOP_ABSXDC,
+                NOP_ABSXFC));
 
 TEST_F(CpuTest, beq_branch_not_taken) {
     stage_instruction(BEQ);
