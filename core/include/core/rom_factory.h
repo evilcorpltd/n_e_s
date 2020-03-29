@@ -10,8 +10,10 @@ namespace n_e_s::core {
 
 class RomFactory {
 public:
-    static std::unique_ptr<IRom> from_file(const std::string &filepath);
-    static std::unique_ptr<IRom> from_bytes(std::istream &bytestream);
+    [[nodiscard]] static std::unique_ptr<IRom> from_file(
+            const std::string &filepath);
+    [[nodiscard]] static std::unique_ptr<IRom> from_bytes(
+            std::istream &bytestream);
 };
 
 } // namespace n_e_s::core

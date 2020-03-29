@@ -41,26 +41,27 @@ std::string nrom_bytes(const uint8_t prg_rom_size, const uint8_t chr_rom_size) {
 }
 
 TEST(RomFactory, cant_open_files_that_dont_exist) {
-    EXPECT_THROW(RomFactory::from_file("this_file_hopefully_doesnt_exist"),
+    EXPECT_THROW(auto tmp = RomFactory::from_file(
+                         "this_file_hopefully_doesnt_exist"),
             std::invalid_argument);
 }
 
 TEST(RomFactory, doesnt_parse_streams_with_too_few_bytes) {
     std::string bytes(15, 0);
     std::stringstream ss(bytes);
-    EXPECT_THROW(RomFactory::from_bytes(ss), std::invalid_argument);
+    EXPECT_THROW(auto tmp = RomFactory::from_bytes(ss), std::invalid_argument);
 }
 
 TEST(RomFactory, doesnt_parse_bytes_without_a_nes_header) {
     std::string bytes(16, 0);
     std::stringstream ss(bytes);
-    EXPECT_THROW(RomFactory::from_bytes(ss), std::invalid_argument);
+    EXPECT_THROW(auto tmp = RomFactory::from_bytes(ss), std::invalid_argument);
 }
 
 TEST(RomFactory, fails_if_mapper_not_supported) {
     std::string bytes{ines_header_bytes(0xCD, 0, 0, 0)};
     std::stringstream ss(bytes);
-    EXPECT_THROW(RomFactory::from_bytes(ss), std::logic_error);
+    EXPECT_THROW(auto tmp = RomFactory::from_bytes(ss), std::logic_error);
 }
 
 TEST(Nrom, creation_works_with_correct_rom_sizes) {
@@ -88,24 +89,24 @@ TEST(Nrom, has_the_correct_address_space) {
 TEST(Nrom, creation_fails_with_bad_rom_sizes) {
     std::string bytes{nrom_bytes(0, 1)};
     std::stringstream ss(bytes);
-    EXPECT_THROW(RomFactory::from_bytes(ss), std::invalid_argument);
+    EXPECT_THROW(auto tmp = RomFactory::from_bytes(ss), std::invalid_argument);
 
     bytes = nrom_bytes(1, 1);
     bytes.pop_back();
     ss = std::stringstream(bytes);
-    EXPECT_THROW(RomFactory::from_bytes(ss), std::invalid_argument);
+    EXPECT_THROW(auto tmp = RomFactory::from_bytes(ss), std::invalid_argument);
 
     bytes = nrom_bytes(3, 1);
     ss = std::stringstream(bytes);
-    EXPECT_THROW(RomFactory::from_bytes(ss), std::invalid_argument);
+    EXPECT_THROW(auto tmp = RomFactory::from_bytes(ss), std::invalid_argument);
 
     bytes = nrom_bytes(1, 0);
     ss = std::stringstream(bytes);
-    EXPECT_THROW(RomFactory::from_bytes(ss), std::invalid_argument);
+    EXPECT_THROW(auto tmp = RomFactory::from_bytes(ss), std::invalid_argument);
 
     bytes = nrom_bytes(1, 2);
     ss = std::stringstream(bytes);
-    EXPECT_THROW(RomFactory::from_bytes(ss), std::invalid_argument);
+    EXPECT_THROW(auto tmp = RomFactory::from_bytes(ss), std::invalid_argument);
 }
 
 TEST(Nrom, write_and_read_byte) {
