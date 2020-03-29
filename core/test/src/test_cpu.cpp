@@ -137,26 +137,32 @@ enum Opcode : uint8_t {
     LDY_IMM = 0xA0,
     LDA_INXIND = 0xA1,
     LDX_IMM = 0xA2,
+    LAX_INXIND = 0xA3,
     LDY_ZERO = 0xA4,
     LDA_ZERO = 0xA5,
     LDX_ZERO = 0xA6,
+    LAX_ZERO = 0xA7,
     TAY = 0xA8,
     LDA_IMM = 0xA9,
     TAX = 0xAA,
     LDY_ABS = 0xAC,
     LDA_ABS = 0xAD,
     LDX_ABS = 0xAE,
+    LAX_ABS = 0xAF,
     BCS = 0xB0,
     LDA_INDINX = 0xB1,
+    LAX_INDINX = 0xB3,
     LDY_ZEROX = 0xB4,
     LDA_ZEROX = 0xB5,
     LDX_ZEROY = 0xB6,
+    LAX_ZEROY = 0xB7,
     CLV = 0xB8,
     LDA_ABSY = 0xB9,
     TSX = 0xBA,
     LDY_ABSX = 0xBC,
     LDA_ABSX = 0xBD,
     LDX_ABSY = 0xBE,
+    LAX_ABSY = 0xBF,
     CPY_IMM = 0xC0,
     CMP_INXIND = 0xC1,
     CPY_ZERO = 0xC4,
@@ -2224,6 +2230,89 @@ TEST_F(CpuTest, lda_indirect_indexed) {
     EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
 
     EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D)).WillOnce(Return(0xE0));
+    step_execution(5);
+
+    EXPECT_EQ(expected, registers);
+}
+
+// LAX
+TEST_F(CpuZeropageTest, lax_zero_sets_reg_clear_flags) {
+    registers.p = N_FLAG | Z_FLAG;
+    expected.x = 0x42;
+    expected.a = 0x42;
+    memory_content = 0x42;
+    run_read_instruction(LAX_ZERO);
+}
+TEST_F(CpuZeropageTest, lax_zero_sets_reg_sets_z) {
+    expected.x = 0x00;
+    expected.a = 0x00;
+    memory_content = 0x00;
+    expected.p |= Z_FLAG;
+    run_read_instruction(LAX_ZERO);
+}
+TEST_F(CpuZeropageTest, lax_zero_sets_reg_sets_n) {
+    expected.x = 0xF0;
+    expected.a = 0xF0;
+    memory_content = 0xF0;
+    expected.p |= N_FLAG;
+    run_read_instruction(LAX_ZERO);
+}
+TEST_F(CpuZeropageIndexedTest, lax_zeroy_sets_reg) {
+    expected.x = 0x42;
+    expected.a = 0x42;
+    memory_value = 0x42;
+    run_read_instruction(LAX_ZEROY, IndexReg::Y);
+}
+TEST_F(CpuAbsoluteTest, lax_abs_sets_reg) {
+    expected.x = 0x42;
+    expected.a = 0x42;
+    memory_content = 0x42;
+    run_read_instruction(LAX_ABS);
+}
+TEST_F(CpuAbsoluteIndexedTest, lax_absy_sets_reg_without_pagecrossing) {
+    expected.x = 0x42;
+    expected.a = 0x42;
+    memory_content = 0x42;
+    run_read_instruction_without_pagecrossing(LAX_ABSY, IndexReg::Y);
+}
+TEST_F(CpuAbsoluteIndexedTest, lax_absy_sets_reg_with_pagecrossing) {
+    expected.x = 0x42;
+    expected.a = 0x42;
+    memory_content = 0x42;
+    run_read_instruction_with_pagecrossing(LAX_ABSY, IndexReg::Y);
+}
+TEST_F(CpuTest, lax_indexed_indirect) {
+    registers.pc = expected.pc = 0x4322;
+    registers.x = 0xED;
+    expected.x = 0x42; // X is overwritten, so we can not use the test fixture
+    expected.a = 0x42;
+    stage_instruction(LAX_INXIND);
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0xAB));
+    EXPECT_CALL(mmu, read_byte(0xAB)).WillOnce(Return(0x68)); // Dummy read
+    EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED))).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED + 1u)))
+            .WillOnce(Return(0x12));
+    EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(0x42));
+
+    step_execution(6);
+    EXPECT_EQ(expected, registers);
+}
+TEST_F(CpuTest, lax_indirect_indexed) {
+    registers.pc = expected.pc = 0x4321;
+    registers.y = expected.y = 0x0D;
+    expected.a = 0x42;
+    expected.x = 0x42;
+
+    stage_instruction(LAX_INDINX);
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
+    EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
+
+    EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D)).WillOnce(Return(0x42));
     step_execution(5);
 
     EXPECT_EQ(expected, registers);

@@ -167,12 +167,16 @@ Opcode decode(const uint8_t op) {
         return {Family::LDA, LdaIndirectX, AddressMode::IndexedIndirect};
     case LdxImmediate:
         return {Family::LDX, LdxImmediate, AddressMode::Immediate};
+    case LaxIndirectX:
+        return {Family::LAX, LaxIndirectX, AddressMode::IndexedIndirect};
     case LdyZeropage:
         return {Family::LDY, LdyZeropage, AddressMode::Zeropage};
     case LdaZeropage:
         return {Family::LDA, LdaZeropage, AddressMode::Zeropage};
     case LdxZeropage:
         return {Family::LDX, LdxZeropage, AddressMode::Zeropage};
+    case LaxZeropage:
+        return {Family::LAX, LaxZeropage, AddressMode::Zeropage};
     case TayImplied:
         return {Family::TAY, TayImplied, AddressMode::Implied};
     case LdaImmediate:
@@ -185,16 +189,22 @@ Opcode decode(const uint8_t op) {
         return {Family::LDA, LdaAbsolute, AddressMode::Absolute};
     case LdxAbsolute:
         return {Family::LDX, LdxAbsolute, AddressMode::Absolute};
+    case LaxAbsolute:
+        return {Family::LAX, LaxAbsolute, AddressMode::Absolute};
     case BcsRelative:
         return {Family::BCS, BcsRelative, AddressMode::Relative};
     case LdaIndirectY:
         return {Family::LDA, LdaIndirectY, AddressMode::IndirectIndexed};
+    case LaxIndirectY:
+        return {Family::LAX, LaxIndirectY, AddressMode::IndirectIndexed};
     case LdyZeropageX:
         return {Family::LDY, LdyZeropageX, AddressMode::ZeropageX};
     case LdaZeropageX:
         return {Family::LDA, LdaZeropageX, AddressMode::ZeropageX};
     case LdxZeropageY:
         return {Family::LDX, LdxZeropageY, AddressMode::ZeropageY};
+    case LaxZeropageY:
+        return {Family::LAX, LaxZeropageY, AddressMode::ZeropageY};
     case ClvImplied:
         return {Family::CLV, ClvImplied, AddressMode::Implied};
     case LdaAbsoluteY:
@@ -207,6 +217,8 @@ Opcode decode(const uint8_t op) {
         return {Family::LDA, LdaAbsoluteX, AddressMode::AbsoluteX};
     case LdxAbsoluteY:
         return {Family::LDX, LdxAbsoluteY, AddressMode::AbsoluteY};
+    case LaxAbsoluteY:
+        return {Family::LAX, LaxAbsoluteY, AddressMode::AbsoluteY};
     case CpyImmediate:
         return {Family::CPY, CpyImmediate, AddressMode::Immediate};
     case CmpIndirectX:
@@ -414,6 +426,7 @@ MemoryAccess get_memory_access(const Family family) {
     case Family::EOR:
     case Family::ORA:
     case Family::SBC:
+    case Family::LAX:
         return MemoryAccess::Read;
     case Family::STY:
     case Family::STA:
@@ -547,6 +560,8 @@ std::string_view to_string(const Family family) {
         return "ORA";
     case Family::SBC:
         return "SBC";
+    case Family::LAX:
+        return "LAX";
     }
 
     // Should not happen

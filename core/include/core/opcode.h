@@ -116,26 +116,32 @@ enum Instruction : uint8_t {
     LdyImmediate = 0xA0,
     LdaIndirectX = 0xA1,
     LdxImmediate = 0xA2,
+    LaxIndirectX = 0xA3, // Undocumented
     LdyZeropage = 0xA4,
     LdaZeropage = 0xA5,
     LdxZeropage = 0xA6,
+    LaxZeropage = 0xA7, // Undocumented
     TayImplied = 0xA8,
     LdaImmediate = 0xA9,
     TaxImplied = 0xAA,
     LdyAbsolute = 0xAC,
     LdaAbsolute = 0xAD,
     LdxAbsolute = 0xAE,
+    LaxAbsolute = 0xAF, // Undocumented
     BcsRelative = 0xB0,
     LdaIndirectY = 0xB1,
+    LaxIndirectY = 0xB3, // Undocumented
     LdyZeropageX = 0xB4,
     LdaZeropageX = 0xB5,
     LdxZeropageY = 0xB6,
+    LaxZeropageY = 0xB7, // Undocumented
     ClvImplied = 0xB8,
     LdaAbsoluteY = 0xB9,
     TsxImplied = 0xBA,
     LdyAbsoluteX = 0xBC,
     LdaAbsoluteX = 0xBD,
     LdxAbsoluteY = 0xBE,
+    LaxAbsoluteY = 0xBF, // Undocumented
     CpyImmediate = 0xC0,
     CmpIndirectX = 0xC1,
     CpyZeropage = 0xC4,
@@ -240,6 +246,7 @@ enum class Family {
     ROR,
     ORA,
     SBC,
+    LAX,
 };
 
 enum class AddressMode {

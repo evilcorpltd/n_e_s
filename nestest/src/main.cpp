@@ -30,8 +30,14 @@ constexpr int8_t to_signed(uint8_t byte) {
 }
 
 constexpr bool is_undocumented(const n_e_s::core::Opcode &opcode) {
-    return (opcode.family == n_e_s::core::Family::NOP &&
-            opcode.instruction != n_e_s::core::Instruction::NopImplied);
+    if (opcode.family == n_e_s::core::Family::NOP &&
+            opcode.instruction != n_e_s::core::Instruction::NopImplied) {
+        return true;
+    }
+    if (opcode.family == n_e_s::core::Family::LAX) {
+        return true;
+    }
+    return false;
 }
 
 constexpr int get_arg_count(n_e_s::core::AddressMode mode) {
