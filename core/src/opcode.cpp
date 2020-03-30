@@ -225,10 +225,14 @@ Opcode decode(const uint8_t op) {
         return {Family::CMP, CmpIndirectX, AddressMode::IndexedIndirect};
     case CpyZeropage:
         return {Family::CPY, CpyZeropage, AddressMode::Zeropage};
+    case DcpIndexedIndirect:
+        return {Family::DCP, DcpIndexedIndirect, AddressMode::IndexedIndirect};
     case CmpZeropage:
         return {Family::CMP, CmpZeropage, AddressMode::Zeropage};
     case DecZeropage:
         return {Family::DEC, DecZeropage, AddressMode::Zeropage};
+    case DcpZeropage:
+        return {Family::DCP, DcpZeropage, AddressMode::Zeropage};
     case InyImplied:
         return {Family::INY, InyImplied, AddressMode::Implied};
     case CmpImmediate:
@@ -241,26 +245,36 @@ Opcode decode(const uint8_t op) {
         return {Family::CMP, CmpAbsolute, AddressMode::Absolute};
     case DecAbsolute:
         return {Family::DEC, DecAbsolute, AddressMode::Absolute};
+    case DcpAbsolute:
+        return {Family::DCP, DcpAbsolute, AddressMode::Absolute};
     case BneRelative:
         return {Family::BNE, BneRelative, AddressMode::Relative};
     case CmpIndirectY:
         return {Family::CMP, CmpIndirectY, AddressMode::IndirectIndexed};
+    case DcpIndirectIndexed:
+        return {Family::DCP, DcpIndirectIndexed, AddressMode::IndirectIndexed};
     case NopZeropageXD4:
         return {Family::NOP, NopZeropageXD4, AddressMode::ZeropageX};
     case CmpZeropageX:
         return {Family::CMP, CmpZeropageX, AddressMode::ZeropageX};
     case DecZeropageX:
         return {Family::DEC, DecZeropageX, AddressMode::ZeropageX};
+    case DcpZeropageX:
+        return {Family::DCP, DcpZeropageX, AddressMode::ZeropageX};
     case CldImplied:
         return {Family::CLD, CldImplied, AddressMode::Implied};
     case CmpAbsoluteY:
         return {Family::CMP, CmpAbsoluteY, AddressMode::AbsoluteY};
     case NopImpliedDA:
         return {Family::NOP, NopImpliedDA, AddressMode::Implied};
+    case DcpAbsoluteY:
+        return {Family::DCP, DcpAbsoluteY, AddressMode::AbsoluteY};
     case CmpAbsoluteX:
         return {Family::CMP, CmpAbsoluteX, AddressMode::AbsoluteX};
     case DecAbsoluteX:
         return {Family::DEC, DecAbsoluteX, AddressMode::AbsoluteX};
+    case DcpAbsoluteX:
+        return {Family::DCP, DcpAbsoluteX, AddressMode::AbsoluteX};
     case CpxImmediate:
         return {Family::CPX, CpxImmediate, AddressMode::Immediate};
     case SbcIndirectX:
@@ -449,6 +463,7 @@ MemoryAccess get_memory_access(const Family family) {
     case Family::ROR:
     case Family::ASL:
     case Family::LSR:
+    case Family::DCP:
         return MemoryAccess::ReadWrite;
     }
     // Should not happen
@@ -575,6 +590,8 @@ std::string_view to_string(const Family family) {
         return "LAX";
     case Family::SAX:
         return "SAX";
+    case Family::DCP:
+        return "DCP";
     }
 
     // Should not happen

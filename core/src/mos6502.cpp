@@ -551,6 +551,15 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::LaxIndirectY:
         result.append(create_load_instruction(*state_.current_opcode));
         break;
+    case Instruction::DcpZeropage:
+    case Instruction::DcpZeropageX:
+    case Instruction::DcpAbsolute:
+    case Instruction::DcpAbsoluteX:
+    case Instruction::DcpAbsoluteY:
+    case Instruction::DcpIndirectIndexed:
+    case Instruction::DcpIndexedIndirect:
+        result.append(create_dcp_instruction(*state_.current_opcode));
+        break;
     }
     return result;
 } // namespace n_e_s::core
@@ -841,6 +850,26 @@ Pipeline Mos6502::create_compare_instruction(Opcode opcode) {
     return result;
 }
 
+Pipeline Mos6502::create_dcp_instruction(Opcode opcode) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
+    Pipeline result;
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
+    result.push([=]() {
+        // DEC
+        const uint8_t new_value = tmp_ - static_cast<uint8_t>(1);
+        mmu_->write_byte(effective_address_, new_value);
+
+        // CMP
+        const uint8_t reg = registers_->a;
+
+        set_carry(reg >= new_value);
+        const int16_t temp_result = reg - new_value;
+        set_zero(static_cast<uint8_t>(temp_result));
+        set_negative(static_cast<uint8_t>(temp_result));
+    });
+    return result;
+}
+
 Pipeline Mos6502::create_eor_instruction(Opcode opcode) {
     const MemoryAccess memory_access = get_memory_access(opcode.family);
     Pipeline result;
@@ -962,11 +991,10 @@ Pipeline Mos6502::create_addressing_steps(AddressMode address_mode,
                 &registers_->y, access));
         break;
     case AddressMode::IndexedIndirect:
-        result.append(create_indexed_indirect_addressing_steps());
+        result.append(create_indexed_indirect_addressing_steps(access));
         break;
     case AddressMode::IndirectIndexed:
-        result.append(create_indirect_indexed_addressing_steps(
-                access == MemoryAccess::Write));
+        result.append(create_indirect_indexed_addressing_steps(access));
         break;
     default:
         break;
@@ -1106,7 +1134,8 @@ Pipeline Mos6502::create_absolute_indexed_addressing_steps(
     return result;
 }
 
-Pipeline Mos6502::create_indexed_indirect_addressing_steps() {
+Pipeline Mos6502::create_indexed_indirect_addressing_steps(
+        const MemoryAccess access) {
     Pipeline result;
     result.push([=]() { tmp_ = mmu_->read_byte(registers_->pc++); });
     result.push([=]() {
@@ -1123,10 +1152,15 @@ Pipeline Mos6502::create_indexed_indirect_addressing_steps() {
         const uint16_t upper = mmu_->read_byte(address) << 8u;
         effective_address_ = upper | tmp2_;
     });
+    if (access == MemoryAccess::ReadWrite) {
+        result.push([=]() { tmp_ = mmu_->read_byte(effective_address_); });
+        result.push([=]() { mmu_->write_byte(effective_address_, tmp_); });
+    }
     return result;
 }
 
-Pipeline Mos6502::create_indirect_indexed_addressing_steps(bool is_write) {
+Pipeline Mos6502::create_indirect_indexed_addressing_steps(
+        const MemoryAccess access) {
     Pipeline result;
     result.push([=]() { tmp_ = mmu_->read_byte(registers_->pc++); });
     result.push([=]() { tmp2_ = mmu_->read_byte(tmp_); });
@@ -1140,7 +1174,7 @@ Pipeline Mos6502::create_indirect_indexed_addressing_steps(bool is_write) {
         is_crossing_page_boundary_ = cross_page(address, offset);
         effective_address_ = address + offset;
     });
-    if (is_write) {
+    if (access == MemoryAccess::Write) {
         result.push([=]() {
             if (is_crossing_page_boundary_) {
                 // The high byte of the effective address is invalid
@@ -1153,7 +1187,7 @@ Pipeline Mos6502::create_indirect_indexed_addressing_steps(bool is_write) {
                 mmu_->read_byte(effective_address_);
             }
         });
-    } else {
+    } else if (access == MemoryAccess::Read) {
         result.push_conditional([=]() {
             if (is_crossing_page_boundary_) {
                 // The high byte of the effective address is invalid
@@ -1165,6 +1199,21 @@ Pipeline Mos6502::create_indirect_indexed_addressing_steps(bool is_write) {
             }
             return StepResult::Skip;
         });
+    } else {
+        result.push([=]() {
+            if (is_crossing_page_boundary_) {
+                // The high byte of the effective address is invalid
+                // at this time (smaller by $100), but a read is still
+                // performed.
+                mmu_->read_byte(
+                        effective_address_ - static_cast<uint16_t>(0x0100));
+            } else {
+                // Extra read from effective address.
+                mmu_->read_byte(effective_address_);
+            }
+        });
+        result.push([=]() { tmp_ = mmu_->read_byte(effective_address_); });
+        result.push([=]() { mmu_->write_byte(effective_address_, tmp_); });
     }
     return result;
 }

@@ -96,6 +96,7 @@ private:
     Pipeline create_store_instruction(Opcode opcode);
     Pipeline create_load_instruction(Opcode opcode);
     Pipeline create_compare_instruction(Opcode opcode);
+    Pipeline create_dcp_instruction(Opcode opcode);
     Pipeline create_eor_instruction(Opcode opcode);
     Pipeline create_ora_instruction(Opcode opcode);
     Pipeline create_left_shift_instruction(Opcode opcode, bool shift_in_carry);
@@ -110,8 +111,8 @@ private:
     Pipeline create_absolute_addressing_steps(MemoryAccess access);
     Pipeline create_absolute_indexed_addressing_steps(const uint8_t *index_reg,
             MemoryAccess access);
-    Pipeline create_indexed_indirect_addressing_steps();
-    Pipeline create_indirect_indexed_addressing_steps(bool is_write);
+    Pipeline create_indexed_indirect_addressing_steps(MemoryAccess access);
+    Pipeline create_indirect_indexed_addressing_steps(MemoryAccess access);
 };
 
 } // namespace n_e_s::core

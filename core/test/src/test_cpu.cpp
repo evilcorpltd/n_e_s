@@ -169,26 +169,33 @@ enum Opcode : uint8_t {
     LAX_ABSY = 0xBF,
     CPY_IMM = 0xC0,
     CMP_INXIND = 0xC1,
+    DCP_INXIND = 0xC3,
     CPY_ZERO = 0xC4,
     CMP_ZERO = 0xC5,
     DEC_ZERO = 0xC6,
+    DCP_ZERO = 0xC7,
     INY = 0xC8,
     CMP_IMM = 0xC9,
     DEX = 0xCA,
     CPY_ABS = 0xCC,
     CMP_ABS = 0xCD,
     DEC_ABS = 0xCE,
+    DCP_ABS = 0xCF,
     BNE = 0xD0,
     CMP_INDINX = 0xD1,
+    DCP_INDINX = 0xD3,
     NOP_ZEROXD4 = 0xD4,
     CMP_ZEROX = 0xD5,
     DEC_ZEROX = 0xD6,
+    DCP_ZEROX = 0xD7,
     CLD = 0xD8,
     CMP_ABSY = 0xD9,
     NOP_IMPDA = 0xDA,
+    DCP_ABSY = 0xDB,
     NOP_ABSXDC = 0xDC,
     CMP_ABSX = 0xDD,
     DEC_ABSX = 0xDE,
+    DCP_ABSX = 0xDF,
     CPX_IMM = 0xE0,
     SBC_INXIND = 0xE1,
     CPX_ZERO = 0xE4,
@@ -956,6 +963,27 @@ public:
         EXPECT_EQ(expected, registers);
     }
 
+    void run_readwrite_instruction(uint8_t instruction,
+            uint8_t new_memory_content) {
+        registers.pc = expected.pc = start_pc;
+        registers.x = expected.x = 0xED;
+        stage_instruction(instruction);
+        expected.pc += 1;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0xAB));
+        EXPECT_CALL(mmu, read_byte(0xAB)).WillOnce(Return(0x68)); // Dummy read
+        EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED)))
+                .WillOnce(Return(0x34));
+        EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED + 1u)))
+                .WillOnce(Return(0x12));
+        EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(memory_content));
+        EXPECT_CALL(mmu, write_byte(0x1234, memory_content));
+        EXPECT_CALL(mmu, write_byte(0x1234, new_memory_content));
+
+        step_execution(8);
+        EXPECT_EQ(expected, registers);
+    }
+
     uint16_t start_pc{0x4322};
     uint8_t memory_content{0x42};
 };
@@ -1028,6 +1056,29 @@ public:
                 .WillOnce(Return(0x00));
         EXPECT_CALL(mmu, write_byte(0x1234 + registers.y, memory_content));
         step_execution(6);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void run_readwrite_instruction_with_pagecrossing(uint8_t instruction,
+            uint8_t new_memory_content) {
+        registers.pc = expected.pc = start_pc;
+        registers.y = expected.y = 0x0D;
+        stage_instruction(instruction);
+        expected.pc += 1;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x42));
+        EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
+        EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
+
+        const uint16_t effective_address = 0x1234 + 0x0D;
+        EXPECT_CALL(mmu, read_byte(effective_address))
+                .WillOnce(Return(0xFF)); // Dummy read
+        EXPECT_CALL(mmu, read_byte(effective_address))
+                .WillOnce(Return(memory_content));
+        EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
+        EXPECT_CALL(mmu, write_byte(effective_address, new_memory_content));
+
+        step_execution(8);
         EXPECT_EQ(expected, registers);
     }
 
@@ -2809,6 +2860,54 @@ TEST_F(CpuAbsoluteIndexedTest, dec_absx_clears_n_flag) {
     registers.p = N_FLAG;
     memory_content = 126;
     run_readwrite_instruction(DEC_ABSX, IndexReg::X, 125);
+}
+
+// DCP
+TEST_F(CpuZeropageTest, dcp_decrements_sets_z_flag) {
+    memory_content = 0x03;
+    registers.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
+    expected.a = registers.a = 0x01;
+    expected.p = N_FLAG;
+    run_readwrite_instruction(DCP_ZERO, 0x02);
+}
+TEST_F(CpuZeropageIndexedTest, dcp_decrements_sets_z_flag) {
+    memory_value = 0x03;
+    registers.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
+    expected.a = registers.a = 0x01;
+    expected.p = N_FLAG;
+    run_readwrite_instruction(DCP_ZEROX, IndexReg::X, 0x02);
+}
+TEST_F(CpuAbsoluteTest, dcp_decrements_sets_c_flag) {
+    memory_content = 0x02;
+    registers.p |= static_cast<uint8_t>(Z_FLAG | N_FLAG);
+    expected.a = registers.a = 0x1A;
+    expected.p = C_FLAG;
+    run_readwrite_instruction(DCP_ABS, 0x01);
+}
+TEST_F(CpuAbsoluteIndexedTest, dcp_absx_sets_n_flag) {
+    memory_content = 126;
+    expected.a = registers.a = 0x01;
+    expected.p = N_FLAG;
+    run_readwrite_instruction(DCP_ABSX, IndexReg::X, 125);
+}
+TEST_F(CpuAbsoluteIndexedTest, dcp_absy_sets_n_flag) {
+    memory_content = 126;
+    expected.a = registers.a = 0x01;
+    expected.p = N_FLAG;
+    run_readwrite_instruction(DCP_ABSY, IndexReg::Y, 125);
+}
+TEST_F(CpuIndexedIndirectTest, dcp_decrements_clears_n) {
+    memory_content = 0x12;
+    registers.p = N_FLAG;
+    expected.p = C_FLAG;
+    expected.a = registers.a = 0x42;
+    run_readwrite_instruction(DCP_INXIND, 0x11);
+}
+TEST_F(CpuIndirectIndexedTest, dcp_decrements_clears_ncz) {
+    memory_content = 0xFE;
+    registers.p = static_cast<uint8_t>(Z_FLAG | C_FLAG) | N_FLAG;
+    expected.a = registers.a = 0x02;
+    run_readwrite_instruction_with_pagecrossing(DCP_INDINX, 0xFD);
 }
 
 // INX

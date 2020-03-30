@@ -149,25 +149,32 @@ enum Instruction : uint8_t {
     CpyImmediate = 0xC0,
     CmpIndirectX = 0xC1,
     CpyZeropage = 0xC4,
+    DcpIndexedIndirect = 0xC3, // Undocumented
     CmpZeropage = 0xC5,
     DecZeropage = 0xC6,
+    DcpZeropage = 0xC7, // Undocumented
     InyImplied = 0xC8,
     CmpImmediate = 0xC9,
     DexImplied = 0xCA,
     CpyAbsolute = 0xCC,
     CmpAbsolute = 0xCD,
     DecAbsolute = 0xCE,
+    DcpAbsolute = 0xCF, // Undocumented
     BneRelative = 0xD0,
     CmpIndirectY = 0xD1,
+    DcpIndirectIndexed = 0xD3, // Undocumented
     NopZeropageXD4 = 0xD4, // Undocumented
     CmpZeropageX = 0xD5,
     DecZeropageX = 0xD6,
+    DcpZeropageX = 0xD7, // Undocumented
     CldImplied = 0xD8,
     CmpAbsoluteY = 0xD9,
     NopImpliedDA = 0xDA, // Undocumented
+    DcpAbsoluteY = 0xDB, // Undocumented
     NopAbsoluteXDC = 0xDC, // Undocumented
     CmpAbsoluteX = 0xDD,
     DecAbsoluteX = 0xDE,
+    DcpAbsoluteX = 0xDF, // Undocumented
     CpxImmediate = 0xE0,
     SbcIndirectX = 0xE1,
     CpxZeropage = 0xE4,
@@ -253,6 +260,7 @@ enum class Family {
     SBC,
     LAX,
     SAX,
+    DCP,
 };
 
 enum class AddressMode {
