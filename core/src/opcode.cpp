@@ -277,6 +277,8 @@ Opcode decode(const uint8_t op) {
         return {Family::SBC, SbcImmediate, AddressMode::Immediate};
     case NopImplied:
         return {Family::NOP, NopImplied, AddressMode::Implied};
+    case SbcImmediateEB:
+        return {Family::SBC, SbcImmediateEB, AddressMode::Immediate};
     case CpxAbsolute:
         return {Family::CPX, CpxAbsolute, AddressMode::Absolute};
     case SbcAbsolute:

@@ -259,6 +259,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::SbcZeropage:
     case Instruction::SbcZeropageX:
     case Instruction::SbcImmediate:
+    case Instruction::SbcImmediateEB:
     case Instruction::SbcAbsolute:
     case Instruction::SbcAbsoluteX:
     case Instruction::SbcAbsoluteY:

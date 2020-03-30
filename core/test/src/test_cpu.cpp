@@ -197,6 +197,7 @@ enum Opcode : uint8_t {
     INX = 0xE8,
     SBC_IMM = 0xE9,
     NOP = 0xEA,
+    SBC_IMMEB = 0xEB,
     CPX_ABS = 0xEC,
     SBC_ABS = 0xED,
     INC_ABS = 0xEE,
@@ -1798,6 +1799,16 @@ TEST_F(CpuImmediateTest, sbc_imm_carry_and_overflow) {
     memory_content = 0x70;
 
     run_instruction(SBC_IMM);
+}
+
+TEST_F(CpuImmediateTest, sbc_immeb_carry_and_overflow) {
+    registers.a = 0xD0;
+    registers.p = C_FLAG;
+    expected.p = V_FLAG | C_FLAG;
+    expected.a = 0x60;
+    memory_content = 0x70;
+
+    run_instruction(SBC_IMMEB);
 }
 
 TEST_F(CpuAbsoluteTest, sbc_abs_no_carry_or_overflow) {

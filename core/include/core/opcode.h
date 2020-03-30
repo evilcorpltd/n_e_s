@@ -176,6 +176,7 @@ enum Instruction : uint8_t {
     InxImplied = 0xE8,
     SbcImmediate = 0xE9,
     NopImplied = 0xEA,
+    SbcImmediateEB = 0xEB, // Undocumented
     CpxAbsolute = 0xEC,
     SbcAbsolute = 0xED,
     IncAbsolute = 0xEE,

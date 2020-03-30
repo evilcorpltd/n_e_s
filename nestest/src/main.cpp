@@ -39,6 +39,9 @@ constexpr bool is_undocumented(const n_e_s::core::Opcode &opcode) {
     if (opcode.family == n_e_s::core::Family::SAX) {
         return true;
     }
+    if (opcode.instruction == n_e_s::core::Instruction::SbcImmediateEB) {
+        return true;
+    }
     return false;
 }
 
