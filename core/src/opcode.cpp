@@ -367,6 +367,14 @@ Opcode decode(const uint8_t op) {
         return {Family::ORA, OraZeropageX, AddressMode::ZeropageX};
     case OraIndirectIndexed:
         return {Family::ORA, OraIndirectIndexed, AddressMode::IndirectIndexed};
+    case SaxIndirectX:
+        return {Family::SAX, SaxIndirectX, AddressMode::IndexedIndirect};
+    case SaxZeropage:
+        return {Family::SAX, SaxZeropage, AddressMode::Zeropage};
+    case SaxAbsolute:
+        return {Family::SAX, SaxAbsolute, AddressMode::Absolute};
+    case SaxZeropageY:
+        return {Family::SAX, SaxZeropageY, AddressMode::ZeropageY};
     default:
         // Since this is an invalid opcode the instruction and address mode
         // have no real meaning, so we just use 0, 0 for them.
@@ -431,6 +439,7 @@ MemoryAccess get_memory_access(const Family family) {
     case Family::STY:
     case Family::STA:
     case Family::STX:
+    case Family::SAX:
         return MemoryAccess::Write;
     case Family::INC:
     case Family::DEC:
@@ -562,6 +571,8 @@ std::string_view to_string(const Family family) {
         return "SBC";
     case Family::LAX:
         return "LAX";
+    case Family::SAX:
+        return "SAX";
     }
 
     // Should not happen

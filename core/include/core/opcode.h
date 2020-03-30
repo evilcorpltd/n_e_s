@@ -96,19 +96,23 @@ enum Instruction : uint8_t {
     RorAbsoluteX = 0x7E,
     NopImmediate80 = 0x80, // Undocumented
     StaIndexedIndirect = 0x81,
+    SaxIndirectX = 0x83, // Undocumented
     StyZeropage = 0x84,
     StaZeropage = 0x85,
     StxZeropage = 0x86,
+    SaxZeropage = 0x87, // Undocumented
     DeyImplied = 0x88,
     TxaImplied = 0x8A,
     StyAbsolute = 0x8C,
     StaAbsolute = 0x8D,
     StxAbsolute = 0x8E,
+    SaxAbsolute = 0x8F, // Undocumented
     BccRelative = 0x90,
     StaIndirectIndexed = 0x91,
     StyZeropageX = 0x94,
     StaZeropageX = 0x95,
     StxZeropageY = 0x96,
+    SaxZeropageY = 0x97, // Undocumented
     TyaImplied = 0x98,
     StaAbsoluteY = 0x99,
     TxsImplied = 0x9A,
@@ -247,6 +251,7 @@ enum class Family {
     ORA,
     SBC,
     LAX,
+    SAX,
 };
 
 enum class AddressMode {

@@ -333,6 +333,10 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::StyZeropage:
     case Instruction::StyAbsolute:
     case Instruction::StyZeropageX:
+    case Instruction::SaxAbsolute:
+    case Instruction::SaxZeropage:
+    case Instruction::SaxZeropageY:
+    case Instruction::SaxIndirectX:
         result.append(create_store_instruction(*state_.current_opcode));
         break;
     case Instruction::TxsImplied:
@@ -761,14 +765,21 @@ Pipeline Mos6502::create_store_instruction(Opcode opcode) {
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
     uint8_t *reg{};
+    uint8_t *reg2{};
     if (opcode.family == Family::STX) {
         reg = &registers_->x;
     } else if (opcode.family == Family::STY) {
         reg = &registers_->y;
     } else if (opcode.family == Family::STA) {
         reg = &registers_->a;
+    } else if (opcode.family == Family::SAX) {
+        reg = &registers_->a;
+        reg2 = &registers_->x;
     }
-    result.push([=]() { mmu_->write_byte(effective_address_, *reg); });
+    result.push([=]() {
+        const uint8_t value = reg2 == nullptr ? *reg : *reg & *reg2;
+        mmu_->write_byte(effective_address_, value);
+    });
 
     return result;
 }

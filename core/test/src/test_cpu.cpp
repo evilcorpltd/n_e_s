@@ -117,19 +117,23 @@ enum Opcode : uint8_t {
     ROR_ABSX = 0x7E,
     NOP_IMM80 = 0x80,
     STA_INXIND = 0x81,
+    SAX_INXIND = 0x83,
+    STY_ZERO = 0x84,
+    STA_ZERO = 0x85,
+    STX_ZERO = 0x86,
+    SAX_ZERO = 0x87,
+    DEY = 0x88,
     TXA = 0x8A,
     STY_ABS = 0x8C,
     STA_ABS = 0x8D,
     STX_ABS = 0x8E,
-    STY_ZERO = 0x84,
-    STA_ZERO = 0x85,
-    STX_ZERO = 0x86,
-    DEY = 0x88,
+    SAX_ABS = 0x8F,
     BCC = 0x90,
     STA_INDINX = 0x91,
     STY_ZEROX = 0x94,
     STA_ZEROX = 0x95,
     STX_ZEROY = 0x96,
+    SAX_ZEROY = 0x97,
     TYA = 0x98,
     STA_ABSY = 0x99,
     TXS = 0x9A,
@@ -3056,6 +3060,47 @@ TEST_F(CpuZeropageIndexedTest, sty_zero_x_indexed) {
     registers.y = expected.y = 0x07;
 
     run_write_instruction(STY_ZEROX, IndexReg::X);
+}
+
+// SAX
+TEST_F(CpuAbsoluteTest, sax_abs) {
+    registers.a = expected.a = 0b10101010;
+    registers.x = expected.x = 0b11110000;
+    memory_content = 0b10100000;
+    run_write_instruction(SAX_ABS);
+}
+TEST_F(CpuZeropageTest, sax_zero) {
+    registers.a = expected.a = 0b10101010;
+    registers.x = expected.x = 0b00001111;
+    memory_content = 0b00001010;
+    run_write_instruction(SAX_ZERO);
+}
+TEST_F(CpuZeropageIndexedTest, sax_zero_y_indexed) {
+    registers.a = expected.a = 0b10101010;
+    registers.x = expected.x = 0b00001111;
+    memory_value = 0b00001010;
+    run_write_instruction(SAX_ZEROY, IndexReg::Y);
+}
+TEST_F(CpuTest, sax_indexed_indirect) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = expected.a = 0b10101010;
+    registers.x = expected.x = 0b00001111;
+
+    stage_instruction(SAX_INXIND);
+
+    expected.pc += 1;
+
+    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0xAB));
+    EXPECT_CALL(mmu, read_byte(0xAB)).WillOnce(Return(0x00)); // Dummy read
+    EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + registers.x)))
+            .WillOnce(Return(0x34));
+    EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + registers.x + 1u)))
+            .WillOnce(Return(0x12));
+    EXPECT_CALL(mmu, write_byte(0x1234, 0b00001010));
+
+    step_execution(6);
+
+    EXPECT_EQ(expected, registers);
 }
 
 // TSX
