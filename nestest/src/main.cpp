@@ -1,6 +1,5 @@
 #include <iomanip>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 
 #include <fmt/format.h>
@@ -66,50 +65,42 @@ std::string get_memory_string(const n_e_s::core::Opcode &opcode,
         const uint8_t op1,
         const uint8_t op2,
         const n_e_s::nes::Nes &nes) {
-    std::stringstream ss;
-    ss << std::hex << std::uppercase;
-
     switch (opcode.address_mode) {
     case n_e_s::core::AddressMode::Implied:
         break;
     case n_e_s::core::AddressMode::Immediate:
-        ss << "#$" << std::setfill('0') << std::setw(2) << +op1;
-        break;
+        return fmt::format("#${:02X}", op1);
     case n_e_s::core::AddressMode::Zeropage:
-        ss << "$" << std::setfill('0') << std::setw(2) << +op1 << " = "
-           << std::setfill('0') << std::setw(2) << +nes.mmu().read_byte(op1);
-        break;
+        return fmt::format("${:02X} = {:02X}", op1, nes.mmu().read_byte(op1));
     case n_e_s::core::AddressMode::ZeropageX: {
         const uint8_t effective_addr = op1 + nes.cpu_registers().x;
-        ss << "$" << std::setfill('0') << std::setw(2) << +op1;
-        ss << ",X @ " << std::setfill('0') << std::setw(2) << +effective_addr;
-        ss << " = " << std::setfill('0') << std::setw(2)
-           << +nes.mmu().read_byte(effective_addr);
-    } break;
+        return fmt::format("${:02X},X @ {:02X} = {:02X}",
+                op1,
+                effective_addr,
+                nes.mmu().read_byte(effective_addr));
+    }
     case n_e_s::core::AddressMode::ZeropageY: {
         const uint8_t effective_addr = op1 + nes.cpu_registers().y;
-        ss << "$" << std::setfill('0') << std::setw(2) << +op1;
-        ss << ",Y @ " << std::setfill('0') << std::setw(2) << +effective_addr;
-        ss << " = " << std::setfill('0') << std::setw(2)
-           << +nes.mmu().read_byte(effective_addr);
-    } break;
+        return fmt::format("${:02X},Y @ {:02X} = {:02X}",
+                op1,
+                effective_addr,
+                nes.mmu().read_byte(effective_addr));
+    }
     case n_e_s::core::AddressMode::Relative:
-        ss << "$" << std::setfill('0') << std::setw(4)
-           << to_signed(op1) + nes.cpu().state().start_pc + 2;
-        break;
+        return fmt::format(
+                "${:04X}", to_signed(op1) + nes.cpu().state().start_pc + 2);
     case n_e_s::core::AddressMode::Accumulator:
-        ss << "A";
-        break;
+        return "A";
     case n_e_s::core::AddressMode::IndexedIndirect: {
         const uint8_t midaddr = op1 + nes.cpu_registers().x;
         const uint16_t effective_addr =
                 nes.mmu().read_byte(midaddr) +
                 (nes.mmu().read_byte(static_cast<uint8_t>(midaddr + 1u)) << 8u);
-        ss << "($" << std::setfill('0') << std::setw(2) << +op1;
-        ss << ",X) @ " << std::setfill('0') << std::setw(2) << +midaddr;
-        ss << " = " << std::setfill('0') << std::setw(4) << effective_addr;
-        ss << " = " << std::setfill('0') << std::setw(2)
-           << +nes.mmu().read_byte(effective_addr);
+        return fmt::format("(${:02X},X) @ {:02X} = {:04X} = {:02X}",
+                op1,
+                midaddr,
+                effective_addr,
+                nes.mmu().read_byte(effective_addr));
     } break;
     case n_e_s::core::AddressMode::IndirectIndexed: {
         const uint8_t op1_plus_one =
@@ -117,49 +108,49 @@ std::string get_memory_string(const n_e_s::core::Opcode &opcode,
         const uint16_t midaddr = nes.mmu().read_byte(op1) |
                                  static_cast<uint16_t>(op1_plus_one << 8u);
         const uint16_t effective_addr = midaddr + nes.cpu_registers().y;
-        ss << "($" << std::setfill('0') << std::setw(2) << +op1 << ")";
-        ss << ",Y = " << std::setfill('0') << std::setw(4) << midaddr;
-        ss << " @ " << std::setfill('0') << std::setw(4) << effective_addr;
-        ss << " = " << std::setfill('0') << std::setw(2)
-           << +nes.mmu().read_byte(effective_addr);
+        return fmt::format("(${:02X}),Y = {:04X} @ {:04X} = {:02X}",
+                op1,
+                midaddr,
+                effective_addr,
+                nes.mmu().read_byte(effective_addr));
     } break;
     case n_e_s::core::AddressMode::Absolute:
-        ss << "$" << std::setfill('0') << std::setw(2) << +op2 << std::setw(2)
-           << +op1;
         if (opcode.family != n_e_s::core::Family::JSR &&
                 opcode.family != n_e_s::core::Family::JMP) {
-            ss << " = " << std::setfill('0') << std::setw(2)
-               << +nes.mmu().read_byte(static_cast<uint16_t>(op2 << 8u) | op1);
+            const uint8_t resulting_addr =
+                    nes.mmu().read_byte(static_cast<uint16_t>(op2 << 8u) | op1);
+            return fmt::format(
+                    "${:02X}{:02X} = {:02X}", op2, op1, resulting_addr);
+        } else {
+            return fmt::format("${:02X}{:02X}", op2, op1);
         }
-        break;
     case n_e_s::core::AddressMode::AbsoluteX: {
         const uint16_t midaddr = op1 | static_cast<uint16_t>(op2 << 8u);
         const uint16_t effective_addr = midaddr + nes.cpu_registers().x;
-        ss << "$" << std::setfill('0') << std::setw(4) << +midaddr;
-        ss << ",X @ " << std::setfill('0') << std::setw(4) << effective_addr;
-        ss << " = " << std::setfill('0') << std::setw(2)
-           << +nes.mmu().read_byte(effective_addr);
-    } break;
+        return fmt::format("${:04X},X @ {:04X} = {:02X}",
+                midaddr,
+                effective_addr,
+                nes.mmu().read_byte(effective_addr));
+    }
     case n_e_s::core::AddressMode::AbsoluteY: {
         const uint16_t midaddr = op1 | static_cast<uint16_t>(op2 << 8u);
         const uint16_t effective_addr = midaddr + nes.cpu_registers().y;
-        ss << "$" << std::setfill('0') << std::setw(4) << +midaddr;
-        ss << ",Y @ " << std::setfill('0') << std::setw(4) << effective_addr;
-        ss << " = " << std::setfill('0') << std::setw(2)
-           << +nes.mmu().read_byte(effective_addr);
-    } break;
+        return fmt::format("${:04X},Y @ {:04X} = {:02X}",
+                midaddr,
+                effective_addr,
+                nes.mmu().read_byte(effective_addr));
+    }
     case n_e_s::core::AddressMode::Indirect:
-        ss << "($" << std::setfill('0') << std::setw(2) << +op2 << std::setw(2)
-           << +op1;
         const uint16_t effective_addr1 = static_cast<uint16_t>(op2 << 8u) | op1;
         const uint16_t effective_addr2 = static_cast<uint16_t>(op2 << 8u) |
                                          static_cast<uint8_t>(op1 + 1u);
-        ss << ") = " << std::setfill('0') << std::setw(2)
-           << +nes.mmu().read_byte(effective_addr2) << std::setw(2)
-           << +nes.mmu().read_byte(effective_addr1);
-        break;
+        return fmt::format("(${:02X}{:02X}) = {:02X}{:02X}",
+                op2,
+                op1,
+                nes.mmu().read_byte(effective_addr2),
+                nes.mmu().read_byte(effective_addr1));
     }
-    return ss.str();
+    return "";
 }
 
 std::string get_reg_string(const n_e_s::core::CpuRegisters &reg) {
