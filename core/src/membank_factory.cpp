@@ -2,6 +2,7 @@
 
 #include "core/ippu.h"
 
+#include "mapped_cpu_register.h"
 #include "mapped_membank.h"
 #include "membank.h"
 
@@ -22,14 +23,16 @@ MemBankList MemBankFactory::create_nes_mem_banks(IPpu *ppu) {
     MemBankList mem_banks;
 
     // Ram, repeats every 0x800 byte
-    mem_banks.push_back(std::make_unique<MemBank<0x0000, 0x1FFF, 0x800>>());
+    auto cpu_ram = std::make_unique<MemBank<0x0000, 0x1FFF, 0x800>>();
+    IMemBank *cpu_ram_ptr = cpu_ram.get();
+    mem_banks.push_back(std::move(cpu_ram));
 
     // Ppu, repeats every 0x8 byte
     mem_banks.push_back(std::make_unique<MappedMemBank<0x2000, 0x3FFF, 0x8>>(
             create_ppu_reader(ppu), create_ppu_writer(ppu)));
 
     // Io
-    mem_banks.push_back(std::make_unique<MemBank<0x4000, 0x4017, 0x18>>());
+    mem_banks.push_back(std::make_unique<MappedCpuRegister>(ppu, cpu_ram_ptr));
 
     // Io dev
     mem_banks.push_back(std::make_unique<MemBank<0x4018, 0x401F, 0x8>>());

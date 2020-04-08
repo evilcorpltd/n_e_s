@@ -12,7 +12,7 @@ using namespace n_e_s::core::test;
 namespace {
 
 std::vector<uint16_t> get_addr_list() {
-    return {0x0000, 0x1000, 0x4000};
+    return {0x0000, 0x1000, 0x1500};
 }
 
 class MmuTest : public ::testing::Test {
@@ -59,6 +59,20 @@ TEST_F(MmuTest, read_write_byte_to_ppu) {
 TEST_F(MmuTest, read_write_byte_io_dev_bank) {
     mmu->write_byte(0x4018, 0x33);
     EXPECT_EQ(0x33, mmu->read_byte(0x4018));
+}
+
+TEST_F(MmuTest, write_dma) {
+    const uint8_t dma_write_value = 0x03;
+
+    for (uint16_t i = 0; i < 256; ++i) {
+        const uint16_t addr = dma_write_value * 0x0100 + i;
+
+        // Fill in some data
+        mmu->write_byte(addr, i);
+
+        EXPECT_CALL(ppu, write_byte(0x2004, i));
+    }
+    mmu->write_byte(0x4014, dma_write_value);
 }
 
 TEST_F(MmuTest, ram_bank_mirroring) {

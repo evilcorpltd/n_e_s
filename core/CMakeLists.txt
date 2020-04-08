@@ -16,6 +16,8 @@ add_library(${PROJECT_NAME}
     include/core/rom_factory.h
     src/cpu_factory.cpp
     src/invalid_address.cpp
+    src/mapped_cpu_register.cpp
+    src/mapped_cpu_register.h
     src/mapped_membank.h
     src/membank.h
     src/membank_base.h
