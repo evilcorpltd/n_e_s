@@ -15,16 +15,16 @@ environment:
     CMAKE_ARGS: -A x64
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
-  - TOOLCHAIN: Msvc 2017 x64/Ninja
+  - TOOLCHAIN: Msvc 2019 x64/Ninja
     GENERATOR: Ninja
-    VCVARS: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    VCVARS: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
-  - TOOLCHAIN: Msvc 2017 x64 Clang/Ninja
+  - TOOLCHAIN: Msvc 2019 x64 Clang/Ninja
     GENERATOR: Ninja
-    VCVARS: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat
+    VCVARS: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat
     CMAKE_ARGS: -DCMAKE_C_COMPILER=clang-cl.exe -DCMAKE_CXX_COMPILER=clang-cl.exe
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
 install:
   - cmd: python -m pip install cmake==3.15.3 ninja==1.9.0.post1 --disable-pip-version-check
