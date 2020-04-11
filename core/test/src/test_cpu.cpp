@@ -648,7 +648,7 @@ public:
         EXPECT_CALL(mmu, read_byte(index_value))
                 .WillOnce(Return(0xCD)); // Dummy read
         EXPECT_CALL(mmu, read_byte(effective_address))
-                .WillOnce(Return(memory_value));
+                .WillOnce(Return(memory_content));
 
         step_execution(4);
         EXPECT_EQ(expected, registers);
@@ -664,7 +664,7 @@ public:
         EXPECT_CALL(mmu, read_byte(start_pc + 1)).WillOnce(Return(index_value));
         EXPECT_CALL(mmu, read_byte(index_value))
                 .WillOnce(Return(0xCD)); // Dummy read
-        EXPECT_CALL(mmu, write_byte(effective_address, memory_value));
+        EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
 
         step_execution(4);
         EXPECT_EQ(expected, registers);
@@ -683,10 +683,10 @@ public:
         EXPECT_CALL(mmu, read_byte(index_value))
                 .WillOnce(Return(0xCD)); // Dummy read
         EXPECT_CALL(mmu, read_byte(effective_address))
-                .WillOnce(Return(memory_value));
+                .WillOnce(Return(memory_content));
         EXPECT_CALL(mmu,
                 write_byte(effective_address,
-                        memory_value)); // Extra write with old value
+                        memory_content)); // Extra write with old value
         EXPECT_CALL(mmu, write_byte(effective_address, new_memory_content));
 
         step_execution(6);
@@ -696,7 +696,7 @@ public:
     void load_sets_reg(uint8_t instruction,
             uint8_t *target_reg,
             IndexReg index_reg) {
-        *target_reg = memory_value;
+        *target_reg = memory_content;
         run_read_instruction(instruction, index_reg);
     }
 
@@ -711,7 +711,7 @@ public:
     }
 
     uint16_t start_pc{0x4321};
-    uint8_t memory_value{0x39};
+    uint8_t memory_content{0x39};
     uint8_t reg_value{0xED};
     uint8_t index_value{0x44};
     uint8_t effective_address{};
@@ -1009,7 +1009,8 @@ public:
         EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
 
         const uint16_t effective_address = 0x1234 + registers.y;
-        EXPECT_CALL(mmu, read_byte(effective_address)).WillOnce(Return(0x00)); // Dummy read
+        EXPECT_CALL(mmu, read_byte(effective_address))
+                .WillOnce(Return(0x00)); // Dummy read
         EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
         step_execution(6);
         EXPECT_EQ(expected, registers);
@@ -1178,7 +1179,7 @@ TEST_F(CpuZeropageTest, asl_zero_clears_c_z_sets_n) {
     run_readwrite_instruction(ASL_ZERO, 0b10101010);
 }
 TEST_F(CpuZeropageIndexedTest, asl_zerox_shifts) {
-    memory_value = 0b00100101;
+    memory_content = 0b00100101;
 
     run_readwrite_instruction(ASL_ZEROX, IndexReg::X, 0b01001010);
 }
@@ -1260,7 +1261,7 @@ TEST_F(CpuZeropageIndexedTest, and_zerox_sets_neg) {
     registers.p = Z_FLAG;
     expected.a = 0b10001010;
     expected.p = N_FLAG;
-    memory_value = 0b10001111;
+    memory_content = 0b10001111;
 
     run_read_instruction(AND_ZEROX, IndexReg::X);
 }
@@ -1493,7 +1494,7 @@ TEST_F(CpuZeropageTest, lsr_zeropage_shifts) {
     run_readwrite_instruction(LSR_ZERO, 0b00100100);
 }
 TEST_F(CpuZeropageIndexedTest, lsr_zeropagex_sets_reg) {
-    memory_value = 0b01001000;
+    memory_content = 0b01001000;
     run_readwrite_instruction(LSR_ZEROX, IndexReg::X, 0b00100100);
 }
 TEST_F(CpuAbsoluteTest, lsr_abs_shifts) {
@@ -1713,7 +1714,7 @@ TEST_F(CpuTest, adc_absy_no_carry_or_overflow_with_pagecrossing) {
 }
 
 TEST_F(CpuZeropageIndexedTest, adc_zero_x) {
-    memory_value = 0x07;
+    memory_content = 0x07;
     registers.a = 0x50;
     expected.a = 0x57;
     registers.p = V_FLAG;
@@ -2326,7 +2327,7 @@ TEST_F(CpuZeropageTest, lax_zero_sets_reg_sets_n) {
 TEST_F(CpuZeropageIndexedTest, lax_zeroy_sets_reg) {
     expected.x = 0x42;
     expected.a = 0x42;
-    memory_value = 0x42;
+    memory_content = 0x42;
     run_read_instruction(LAX_ZEROY, IndexReg::Y);
 }
 TEST_F(CpuAbsoluteTest, lax_abs_sets_reg) {
@@ -2574,8 +2575,8 @@ TEST_F(CpuZeropageTest, cmp_zeropage_sets_nc) {
 }
 
 TEST_F(CpuZeropageIndexedTest, cmp_zero_x_sets_zc) {
-    memory_value = 0x07;
-    registers.a = expected.a = memory_value;
+    memory_content = 0x07;
+    registers.a = expected.a = memory_content;
     registers.p |= N_FLAG;
     expected.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
 
@@ -2926,7 +2927,7 @@ TEST_F(CpuZeropageTest, sta_zero) {
 }
 
 TEST_F(CpuZeropageIndexedTest, sta_zero_x_indexed) {
-    registers.a = expected.a = memory_value;
+    registers.a = expected.a = memory_content;
 
     run_write_instruction(STA_ZEROX, IndexReg::X);
 }
@@ -2942,7 +2943,7 @@ TEST_F(CpuZeropageTest, stx_zero) {
 }
 
 TEST_F(CpuZeropageIndexedTest, stx_zero_y_indexed) {
-    memory_value = 0x07;
+    memory_content = 0x07;
     registers.x = expected.x = 0x07;
 
     run_write_instruction(STX_ZEROY, IndexReg::Y);
@@ -3063,7 +3064,7 @@ TEST_F(CpuZeropageTest, sty_zero) {
 }
 
 TEST_F(CpuZeropageIndexedTest, sty_zero_x_indexed) {
-    memory_value = 0x07;
+    memory_content = 0x07;
     registers.y = expected.y = 0x07;
 
     run_write_instruction(STY_ZEROX, IndexReg::X);
@@ -3085,7 +3086,7 @@ TEST_F(CpuZeropageTest, sax_zero) {
 TEST_F(CpuZeropageIndexedTest, sax_zero_y_indexed) {
     registers.a = expected.a = 0b10101010;
     registers.x = expected.x = 0b00001111;
-    memory_value = 0b00001010;
+    memory_content = 0b00001010;
     run_write_instruction(SAX_ZEROY, IndexReg::Y);
 }
 TEST_F(CpuTest, sax_indexed_indirect) {
@@ -3441,7 +3442,7 @@ TEST_F(CpuZeropageTest, eor_zero) {
 }
 
 TEST_F(CpuZeropageIndexedTest, eor_zero_x) {
-    memory_value = 0x01;
+    memory_content = 0x01;
     registers.a = 0b10000000;
     registers.p = V_FLAG | C_FLAG;
     expected.a = 0b10000001;
@@ -3504,7 +3505,7 @@ TEST_F(CpuZeropageTest, rol_zeropage_shifts) {
     run_readwrite_instruction(ROL_ZERO, 0b10010000);
 }
 TEST_F(CpuZeropageIndexedTest, rol_zeropagex_sets_reg) {
-    memory_value = 0b01001000;
+    memory_content = 0b01001000;
     expected.p = N_FLAG;
     run_readwrite_instruction(ROL_ZEROX, IndexReg::X, 0b10010000);
 }
@@ -3601,7 +3602,7 @@ TEST_F(CpuZeropageTest, ror_zeropage_shifts) {
     run_readwrite_instruction(ROR_ZERO, 0b00100100);
 }
 TEST_F(CpuZeropageIndexedTest, ror_zeropagex_sets_reg) {
-    memory_value = 0b01001000;
+    memory_content = 0b01001000;
     run_readwrite_instruction(ROR_ZEROX, IndexReg::X, 0b00100100);
 }
 TEST_F(CpuAbsoluteTest, ror_abs_shifts) {
@@ -3735,7 +3736,7 @@ TEST_F(CpuZeropageTest, ora_zero_set_neg_clears_zero) {
     run_read_instruction(ORA_ZERO);
 }
 TEST_F(CpuZeropageIndexedTest, ora_zero_x) {
-    memory_value = 0b00100011;
+    memory_content = 0b00100011;
     registers.a = 0b00110000;
     registers.p = Z_FLAG | N_FLAG;
     expected.a = 0b00110011;
