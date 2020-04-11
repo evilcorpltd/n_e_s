@@ -1,0 +1,65 @@
+name: Windows CI
+
+on: [push, pull_request]
+
+jobs:
+  ci:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    env:
+      CTEST_OUTPUT_ON_FAILURE: ON
+      CTEST_PARALLEL_LEVEL: 2
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows-2019-cl-x86
+            os: windows-2019
+            generator: Visual Studio 16 2019
+            configuration: Debug
+            cmake-args: -A Win32
+
+          - name: windows-2019-cl-x64
+            os: windows-2019
+            generator: Visual Studio 16 2019
+            configuration: Debug
+            cmake-args: -A x64
+
+          - name: windows-2019-clang
+            os: windows-2019
+            compiler: clang
+            generator: Ninja
+            configuration: Debug
+            cmake-args: -DCMAKE_C_COMPILER="clang.exe" -DCMAKE_CXX_COMPILER="clang.exe"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install
+        run: |
+          python -m pip install cmake==3.16.3 ninja==1.9.0.post1 --upgrade
+          cmake --version
+          ninja --version
+          echo "Generator: ${{ matrix.generator }}"
+          echo "CMake args: ${{ matrix.cmake-args }}"
+
+      - name: Install clang
+        if: matrix.compiler == 'clang'
+        run: |
+          curl -fsSLO https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/LLVM-10.0.0-win64.exe
+          7z x LLVM-10.0.0-win64.exe -y -o"c:\llvm"
+          echo "::add-path::c:\llvm\bin"
+
+      - name: CMake
+        run: |
+          cmake -S . -B build -G "${{ matrix.generator }}" ${{ matrix.cmake-args }}
+
+      - name: Build
+        run: |
+          cmake --build build --config ${{ matrix.configuration }}
+
+      - name: Test
+        run: |
+          (cd build && ctest -C ${{ matrix.configuration }} )
