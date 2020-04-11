@@ -1673,44 +1673,23 @@ TEST_F(CpuZeropageTest, adc_zero_no_carry_or_overflow) {
     run_read_instruction(ADC_ZERO);
 }
 
-TEST_F(CpuTest, adc_absx_no_carry_or_overflow_no_pagecrossing) {
-    registers.pc = expected.pc = 0x4321;
-    registers.x = expected.x = 0x10;
-
-    stage_instruction(ADC_ABSX);
-
+TEST_F(CpuAbsoluteIndexedTest, adc_absx_no_carry_or_overflow_no_pagecrossing) {
     registers.a = 0x50;
     registers.p = V_FLAG;
     expected.a = 0x71;
-    expected.pc += 2;
+    memory_content = 0x21;
 
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x78));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x56));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0x10)).WillOnce(Return(0x21));
-
-    step_execution(4);
-    EXPECT_EQ(expected, registers);
+    run_read_instruction_with_pagecrossing(ADC_ABSX, IndexReg::X);
 }
 
-TEST_F(CpuTest, adc_absy_no_carry_or_overflow_with_pagecrossing) {
-    registers.pc = expected.pc = 0x4321;
-    registers.y = expected.y = 0xAB;
-
-    stage_instruction(ADC_ABSY);
-
+TEST_F(CpuAbsoluteIndexedTest,
+        adc_absy_no_carry_or_overflow_with_pagecrossing) {
     registers.a = 0x50;
     registers.p = V_FLAG;
     expected.a = 0x71;
-    expected.pc += 2;
+    memory_content = 0x21;
 
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x78));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x56));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB - 0x0100))
-            .WillOnce(Return(0xDEAD));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB)).WillOnce(Return(0x21));
-
-    step_execution(5);
-    EXPECT_EQ(expected, registers);
+    run_read_instruction_with_pagecrossing(ADC_ABSY, IndexReg::Y);
 }
 
 TEST_F(CpuZeropageIndexedTest, adc_zero_x) {
@@ -1722,46 +1701,20 @@ TEST_F(CpuZeropageIndexedTest, adc_zero_x) {
     run_read_instruction(ADC_ZEROX, IndexReg::X);
 }
 
-TEST_F(CpuTest, adc_indexed_indirect) {
-    registers.pc = expected.pc = 0x4321;
-    registers.x = expected.x = 0xED;
+TEST_F(CpuIndexedIndirectTest, adc_indexed_indirect) {
     registers.a = 0x07;
     expected.a = 0x07 + 0x12;
+    memory_content = 0x12;
 
-    stage_instruction(ADC_INDX);
-
-    expected.pc += 1;
-
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0xAB));
-    EXPECT_CALL(mmu, read_byte(0xAB)).WillOnce(Return(0x00)); // Dummy read
-    EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED))).WillOnce(Return(0x34));
-    EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED + 1u)))
-            .WillOnce(Return(0x12));
-    EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(0x12));
-
-    step_execution(6);
-
-    EXPECT_EQ(expected, registers);
+    run_instruction(ADC_INDX);
 }
 
-TEST_F(CpuTest, adc_indirect_indexed) {
-    registers.pc = expected.pc = 0x4321;
-    registers.y = expected.y = 0x0D;
+TEST_F(CpuIndirectIndexedTest, adc_indirect_indexed) {
     registers.a = 0x07;
     expected.a = 0x07 + 0x12;
+    memory_content = 0x12;
 
-    stage_instruction(ADC_INDY);
-
-    expected.pc += 1;
-
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x42));
-    EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
-    EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
-
-    EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D)).WillOnce(Return(0x12));
-    step_execution(5);
-
-    EXPECT_EQ(expected, registers);
+    run_read_instruction_without_pagecrossing(ADC_INDY);
 }
 
 // SBC
@@ -1832,66 +1785,35 @@ TEST_F(CpuZeropageTest, sbc_zero_no_carry_or_overflow) {
     run_read_instruction(SBC_ZERO);
 }
 
-TEST_F(CpuTest, sbc_absx_no_carry_or_overflow_no_pagecrossing) {
-    registers.pc = expected.pc = 0x4321;
-    registers.x = expected.x = 0x10;
-
-    stage_instruction(SBC_ABSX);
-
+TEST_F(CpuAbsoluteIndexedTest, sbc_absx_no_carry_or_overflow_no_pagecrossing) {
     registers.a = 0xD0;
     registers.p = V_FLAG | C_FLAG;
     expected.p = N_FLAG;
     expected.a = 0xE0;
-    expected.pc += 2;
+    memory_content = 0xF0;
 
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x78));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x56));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0x10)).WillOnce(Return(0xF0));
-
-    step_execution(4);
-    EXPECT_EQ(expected, registers);
+    run_read_instruction_without_pagecrossing(SBC_ABSX, IndexReg::X);
 }
 
-TEST_F(CpuTest, sbc_absy_no_carry_or_overflow_with_pagecrossing) {
-    registers.pc = expected.pc = 0x4321;
-    registers.y = expected.y = 0xAB;
-
-    stage_instruction(SBC_ABSY);
-
+TEST_F(CpuAbsoluteIndexedTest,
+        sbc_absy_no_carry_or_overflow_with_pagecrossing) {
     registers.a = 0xD0;
     registers.p = V_FLAG | C_FLAG;
     expected.p = N_FLAG;
     expected.a = 0xE0;
-    expected.pc += 2;
+    memory_content = 0xF0;
 
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x78));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x56));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB - 0x0100))
-            .WillOnce(Return(0xDEAD));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB)).WillOnce(Return(0xF0));
-
-    step_execution(5);
-    EXPECT_EQ(expected, registers);
+    run_read_instruction_with_pagecrossing(SBC_ABSX, IndexReg::X);
 }
 
-TEST_F(CpuTest, sbc_zero_x) {
-    registers.pc = expected.pc = 0x4321;
+TEST_F(CpuZeropageIndexedTest, sbc_zero_x) {
     registers.a = 0x50;
-    registers.x = expected.x = 0xED;
     registers.p = V_FLAG | C_FLAG;
-
-    stage_instruction(SBC_ZEROX);
-
     expected.p = C_FLAG;
     expected.a = 0x50 - 0x07;
-    expected.pc += 1;
+    memory_content = 0x07;
 
-    EXPECT_CALL(mmu, read_byte(0x4322)).WillOnce(Return(0x44));
-    EXPECT_CALL(mmu, read_byte(0x44)).WillOnce(Return(0xCD)); // Dummy read
-    EXPECT_CALL(mmu, read_byte(u16_to_u8(0x44 + 0xED))).WillOnce(Return(0x07));
-
-    step_execution(4);
-    EXPECT_EQ(expected, registers);
+    run_read_instruction(SBC_ZEROX, IndexReg::X);
 }
 
 TEST_F(CpuIndexedIndirectTest, sbc) {
@@ -3318,20 +3240,13 @@ TEST_F(CpuTest, dex_clears_z_flag) {
 }
 
 // EOR
-TEST_F(CpuTest, eor_imm) {
-    registers.pc = expected.pc = 0x3210;
+TEST_F(CpuImmediateTest, eor_imm) {
     registers.a = 0b10101010;
     registers.p = Z_FLAG | N_FLAG;
-
-    stage_instruction(EOR_IMM);
-
-    ++expected.pc;
     expected.a = 0b00111100;
+    memory_content = 0b10010110;
 
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0b10010110));
-
-    step_execution(2);
-    EXPECT_EQ(expected, registers);
+    run_instruction(EOR_IMM);
 }
 
 TEST_F(CpuAbsoluteTest, eor_abs_set_zero_clears_neg) {
@@ -3640,21 +3555,14 @@ TEST_F(CpuTest, ror_absx_shifts) {
 }
 
 // ORA, IMM
-TEST_F(CpuTest, ora_imm) {
-    registers.pc = expected.pc = 0x3210;
+TEST_F(CpuImmediateTest, ora_imm) {
     registers.a = 0b10101010;
     registers.p = Z_FLAG | N_FLAG;
-
-    stage_instruction(ORA_IMM);
-
-    ++expected.pc;
     expected.a = 0b11111111;
     expected.p = N_FLAG;
+    memory_content = 0b01110101;
 
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0b01110101));
-
-    step_execution(2);
-    EXPECT_EQ(expected, registers);
+    run_instruction(ORA_IMM);
 }
 // ORA, ABS
 TEST_F(CpuAbsoluteTest, ora_abs_set_neg_clears_zero) {
@@ -3667,64 +3575,31 @@ TEST_F(CpuAbsoluteTest, ora_abs_set_neg_clears_zero) {
     run_read_instruction(ORA_ABS);
 }
 // ORA, ABSY
-TEST_F(CpuTest, ora_absy_without_page_crossing) {
-    registers.pc = expected.pc = 0x4321;
+TEST_F(CpuAbsoluteIndexedTest, ora_absy_without_page_crossing) {
     registers.a = 0b00111100;
-    registers.p = 0;
-    registers.y = expected.y = 0x10;
-
-    stage_instruction(ORA_ABSY);
-
-    expected.pc += 2;
     expected.a = 0b11111100;
     expected.p = N_FLAG;
+    memory_content = 0b11110000;
 
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x78));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x56));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0x10)).WillOnce(Return(0b11110000));
-
-    step_execution(4);
-    EXPECT_EQ(expected, registers);
+    run_read_instruction_without_pagecrossing(ORA_ABSY, IndexReg::Y);
 }
 // ORA, ABSX
-TEST_F(CpuTest, ora_absx_without_page_crossing) {
-    registers.pc = expected.pc = 0x4321;
+TEST_F(CpuAbsoluteIndexedTest, ora_absx_without_page_crossing) {
     registers.a = 0b00110000;
     registers.p = Z_FLAG | N_FLAG;
-    registers.x = expected.x = 0x10;
-
-    stage_instruction(ORA_ABSX);
-
-    expected.pc += 2;
     expected.a = 0b00110011;
+    memory_content = 0b00100011;
 
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x78));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x56));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0x10)).WillOnce(Return(0b00100011));
-
-    step_execution(4);
-    EXPECT_EQ(expected, registers);
+    run_read_instruction_without_pagecrossing(ORA_ABSX, IndexReg::X);
 }
-TEST_F(CpuTest, ora_absx_with_page_crossing) {
-    registers.pc = expected.pc = 0x4321;
+TEST_F(CpuAbsoluteIndexedTest, ora_absx_with_page_crossing) {
     registers.a = 0b10000000;
     registers.p = N_FLAG;
-    registers.x = expected.x = 0xAB;
-
-    stage_instruction(ORA_ABSX);
-
-    expected.pc += 2;
     expected.a = 0b10000001;
     expected.p = N_FLAG;
+    memory_content = 0b00000001;
 
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x78));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x56));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB - 0x0100))
-            .WillOnce(Return(0xDEAD));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB)).WillOnce(Return(0b00000001));
-
-    step_execution(5);
-    EXPECT_EQ(expected, registers);
+    run_read_instruction_with_pagecrossing(ORA_ABSX, IndexReg::X);
 }
 TEST_F(CpuZeropageTest, ora_zero_set_neg_clears_zero) {
     registers.a = 0b00000000;
