@@ -971,7 +971,9 @@ public:
         EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x42));
         EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
         EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
-        EXPECT_CALL(mmu, read_byte(0x1234 + registers.y))
+
+        const uint16_t effective_address = 0x1234 + registers.y;
+        EXPECT_CALL(mmu, read_byte(effective_address))
                 .WillOnce(Return(memory_content));
         step_execution(5);
         EXPECT_EQ(expected, registers);
@@ -986,9 +988,11 @@ public:
         EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x42));
         EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
         EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
-        EXPECT_CALL(mmu, read_byte(0x1234 + registers.y - 0x0100))
+
+        const uint16_t effective_address = 0x1234 + registers.y;
+        EXPECT_CALL(mmu, read_byte(effective_address - 0x0100))
                 .WillOnce(Return(0x00)); // Dummy read
-        EXPECT_CALL(mmu, read_byte(0x1234 + registers.y))
+        EXPECT_CALL(mmu, read_byte(effective_address))
                 .WillOnce(Return(memory_content));
         step_execution(6);
         EXPECT_EQ(expected, registers);
@@ -997,8 +1001,6 @@ public:
     void run_write_instruction_without_pagecrossing(uint8_t instruction) {
         registers.pc = expected.pc = start_pc;
         registers.y = expected.y = 0x0D;
-        registers.a = expected.a = 0x07;
-        memory_content = 0x07;
         stage_instruction(instruction);
         expected.pc += 1;
 
@@ -1006,8 +1008,9 @@ public:
         EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
         EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
 
-        EXPECT_CALL(mmu, read_byte(0x1234 + 0x0D)).WillOnce(Return(0x00));
-        EXPECT_CALL(mmu, write_byte(0x1234 + 0x0D, 0x07));
+        const uint16_t effective_address = 0x1234 + registers.y;
+        EXPECT_CALL(mmu, read_byte(effective_address)).WillOnce(Return(0x00)); // Dummy read
+        EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
         step_execution(6);
         EXPECT_EQ(expected, registers);
     }
@@ -1015,8 +1018,6 @@ public:
     void run_write_instruction_with_pagecrossing(uint8_t instruction) {
         registers.pc = expected.pc = start_pc;
         registers.y = expected.y = 0xED;
-        registers.a = expected.a = 0x07;
-        memory_content = 0x07;
         stage_instruction(instruction);
         expected.pc += 1;
 
@@ -1024,9 +1025,10 @@ public:
         EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
         EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
 
-        EXPECT_CALL(mmu, read_byte(0x1234 + registers.y - 0x0100))
+        const uint16_t effective_address = 0x1234 + registers.y;
+        EXPECT_CALL(mmu, read_byte(effective_address - 0x0100))
                 .WillOnce(Return(0x00));
-        EXPECT_CALL(mmu, write_byte(0x1234 + registers.y, memory_content));
+        EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
         step_execution(6);
         EXPECT_EQ(expected, registers);
     }
