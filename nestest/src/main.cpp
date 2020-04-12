@@ -42,6 +42,9 @@ constexpr bool is_undocumented(const n_e_s::core::Opcode &opcode) {
     if (opcode.instruction == n_e_s::core::Instruction::SbcImmediateEB) {
         return true;
     }
+    if (opcode.family == n_e_s::core::Family::DCP) {
+        return true;
+    }
     return false;
 }
 
