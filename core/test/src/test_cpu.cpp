@@ -2796,7 +2796,7 @@ TEST_F(CpuZeropageTest, dcp_decrements_sets_z_flag) {
     run_readwrite_instruction(DCP_ZERO, 0x02);
 }
 TEST_F(CpuZeropageIndexedTest, dcp_decrements_sets_z_flag) {
-    memory_value = 0x03;
+    memory_content = 0x03;
     registers.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
     expected.a = registers.a = 0x01;
     expected.p = N_FLAG;
