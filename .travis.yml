@@ -76,6 +76,16 @@ matrix:
             - g++-9
       env: MATRIX_EVAL="CXX=g++-9 BUILD_TYPE=Debug"
 
+    - name: "gcc 9 release"
+      addons: &gcc9
+        apt:
+          sources:
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
+          packages:
+            - *common-apt-packages
+            - g++-9
+      env: MATRIX_EVAL="CXX=g++-9 BUILD_TYPE=Release"
+
     - name: "gcc 9 coverage"
       addons: *gcc9
       before_install: pip install gcovr --user
