@@ -1,0 +1,11 @@
+cc_library(
+    name = "fmtlib",
+    srcs = glob([
+        "src/**",
+    ]),
+    hdrs = glob([
+        "include/**",
+    ]),
+    strip_include_prefix = "include/",
+    visibility = ["//visibility:public"],
+)

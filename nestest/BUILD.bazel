@@ -1,0 +1,9 @@
+cc_binary(
+    name = "nestest",
+    srcs = ["src/main.cpp"],
+    deps = [
+        "//core",
+        "//nes",
+        "@fmtlib",
+    ],
+)
