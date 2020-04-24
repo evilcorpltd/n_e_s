@@ -1,7 +1,6 @@
 # n e s
 
 [![Travis build status](https://travis-ci.org/evilcorpltd/n_e_s.svg?branch=master)](https://travis-ci.org/evilcorpltd/n_e_s)
-[![Appveyor build status](https://ci.appveyor.com/api/projects/status/0gxj4to0wqqfvbuq/branch/master?svg=true)](https://ci.appveyor.com/project/robinlinden/n-e-s/branch/master)
 
 ## Description
 
