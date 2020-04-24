@@ -38,7 +38,7 @@ struct CpuState {
 
 class IMos6502 : public ICpu {
 public:
-    [[nodiscard]] virtual CpuState state() const = 0;
+    [[nodiscard]] virtual const CpuState &state() const = 0;
 
     virtual void set_nmi(bool nmi) = 0;
 };

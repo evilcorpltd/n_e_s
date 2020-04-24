@@ -19,7 +19,7 @@ public:
     void reset() override;
 
     // IMos6502
-    CpuState state() const override;
+    const CpuState &state() const override;
 
     void set_nmi(bool nmi) override;
 

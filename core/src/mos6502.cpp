@@ -573,7 +573,7 @@ void Mos6502::reset() {
     registers_->pc = upper | lower;
 }
 
-CpuState Mos6502::state() const {
+const CpuState &Mos6502::state() const {
     return state_;
 }
 
