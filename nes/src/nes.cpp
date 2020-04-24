@@ -36,128 +36,103 @@ private:
 
 } // namespace
 
-class Nes::Impl {
-public:
-    Impl()
-            : ppu_mmu(MmuFactory::create(
-                      MemBankFactory::create_nes_ppu_mem_banks())),
-              ppu(PpuFactory::create(&ppu_registers, ppu_mmu.get())),
-              mmu(MmuFactory::create(
-                      MemBankFactory::create_nes_mem_banks(ppu.get()))),
-              cpu(CpuFactory::create_mos6502(&cpu_registers,
-                      mmu.get(),
-                      ppu.get())) {
-        // P should be set to 0x34 according to the information here:
-        // https://wiki.nesdev.com/w/index.php/CPU_power_up_state
-        // However, nestest sets p to 0x24 instead. We do that for now as well.
-        cpu_registers.p = I_FLAG | FLAG_5;
-        cpu_registers.a = cpu_registers.x = cpu_registers.y = 0x00;
-        cpu_registers.sp = 0xFD;
-    }
-
-    void execute() {
-        if (cycle++ % 3 == 0) {
-            cpu->execute();
-        }
-
-        ppu->execute();
-    }
-
-    void reset() {
-        cpu->reset();
-    }
-
-    void load_rom(const std::string &filepath) {
-        std::unique_ptr<IRom> rom{RomFactory::from_file(filepath)};
-
-        MemBankList ppu_membanks{MemBankFactory::create_nes_ppu_mem_banks()};
-
-        ppu_membanks.push_back(std::make_unique<MemBankReference>(rom.get()));
-
-        ppu_mmu = MmuFactory::create(std::move(ppu_membanks));
-        ppu = PpuFactory::create(&ppu_registers, ppu_mmu.get());
-
-        MemBankList cpu_membanks{
-                MemBankFactory::create_nes_mem_banks(ppu.get())};
-        cpu_membanks.push_back(std::move(rom));
-
-        mmu = MmuFactory::create(std::move(cpu_membanks));
-        cpu = CpuFactory::create_mos6502(&cpu_registers, mmu.get(), ppu.get());
-
-        reset();
-    }
-
-    std::unique_ptr<IMmu> ppu_mmu;
-    PpuRegisters ppu_registers{};
-    std::unique_ptr<IPpu> ppu;
-
-    std::unique_ptr<IMmu> mmu;
-
-    CpuRegisters cpu_registers{};
-    std::unique_ptr<IMos6502> cpu;
-
-    uint64_t cycle{};
-};
-
-Nes::Nes() : impl_(std::make_unique<Impl>()) {}
+Nes::Nes()
+        : ppu_mmu_(MmuFactory::create(
+                  MemBankFactory::create_nes_ppu_mem_banks())),
+          ppu_registers_(std::make_unique<n_e_s::core::PpuRegisters>()),
+          ppu_(PpuFactory::create(ppu_registers_.get(), ppu_mmu_.get())),
+          mmu_(MmuFactory::create(
+                  MemBankFactory::create_nes_mem_banks(ppu_.get()))),
+          cpu_registers_(std::make_unique<n_e_s::core::CpuRegisters>()),
+          cpu_(CpuFactory::create_mos6502(cpu_registers_.get(),
+                  mmu_.get(),
+                  ppu_.get())) {
+    // P should be set to 0x34 according to the information here:
+    // https://wiki.nesdev.com/w/index.php/CPU_power_up_state
+    // However, nestest sets p to 0x24 instead. We do that for now as well.
+    cpu_registers_->p = I_FLAG | FLAG_5;
+    cpu_registers_->a = cpu_registers_->x = cpu_registers_->y = 0x00;
+    cpu_registers_->sp = 0xFD;
+}
 
 Nes::~Nes() = default;
 
 void Nes::execute() {
-    impl_->execute();
+    if (cycle_++ % 3 == 0) {
+        cpu_->execute();
+    }
+
+    ppu_->execute();
 }
 
 void Nes::reset() {
-    impl_->reset();
+    cpu_->reset();
 }
 
 void Nes::load_rom(const std::string &filepath) {
-    impl_->load_rom(filepath);
+    std::unique_ptr<IRom> rom{RomFactory::from_file(filepath)};
+
+    MemBankList ppu_membanks{MemBankFactory::create_nes_ppu_mem_banks()};
+
+    ppu_membanks.push_back(std::make_unique<MemBankReference>(rom.get()));
+
+    ppu_mmu_ = MmuFactory::create(std::move(ppu_membanks));
+    ppu_ = PpuFactory::create(ppu_registers_.get(), ppu_mmu_.get());
+
+    MemBankList cpu_membanks{MemBankFactory::create_nes_mem_banks(ppu_.get())};
+    cpu_membanks.push_back(std::move(rom));
+
+    mmu_ = MmuFactory::create(std::move(cpu_membanks));
+    cpu_ = CpuFactory::create_mos6502(
+            cpu_registers_.get(), mmu_.get(), ppu_.get());
+
+    reset();
 }
+
 n_e_s::core::IMos6502 &Nes::cpu() {
-    return *impl_->cpu;
+    return *cpu_;
 }
 const n_e_s::core::IMos6502 &Nes::cpu() const {
-    return *impl_->cpu;
+    return *cpu_;
 }
 
 n_e_s::core::IPpu &Nes::ppu() {
-    return *impl_->ppu;
+    return *ppu_;
 }
 const n_e_s::core::IPpu &Nes::ppu() const {
-    return *impl_->ppu;
+    return *ppu_;
 }
 
 n_e_s::core::IMmu &Nes::mmu() {
-    return *impl_->mmu;
+    return *mmu_;
 }
 const n_e_s::core::IMmu &Nes::mmu() const {
-    return *impl_->mmu;
+    return *mmu_;
 }
 
 n_e_s::core::IMmu &Nes::ppu_mmu() {
-    return *impl_->ppu_mmu;
+    return *ppu_mmu_;
 }
 const n_e_s::core::IMmu &Nes::ppu_mmu() const {
-    return *impl_->ppu_mmu;
+    return *ppu_mmu_;
 }
 
 n_e_s::core::CpuRegisters &Nes::cpu_registers() {
-    return impl_->cpu_registers;
+    return *cpu_registers_;
 }
 const n_e_s::core::CpuRegisters &Nes::cpu_registers() const {
-    return impl_->cpu_registers;
+    return *cpu_registers_;
 }
 
 n_e_s::core::PpuRegisters &Nes::ppu_registers() {
-    return impl_->ppu_registers;
+    return *ppu_registers_;
 }
 const n_e_s::core::PpuRegisters &Nes::ppu_registers() const {
-    return impl_->ppu_registers;
+    return *ppu_registers_;
 }
 
 uint64_t Nes::current_cycle() const {
-    return impl_->cycle;
+    return cycle_;
 }
 
 } // namespace n_e_s::nes
