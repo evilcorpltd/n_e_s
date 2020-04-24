@@ -1,4 +1,4 @@
-#include "core/rom_factory.h"
+#include "nes/core/rom_factory.h"
 
 #include "rom/nrom.h"
 

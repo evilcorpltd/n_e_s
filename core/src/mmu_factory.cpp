@@ -1,7 +1,7 @@
-#include "core/mmu_factory.h"
+#include "nes/core/mmu_factory.h"
 
-#include "core/imembank.h"
 #include "mmu.h"
+#include "nes/core/imembank.h"
 
 namespace n_e_s::core {
 

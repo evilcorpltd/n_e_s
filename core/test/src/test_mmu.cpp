@@ -1,6 +1,6 @@
-#include "core/invalid_address.h"
-#include "core/membank_factory.h"
-#include "core/mmu_factory.h"
+#include "nes/core/invalid_address.h"
+#include "nes/core/membank_factory.h"
+#include "nes/core/mmu_factory.h"
 
 #include "mock_ppu.h"
 

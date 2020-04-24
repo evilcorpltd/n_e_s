@@ -3,8 +3,8 @@
 #include <cstdint>
 #include <optional>
 
-#include "core/icpu.h"
-#include "core/opcode.h"
+#include "nes/core/icpu.h"
+#include "nes/core/opcode.h"
 
 namespace n_e_s::core {
 

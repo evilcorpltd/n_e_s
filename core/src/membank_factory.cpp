@@ -1,6 +1,6 @@
-#include "core/membank_factory.h"
+#include "nes/core/membank_factory.h"
 
-#include "core/ippu.h"
+#include "nes/core/ippu.h"
 
 #include "mapped_membank.h"
 #include "membank.h"

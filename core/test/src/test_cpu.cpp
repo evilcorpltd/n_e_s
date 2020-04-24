@@ -1,4 +1,4 @@
-#include "core/cpu_factory.h"
+#include "nes/core/cpu_factory.h"
 
 #include "fake_ppu.h"
 #include "icpu_helpers.h"

@@ -1,6 +1,6 @@
 #include "mos6502.h"
 
-#include "core/opcode.h"
+#include "nes/core/opcode.h"
 
 #include <sstream>
 #include <stdexcept>

@@ -1,5 +1,5 @@
-#include "core/membank_factory.h"
-#include "core/mmu_factory.h"
+#include "nes/core/membank_factory.h"
+#include "nes/core/mmu_factory.h"
 
 #include <gtest/gtest.h>
 

@@ -1,14 +1,14 @@
 #include "nes/nes.h"
 
-#include "core/cpu_factory.h"
-#include "core/immu.h"
-#include "core/imos6502.h"
-#include "core/ippu.h"
-#include "core/irom.h"
-#include "core/membank_factory.h"
-#include "core/mmu_factory.h"
-#include "core/ppu_factory.h"
-#include "core/rom_factory.h"
+#include "nes/core/cpu_factory.h"
+#include "nes/core/immu.h"
+#include "nes/core/imos6502.h"
+#include "nes/core/ippu.h"
+#include "nes/core/irom.h"
+#include "nes/core/membank_factory.h"
+#include "nes/core/mmu_factory.h"
+#include "nes/core/ppu_factory.h"
+#include "nes/core/rom_factory.h"
 
 using namespace n_e_s::core;
 

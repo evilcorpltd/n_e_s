@@ -1,4 +1,4 @@
-#include "core/invalid_address.h"
+#include "nes/core/invalid_address.h"
 
 #include <gtest/gtest.h>
 

@@ -1,5 +1,5 @@
-#include "core/invalid_address.h"
-#include "core/ppu_factory.h"
+#include "nes/core/invalid_address.h"
+#include "nes/core/ppu_factory.h"
 
 #include "mock_mmu.h"
 

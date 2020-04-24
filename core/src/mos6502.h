@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core/immu.h"
-#include "core/imos6502.h"
-#include "core/opcode.h"
+#include "nes/core/immu.h"
+#include "nes/core/imos6502.h"
+#include "nes/core/opcode.h"
 #include "pipeline.h"
 
 #include <cstdint>

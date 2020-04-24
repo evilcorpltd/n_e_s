@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/imembank.h"
-#include "core/ippu.h"
+#include "nes/core/imembank.h"
+#include "nes/core/ippu.h"
 
 namespace n_e_s::core {
 

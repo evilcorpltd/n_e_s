@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/imembank.h"
+#include "nes/core/imembank.h"
 
 #include <cstdint>
 
