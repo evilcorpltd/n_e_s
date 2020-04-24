@@ -48,9 +48,9 @@ TEST(Opcode, Family) {
     EXPECT_EQ("NOP", to_string(Family::NOP));
     EXPECT_EQ("INX", to_string(Family::INX));
     EXPECT_EQ("INY", to_string(Family::INY));
-    EXPECT_EQ("CPY", to_string(Family::CPY));
     EXPECT_EQ("CMP", to_string(Family::CMP));
     EXPECT_EQ("DEC", to_string(Family::DEC));
+    EXPECT_EQ("CPY", to_string(Family::CPY));
     EXPECT_EQ("BEQ", to_string(Family::BEQ));
     EXPECT_EQ("SED", to_string(Family::SED));
     EXPECT_EQ("TYA", to_string(Family::TYA));
@@ -66,6 +66,7 @@ TEST(Opcode, Family) {
     EXPECT_EQ("ORA", to_string(Family::ORA));
     EXPECT_EQ("SBC", to_string(Family::SBC));
     EXPECT_EQ("LAX", to_string(Family::LAX));
+    EXPECT_EQ("SAX", to_string(Family::SAX));
     EXPECT_EQ("DCP", to_string(Family::DCP));
 }
 
