@@ -243,60 +243,6 @@ public:
         }
     }
 
-    void load_immediate_sets_reg(uint8_t *reg) {
-        *reg = 42;
-        ++expected.pc;
-
-        EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(*reg));
-
-        step_execution(2);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void load_immediate_sets_n_flag(uint8_t *reg) {
-        *reg = 128;
-        expected.p |= N_FLAG;
-        ++expected.pc;
-
-        EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(*reg));
-
-        step_execution(2);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void load_immediate_clears_n_flag(uint8_t *reg) {
-        registers.p |= N_FLAG;
-        *reg = 127;
-        ++expected.pc;
-
-        EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(*reg));
-
-        step_execution(2);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void load_immediate_sets_z_flag(uint8_t *reg) {
-        *reg = 0;
-        expected.p |= Z_FLAG;
-        ++expected.pc;
-
-        EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(*reg));
-
-        step_execution(2);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void load_immediate_clears_z_flag(uint8_t *reg) {
-        registers.p |= Z_FLAG;
-        *reg = 1;
-        ++expected.pc;
-
-        EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(*reg));
-
-        step_execution(2);
-        EXPECT_EQ(expected, registers);
-    }
-
     void compare_abs_sets_n_c(uint8_t *reg, uint8_t *expected_reg) {
         *expected_reg = *reg = 128;
         expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
@@ -571,6 +517,35 @@ public:
         registers.p |= Z_FLAG;
         memory_content = 0;
 
+        run_instruction(instruction);
+    }
+
+    void load_sets_reg(uint8_t instruction, uint8_t *target_reg) {
+        memory_content = *target_reg = 99;
+        run_instruction(instruction);
+    }
+
+    void load_sets_n_flag(uint8_t instruction, uint8_t *target_reg) {
+        memory_content = *target_reg = 128;
+        expected.p |= N_FLAG;
+        run_instruction(instruction);
+    }
+
+    void load_clears_n_flag(uint8_t instruction, uint8_t *target_reg) {
+        memory_content = *target_reg = 127;
+        registers.p |= N_FLAG;
+        run_instruction(instruction);
+    }
+
+    void load_sets_z_flag(uint8_t instruction, uint8_t *target_reg) {
+        memory_content = *target_reg = 0;
+        expected.p |= Z_FLAG;
+        run_instruction(instruction);
+    }
+
+    void load_clears_z_flag(uint8_t instruction, uint8_t *target_reg) {
+        memory_content = *target_reg = 1;
+        registers.p |= Z_FLAG;
         run_instruction(instruction);
     }
 
@@ -2043,69 +2018,54 @@ TEST_F(CpuBranchTest, bcc_crossing_page_negative) {
 }
 
 // LDX Immediate mode
-TEST_F(CpuTest, ldx_i_sets_reg) {
-    stage_instruction(LDX_IMM);
-    load_immediate_sets_reg(&expected.x);
+TEST_F(CpuImmediateTest, ldx_i_sets_reg) {
+    load_sets_reg(LDX_IMM, &expected.x);
 }
-TEST_F(CpuTest, ldx_i_sets_n_flag) {
-    stage_instruction(LDX_IMM);
-    load_immediate_sets_n_flag(&expected.x);
+TEST_F(CpuImmediateTest, ldx_i_sets_n_flag) {
+    load_sets_n_flag(LDX_IMM, &expected.x);
 }
-TEST_F(CpuTest, ldx_i_clears_n_flag) {
-    stage_instruction(LDX_IMM);
-    load_immediate_clears_n_flag(&expected.x);
+TEST_F(CpuImmediateTest, ldx_i_clears_n_flag) {
+    load_clears_n_flag(LDX_IMM, &expected.x);
 }
-TEST_F(CpuTest, ldx_i_sets_z_flag) {
-    stage_instruction(LDX_IMM);
-    load_immediate_sets_z_flag(&expected.x);
+TEST_F(CpuImmediateTest, ldx_i_sets_z_flag) {
+    load_sets_z_flag(LDX_IMM, &expected.x);
 }
-TEST_F(CpuTest, ldx_i_clears_z_flag) {
-    stage_instruction(LDX_IMM);
-    load_immediate_clears_z_flag(&expected.x);
+TEST_F(CpuImmediateTest, ldx_i_clears_z_flag) {
+    load_clears_z_flag(LDX_IMM, &expected.x);
 }
 
 // LDY Immediate mode
-TEST_F(CpuTest, ldy_i_sets_reg) {
-    stage_instruction(LDY_IMM);
-    load_immediate_sets_reg(&expected.y);
+TEST_F(CpuImmediateTest, ldy_i_sets_reg) {
+    load_sets_reg(LDY_IMM, &expected.y);
 }
-TEST_F(CpuTest, ldy_i_sets_n_flag) {
-    stage_instruction(LDY_IMM);
-    load_immediate_sets_n_flag(&expected.y);
+TEST_F(CpuImmediateTest, ldy_i_sets_n_flag) {
+    load_sets_n_flag(LDY_IMM, &expected.y);
 }
-TEST_F(CpuTest, ldy_i_clears_n_flag) {
-    stage_instruction(LDY_IMM);
-    load_immediate_clears_n_flag(&expected.y);
+TEST_F(CpuImmediateTest, ldy_i_clears_n_flag) {
+    load_clears_n_flag(LDY_IMM, &expected.y);
 }
-TEST_F(CpuTest, ldy_i_sets_z_flag) {
-    stage_instruction(LDY_IMM);
-    load_immediate_sets_z_flag(&expected.y);
+TEST_F(CpuImmediateTest, ldy_i_sets_z_flag) {
+    load_sets_z_flag(LDY_IMM, &expected.y);
 }
-TEST_F(CpuTest, ldy_i_clears_z_flag) {
-    stage_instruction(LDY_IMM);
-    load_immediate_clears_z_flag(&expected.y);
+TEST_F(CpuImmediateTest, ldy_i_clears_z_flag) {
+    load_clears_z_flag(LDY_IMM, &expected.y);
 }
 
 // LDA Immediate mode
-TEST_F(CpuTest, lda_i_sets_reg) {
-    stage_instruction(LDA_IMM);
-    load_immediate_sets_reg(&expected.a);
+TEST_F(CpuImmediateTest, lda_i_sets_reg) {
+    load_sets_reg(LDA_IMM, &expected.a);
 }
-TEST_F(CpuTest, lda_i_sets_n_flag) {
-    stage_instruction(LDA_IMM);
-    load_immediate_sets_n_flag(&expected.a);
+TEST_F(CpuImmediateTest, lda_i_sets_n_flag) {
+    load_sets_n_flag(LDA_IMM, &expected.a);
 }
-TEST_F(CpuTest, lda_i_clears_n_flag) {
-    stage_instruction(LDA_IMM);
-    load_immediate_clears_n_flag(&expected.a);
+TEST_F(CpuImmediateTest, lda_i_clears_n_flag) {
+    load_clears_n_flag(LDA_IMM, &expected.a);
 }
-TEST_F(CpuTest, lda_i_sets_z_flag) {
-    stage_instruction(LDA_IMM);
-    load_immediate_sets_z_flag(&expected.a);
+TEST_F(CpuImmediateTest, lda_i_sets_z_flag) {
+    load_sets_z_flag(LDA_IMM, &expected.a);
 }
-TEST_F(CpuTest, lda_i_clears_z_flag) {
-    stage_instruction(LDA_IMM);
-    load_immediate_clears_z_flag(&expected.a);
+TEST_F(CpuImmediateTest, lda_i_clears_z_flag) {
+    load_clears_z_flag(LDA_IMM, &expected.a);
 }
 
 // LDX Absolute mode
