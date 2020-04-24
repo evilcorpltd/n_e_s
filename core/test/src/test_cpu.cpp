@@ -243,20 +243,6 @@ public:
         }
     }
 
-    void compare_abs_sets_n_c(uint8_t *reg, uint8_t *expected_reg) {
-        *expected_reg = *reg = 128;
-        expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
-        registers.p |= Z_FLAG;
-        expected.pc += 2;
-
-        EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x67));
-        EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x45));
-        EXPECT_CALL(mmu, read_byte(0x4567)).WillOnce(Return(0));
-
-        step_execution(4);
-        EXPECT_EQ(expected, registers);
-    }
-
     void compare_abs_indexed_sets_cz_without_pagecrossing(uint8_t *index_reg,
             uint8_t *index_reg_expected) {
         registers.a = expected.a = 0x07;
@@ -352,28 +338,6 @@ public:
         EXPECT_CALL(mmu, read_byte(0x0100 + 0x42)).WillOnce(Return(0));
 
         *target_reg = 0;
-
-        step_execution(4);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void absolute_indexed_load_sets_n(uint8_t instruction,
-            uint8_t *target_reg,
-            uint8_t *index_reg,
-            uint8_t *expected_index_reg) {
-        expected.p |= N_FLAG;
-        registers.p |= Z_FLAG;
-        registers.pc = expected.pc = 0;
-        *index_reg = *expected_index_reg = 0x42;
-
-        stage_instruction(instruction);
-        expected.pc += 2;
-
-        EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x00));
-        EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x01));
-        EXPECT_CALL(mmu, read_byte(0x0100 + 0x42)).WillOnce(Return(230));
-
-        *target_reg = 230;
 
         step_execution(4);
         EXPECT_EQ(expected, registers);
