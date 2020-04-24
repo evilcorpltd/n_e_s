@@ -47,8 +47,9 @@ MemBankList MemBankFactory::create_nes_ppu_mem_banks() {
     // $2800-$2BFF  $0400   Nametable 2
     // $2C00-$2FFF  $0400   Nametable 3
     // $3000-$3EFF  $0F00   Mirrors of $2000-$2EFF
-    // TODO(JN), fix mirroring at 0x3000 - 0x3EFF
-    mem_banks.push_back(std::make_unique<MemBank<0x2000, 0x2FFF, 0x0400>>());
+    mem_banks.push_back(std::make_unique<MemBank<0x2000, 0x3EFF, 0x1000>>());
+
+    // Palettes
     mem_banks.push_back(std::make_unique<MemBank<0x3F00, 0x3FFF, 0x20>>());
 
     return mem_banks;
