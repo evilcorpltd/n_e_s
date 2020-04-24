@@ -14,11 +14,13 @@ endif()
 target_compile_options(${PROJECT_NAME} INTERFACE
     $<$<OR:$<BOOL:${CLANG}>,$<CXX_COMPILER_ID:GNU>>:
         -fno-common;
+        -fstrict-overflow;
+        -ftrapv;
         -pedantic-errors;
         -Wall;
         -Wdouble-promotion;
-        -Wduplicated-cond;
         -Wduplicated-branches;
+        -Wduplicated-cond;
         -Werror;
         -Wextra;
         -Wformat-overflow;
