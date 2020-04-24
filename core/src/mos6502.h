@@ -9,7 +9,7 @@
 
 namespace n_e_s::core {
 
-class Mos6502 : public IMos6502 {
+class Mos6502 final : public IMos6502 {
 public:
     // Assumes ownership of nothing. Really irresponsible.
     Mos6502(CpuRegisters *registers, IMmu *mmu);

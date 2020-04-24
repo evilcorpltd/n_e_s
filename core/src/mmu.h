@@ -9,7 +9,7 @@
 
 namespace n_e_s::core {
 
-class Mmu : public IMmu {
+class Mmu final : public IMmu {
 public:
     Mmu();
 

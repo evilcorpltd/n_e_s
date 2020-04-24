@@ -10,7 +10,7 @@ namespace n_e_s::core {
 // A mapped membank will always forward calls to the registered
 // reader and writer.
 template <uint16_t StartAddr, uint16_t EndAddr, uint16_t Size>
-class MappedMemBank : public MemBankBase<StartAddr, EndAddr, Size> {
+class MappedMemBank final : public MemBankBase<StartAddr, EndAddr, Size> {
 public:
     using ByteReader = std::function<uint8_t(uint16_t)>;
     using ByteWriter = std::function<void(uint16_t, uint8_t)>;
