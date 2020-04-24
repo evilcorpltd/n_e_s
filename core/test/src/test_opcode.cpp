@@ -1,4 +1,4 @@
-#include "core/opcode.h"
+#include "nes/core/opcode.h"
 
 #include <gtest/gtest.h>
 #include <string>

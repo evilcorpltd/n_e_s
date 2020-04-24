@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/ippu.h"
+#include "nes/core/ippu.h"
 
 namespace n_e_s::core::test {
 

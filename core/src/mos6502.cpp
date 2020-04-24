@@ -1,6 +1,6 @@
 #include "mos6502.h"
 
-#include "core/opcode.h"
+#include "nes/core/opcode.h"
 
 #include <sstream>
 #include <stdexcept>
@@ -573,7 +573,7 @@ void Mos6502::reset() {
     registers_->pc = upper | lower;
 }
 
-CpuState Mos6502::state() const {
+const CpuState &Mos6502::state() const {
     return state_;
 }
 

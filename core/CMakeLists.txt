@@ -1,19 +1,19 @@
 project(n_e_s_core)
 
 add_library(${PROJECT_NAME}
-    include/core/cpu_factory.h
-    include/core/icpu.h
-    include/core/imembank.h
-    include/core/immu.h
-    include/core/imos6502.h
-    include/core/invalid_address.h
-    include/core/ippu.h
-    include/core/irom.h
-    include/core/membank_factory.h
-    include/core/mmu_factory.h
-    include/core/opcode.h
-    include/core/ppu_factory.h
-    include/core/rom_factory.h
+    include/nes/core/cpu_factory.h
+    include/nes/core/icpu.h
+    include/nes/core/imembank.h
+    include/nes/core/immu.h
+    include/nes/core/imos6502.h
+    include/nes/core/invalid_address.h
+    include/nes/core/ippu.h
+    include/nes/core/irom.h
+    include/nes/core/membank_factory.h
+    include/nes/core/mmu_factory.h
+    include/nes/core/opcode.h
+    include/nes/core/ppu_factory.h
+    include/nes/core/rom_factory.h
     src/cpu_factory.cpp
     src/invalid_address.cpp
     src/mapped_membank.h

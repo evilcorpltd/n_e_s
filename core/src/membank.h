@@ -9,7 +9,7 @@
 namespace n_e_s::core {
 
 template <uint16_t StartAddr, uint16_t EndAddr, uint16_t Size>
-class MemBank : public MemBankBase<StartAddr, EndAddr, Size> {
+class MemBank final : public MemBankBase<StartAddr, EndAddr, Size> {
 public:
     MemBank() : bank_() {}
 

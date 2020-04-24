@@ -4,10 +4,10 @@
 
 #include <fmt/format.h>
 
-#include "core/immu.h"
-#include "core/imos6502.h"
-#include "core/ippu.h"
-#include "core/opcode.h"
+#include "nes/core/immu.h"
+#include "nes/core/imos6502.h"
+#include "nes/core/ippu.h"
+#include "nes/core/opcode.h"
 #include "nes/nes.h"
 
 namespace {

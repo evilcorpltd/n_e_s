@@ -1,13 +1,13 @@
 #pragma once
 
-#include "core/immu.h"
-#include "core/ippu.h"
+#include "nes/core/immu.h"
+#include "nes/core/ippu.h"
 
 #include <memory>
 
 namespace n_e_s::core {
 
-class Ppu : public IPpu {
+class Ppu final : public IPpu {
 public:
     explicit Ppu(PpuRegisters *registers, IMmu *mmu);
 

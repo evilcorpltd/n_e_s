@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/irom.h"
+#include "nes/core/irom.h"
 
 #include <vector>
 

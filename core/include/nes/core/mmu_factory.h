@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/imembank.h"
-#include "core/immu.h"
+#include "nes/core/imembank.h"
+#include "nes/core/immu.h"
 
 #include <memory>
 

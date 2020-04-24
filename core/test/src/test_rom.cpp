@@ -1,5 +1,5 @@
-#include "core/irom.h"
-#include "core/rom_factory.h"
+#include "nes/core/irom.h"
+#include "nes/core/rom_factory.h"
 
 #include <gtest/gtest.h>
 

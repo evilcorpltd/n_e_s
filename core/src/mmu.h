@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/imembank.h"
-#include "core/immu.h"
+#include "nes/core/imembank.h"
+#include "nes/core/immu.h"
 
 #include <cstdint>
 #include <memory>
@@ -9,7 +9,7 @@
 
 namespace n_e_s::core {
 
-class Mmu : public IMmu {
+class Mmu final : public IMmu {
 public:
     Mmu();
 

@@ -1,4 +1,4 @@
-#include "core/ppu_factory.h"
+#include "nes/core/ppu_factory.h"
 
 #include "ppu.h"
 

@@ -1,4 +1,4 @@
-#include "core/cpu_factory.h"
+#include "nes/core/cpu_factory.h"
 
 #include "mos6502.h"
 

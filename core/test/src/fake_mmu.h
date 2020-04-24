@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/immu.h"
+#include "nes/core/immu.h"
 
 #include <gmock/gmock.h>
 #include <map>

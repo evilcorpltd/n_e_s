@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/imos6502.h"
+#include "nes/core/imos6502.h"
 
 #include <iosfwd>
 

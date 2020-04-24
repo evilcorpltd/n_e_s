@@ -14,17 +14,14 @@ endif()
 target_compile_options(${PROJECT_NAME} INTERFACE
     $<$<OR:$<BOOL:${CLANG}>,$<CXX_COMPILER_ID:GNU>>:
         -fno-common;
+        -fstrict-overflow;
+        -ftrapv;
         -pedantic-errors;
         -Wall;
         -Wdouble-promotion;
-        -Wduplicated-cond;
-        -Wduplicated-branches;
         -Werror;
         -Wextra;
-        -Wformat-overflow;
-        -Wformat-truncation;
         -Wformat=2;
-        -Wlogical-op;
         -Wmissing-declarations;
         -Wnon-virtual-dtor;
         -Wnull-dereference;
@@ -32,11 +29,17 @@ target_compile_options(${PROJECT_NAME} INTERFACE
         -Wshadow;
         -Wsign-compare;
         -Wundef;
+    >
+    $<$<CXX_COMPILER_ID:GNU>:
+        -Wduplicated-branches;
+        -Wduplicated-cond;
+        -Wformat-overflow;
+        -Wformat-truncation;
+        -Wlogical-op;
         -Wuseless-cast;
     >
     $<$<BOOL:${CLANG}>:
         -Wmissing-variable-declarations;
-        -Wno-unknown-warning-option;
         -Wno-gnu-zero-variadic-macro-arguments; # Required for gtest 1.10.
     >
     $<$<OR:$<BOOL:${CLANGCL}>,$<CXX_COMPILER_ID:MSVC>>:

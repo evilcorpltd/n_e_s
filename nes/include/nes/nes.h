@@ -45,8 +45,16 @@ public:
     uint64_t current_cycle() const;
 
 private:
-    class Impl;
-    std::unique_ptr<Impl> impl_;
+    std::unique_ptr<n_e_s::core::IMmu> ppu_mmu_;
+    std::unique_ptr<n_e_s::core::PpuRegisters> ppu_registers_;
+    std::unique_ptr<n_e_s::core::IPpu> ppu_;
+
+    std::unique_ptr<n_e_s::core::IMmu> mmu_;
+
+    std::unique_ptr<n_e_s::core::CpuRegisters> cpu_registers_;
+    std::unique_ptr<n_e_s::core::IMos6502> cpu_;
+
+    uint64_t cycle_{};
 };
 
 } // namespace n_e_s::nes

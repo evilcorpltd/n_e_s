@@ -1,15 +1,15 @@
 #pragma once
 
-#include "core/immu.h"
-#include "core/imos6502.h"
-#include "core/opcode.h"
+#include "nes/core/immu.h"
+#include "nes/core/imos6502.h"
+#include "nes/core/opcode.h"
 #include "pipeline.h"
 
 #include <cstdint>
 
 namespace n_e_s::core {
 
-class Mos6502 : public IMos6502 {
+class Mos6502 final : public IMos6502 {
 public:
     // Assumes ownership of nothing. Really irresponsible.
     Mos6502(CpuRegisters *registers, IMmu *mmu);
@@ -19,7 +19,7 @@ public:
     void reset() override;
 
     // IMos6502
-    CpuState state() const override;
+    const CpuState &state() const override;
 
     void set_nmi(bool nmi) override;
 
