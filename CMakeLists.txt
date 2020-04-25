@@ -11,5 +11,6 @@ add_subdirectory(warnings)
 
 add_subdirectory(application)
 add_subdirectory(core)
+add_subdirectory(disassembler)
 add_subdirectory(nes)
 add_subdirectory(nestest)
