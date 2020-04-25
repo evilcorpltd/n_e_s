@@ -32,7 +32,10 @@ add_executable(${PROJECT_NAME}
     src/test_cpu_immediate_instructions.cpp
     src/test_cpu_indexed_indirect_instructions.cpp
     src/test_cpu_indirect_indexed_instructions.cpp
+    src/test_cpu_nop_implied_instructions.cpp
     src/test_cpu_move_instructions.cpp
+    src/test_cpu_nop_absolute_x_instructions.cpp
+    src/test_cpu_nop_zeropage_x_instructions.cpp
     src/test_cpu_zeropage_indexed_instructions.cpp
     src/test_cpu_zeropage_instructions.cpp
     src/test_cpuintegration.cpp

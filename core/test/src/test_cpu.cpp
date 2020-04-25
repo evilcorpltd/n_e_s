@@ -561,25 +561,6 @@ TEST_F(CpuTest, cld) {
 }
 
 // NOP
-class NopImpliedFixture : public CpuTest,
-                          public testing::WithParamInterface<uint8_t> {};
-
-TEST_P(NopImpliedFixture, nop_implied) {
-    stage_instruction(GetParam());
-
-    step_execution(2);
-    EXPECT_EQ(expected, registers);
-}
-INSTANTIATE_TEST_SUITE_P(NopImplied,
-        NopImpliedFixture,
-        testing::Values(NOP,
-                NOP_IMP1A,
-                NOP_IMP3A,
-                NOP_IMP5A,
-                NOP_IMP7A,
-                NOP_IMPDA,
-                NOP_IMPFA));
-
 TEST_F(CpuTest, nop80_immediated) {
     stage_instruction(NOP_IMM80);
     expected.pc += 1;
@@ -604,27 +585,6 @@ TEST_F(CpuTest, nop0c_abs) {
     step_execution(4);
     EXPECT_EQ(expected, registers);
 }
-class NopZeroXFixture : public CpuTest,
-                        public testing::WithParamInterface<uint8_t> {};
-
-TEST_P(NopZeroXFixture, nop_zerox) {
-    stage_instruction(GetParam());
-    expected.x = registers.x = 0x01;
-    expected.pc += 1;
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0xCD));
-    EXPECT_CALL(mmu, read_byte(0xCD)).WillOnce(Return(0xFD)); // Dummy read
-
-    step_execution(4);
-    EXPECT_EQ(expected, registers);
-}
-INSTANTIATE_TEST_SUITE_P(NopZeroX,
-        NopZeroXFixture,
-        testing::Values(NOP_ZEROX14,
-                NOP_ZEROX34,
-                NOP_ZEROX54,
-                NOP_ZEROX74,
-                NOP_ZEROXD4,
-                NOP_ZEROXF4));
 
 TEST_F(CpuTest, nop44_zero) {
     stage_instruction(NOP_ZERO44);
@@ -634,6 +594,7 @@ TEST_F(CpuTest, nop44_zero) {
     step_execution(3);
     EXPECT_EQ(expected, registers);
 }
+// TODO(robinlinden): This test doesnt test what it says it tests.
 TEST_F(CpuTest, nop64_zero) {
     stage_instruction(NOP_ZERO44);
     expected.pc += 1;
@@ -642,27 +603,6 @@ TEST_F(CpuTest, nop64_zero) {
     step_execution(3);
     EXPECT_EQ(expected, registers);
 }
-class NopAbsoluteXFixture : public CpuTest,
-                            public testing::WithParamInterface<uint8_t> {};
-
-TEST_P(NopAbsoluteXFixture, nop_absx) {
-    stage_instruction(GetParam());
-    expected.pc += 2;
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0x34));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2)).WillOnce(Return(0x12));
-
-    step_execution(4);
-    EXPECT_EQ(expected, registers);
-}
-INSTANTIATE_TEST_SUITE_P(NopAbsoluteX,
-        NopAbsoluteXFixture,
-        testing::Values(NOP_ABSX1C,
-                NOP_ABSX3C,
-                NOP_ABSX5C,
-                NOP_ABSX7C,
-                NOP_ABSXDC,
-                NOP_ABSXFC));
 
 TEST_F(CpuTest, beq_branch_not_taken) {
     stage_instruction(BEQ);
