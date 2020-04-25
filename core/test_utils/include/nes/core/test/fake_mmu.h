@@ -11,6 +11,8 @@ namespace n_e_s::core::test {
 
 class FakeMmu : public IMmu {
 public:
+    void set_mem_banks(MemBankList) override {}
+
     uint8_t read_byte(uint16_t addr) const override {
         if (const auto iter = memory_.find(addr); iter != memory_.end()) {
             return iter->second;
