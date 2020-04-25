@@ -6,6 +6,7 @@ add_library(${PROJECT_NAME}
     include/nes/core/imembank.h
     include/nes/core/immu.h
     include/nes/core/imos6502.h
+    include/nes/core/ines_header.h
     include/nes/core/invalid_address.h
     include/nes/core/ippu.h
     include/nes/core/irom.h
