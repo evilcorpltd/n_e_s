@@ -19,7 +19,7 @@ jobs:
             os: ubuntu-18.04
             compiler: clang
             version: "9"
-            configuration: Debug
+            cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON -DCMAKE_BUILD_TYPE=Debug
 
     steps:
       - uses: actions/checkout@v2
@@ -46,9 +46,12 @@ jobs:
 
       - name: Build
         run: |
-          cmake --build build --config ${{ matrix.configuration }} --target nestest
+          cmake --build build --target nestest
 
       - name: Run Nestest
+        env:
+          ASAN_OPTIONS: "symbolize=1:strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1"
+          UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
         run: |
           wget https://robinli.eu/f/nestest.nes
           wget https://robinli.eu/f/nestest.log
