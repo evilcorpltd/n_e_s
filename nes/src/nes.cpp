@@ -68,15 +68,14 @@ void Nes::reset() {
 }
 
 void Nes::load_rom(const std::string &filepath) {
-    std::unique_ptr<IRom> rom{RomFactory::from_file(filepath)};
+    rom_ = RomFactory::from_file(filepath);
 
-    MemBankList ppu_membanks{MemBankFactory::create_nes_ppu_mem_banks()};
-
-    ppu_membanks.push_back(std::make_unique<MemBankReference>(rom.get()));
+    MemBankList ppu_membanks{
+            MemBankFactory::create_nes_ppu_mem_banks(rom_.get())};
     ppu_mmu_->set_mem_banks(std::move(ppu_membanks));
 
-    MemBankList cpu_membanks{MemBankFactory::create_nes_mem_banks(ppu_.get())};
-    cpu_membanks.push_back(std::move(rom));
+    MemBankList cpu_membanks{
+            MemBankFactory::create_nes_mem_banks(ppu_.get(), rom_.get())};
     mmu_->set_mem_banks(std::move(cpu_membanks));
 
     reset();

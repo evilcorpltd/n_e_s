@@ -12,14 +12,15 @@ public:
             std::vector<uint8_t> prg_rom,
             std::vector<uint8_t> chr_rom);
 
-    bool is_address_in_range(uint16_t addr) const override;
-    uint8_t read_byte(uint16_t addr) const override;
-    void write_byte(uint16_t addr, uint8_t byte) override;
+    [[nodiscard]] bool is_cpu_address_in_range(uint16_t addr) const override;
+    uint8_t cpu_read_byte(uint16_t addr) const override;
+    void cpu_write_byte(uint16_t addr, uint8_t byte) override;
+
+    [[nodiscard]] bool is_ppu_address_in_range(uint16_t addr) const override;
+    uint8_t ppu_read_byte(uint16_t addr) const override;
+    void ppu_write_byte(uint16_t addr, uint8_t byte) override;
 
 private:
-    std::vector<uint8_t> &translate_address(uint16_t addr);
-    const std::vector<uint8_t> &translate_address(uint16_t addr) const;
-
     std::vector<uint8_t> prg_rom_; // const?
     std::vector<uint8_t> chr_rom_; // const?
     std::vector<uint8_t> prg_ram_;

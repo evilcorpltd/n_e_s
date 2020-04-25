@@ -1,6 +1,8 @@
 #include "nes/core/membank_factory.h"
 #include "nes/core/mmu_factory.h"
 
+#include "mock_irom.h"
+
 #include <gtest/gtest.h>
 
 using namespace n_e_s::core;
@@ -10,9 +12,11 @@ namespace {
 class PpuMembankTest : public ::testing::Test {
 public:
     PpuMembankTest()
-            : mmu{MmuFactory::create(
-                      MemBankFactory::create_nes_ppu_mem_banks())} {}
+            : rom{},
+              mmu{MmuFactory::create(
+                      MemBankFactory::create_nes_ppu_mem_banks(&rom))} {}
 
+    test::MockIRom rom;
     std::unique_ptr<IMmu> mmu;
 };
 

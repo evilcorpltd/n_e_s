@@ -2,6 +2,7 @@
 #include "nes/core/membank_factory.h"
 #include "nes/core/mmu_factory.h"
 
+#include "mock_irom.h"
 #include "nes/core/test/mock_ppu.h"
 
 #include <gtest/gtest.h>
@@ -19,10 +20,12 @@ class MmuTest : public ::testing::Test {
 public:
     MmuTest()
             : ppu{},
+              rom{},
               mmu{MmuFactory::create(
-                      MemBankFactory::create_nes_mem_banks(&ppu))} {}
+                      MemBankFactory::create_nes_mem_banks(&ppu, &rom))} {}
 
     MockPpu ppu;
+    MockIRom rom;
     std::unique_ptr<IMmu> mmu;
 };
 

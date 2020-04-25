@@ -21,51 +21,42 @@ Nrom::Nrom(const INesHeader &h,
     }
 }
 
-// The cartridge owns all space up to 0x1FFF (Chr) and 0x6000 to 0xFFFF (Prg).
-bool Nrom::is_address_in_range(uint16_t addr) const {
-    const bool in_chr = addr <= kChrEnd;
+bool Nrom::is_cpu_address_in_range(uint16_t addr) const {
     const bool in_prg = addr >= kPrgRamStart;
-    return in_chr || in_prg;
+    return in_prg;
 }
 
-uint8_t Nrom::read_byte(uint16_t addr) const {
-    assert(addr <= kChrEnd || addr >= kPrgRamStart);
-
-    const std::vector<uint8_t> &memory = translate_address(addr);
-    // Adjust address if we are reading from Prg
-    if (addr >= kPrgRamStart) {
-        addr -= addr <= kPrgRamEnd ? kPrgRamStart : kPrgRomStart;
-    }
-
-    return memory[addr % memory.size()];
-}
-
-void Nrom::write_byte(uint16_t addr, uint8_t byte) {
-    assert(addr <= kChrEnd || addr >= kPrgRamStart);
-
-    std::vector<uint8_t> &memory = translate_address(addr);
-    // Adjust address if we are reading from Prg
-    if (addr >= kPrgRamStart) {
-        addr -= addr <= kPrgRamEnd ? kPrgRamStart : kPrgRomStart;
-    }
-
-    memory[addr % memory.size()] = byte;
-}
-
-std::vector<uint8_t> &Nrom::translate_address(uint16_t addr) {
-    return const_cast<std::vector<uint8_t> &>(
-            std::as_const(*this).translate_address(addr));
-}
-
-const std::vector<uint8_t> &Nrom::translate_address(uint16_t addr) const {
-    if (addr <= kChrEnd) {
-        return chr_rom_;
-    }
+uint8_t Nrom::cpu_read_byte(uint16_t addr) const {
     if (addr <= kPrgRamEnd) {
-        return prg_ram_;
+        addr -= kPrgRamStart;
+        return prg_ram_.at(addr);
     }
 
-    return prg_rom_;
+    addr -= kPrgRomStart;
+    return prg_rom_.at(addr);
+}
+
+void Nrom::cpu_write_byte(uint16_t addr, uint8_t byte) {
+    if (addr <= kPrgRamEnd) {
+        addr -= kPrgRamStart;
+        prg_ram_.at(addr) = byte;
+    }
+
+    addr -= kPrgRomStart;
+    prg_rom_.at(addr) = byte;
+}
+
+bool Nrom::is_ppu_address_in_range(uint16_t addr) const {
+    const bool in_chr = addr <= kChrEnd;
+    return in_chr;
+}
+
+uint8_t Nrom::ppu_read_byte(uint16_t addr) const {
+    return chr_rom_.at(addr);
+}
+
+void Nrom::ppu_write_byte(uint16_t addr, uint8_t byte) {
+    chr_rom_.at(addr) = byte;
 }
 
 } // namespace n_e_s::core
