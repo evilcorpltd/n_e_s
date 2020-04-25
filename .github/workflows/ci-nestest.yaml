@@ -1,0 +1,64 @@
+name: Nestest CI
+
+on: [push, pull_request]
+
+jobs:
+  ci:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    env:
+      CTEST_OUTPUT_ON_FAILURE: ON
+      CTEST_PARALLEL_LEVEL: 2
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: nestest-clang-9
+            os: ubuntu-18.04
+            compiler: clang
+            version: "9"
+            configuration: Debug
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install
+        run: |
+          echo "::add-path::/home/runner/.local/bin"
+          python3 -m pip install pip --upgrade
+          python3 -m pip install cmake==3.14.4 ninja==1.9.0.post1 --upgrade
+
+          sudo apt update
+
+          sudo apt-get install -y clang-${{ matrix.version }} g++-multilib python3.7
+          echo "::set-env name=CC::clang-${{ matrix.version }}"
+          echo "::set-env name=CXX::clang++-${{ matrix.version }}"
+
+      - name: CMake
+        run: |
+          cmake --version
+          ninja --version
+          echo "CMake args: ${{ matrix.cmake-args }}"
+
+          cmake -S . -B build ${{ matrix.cmake-args }}
+
+      - name: Build
+        run: |
+          cmake --build build --config ${{ matrix.configuration }} --target nestest
+
+      - name: Run Nestest
+        run: |
+          wget https://robinli.eu/f/nestest.nes
+          wget https://robinli.eu/f/nestest.log
+          ./build/nestest/nestest nestest.nes > nestest-output.log
+
+      - name: Diff output
+        run: python3.7 nestest/test_nestest.py --nestest-log nestest.log --nestest-rom nestest.nes --nestest-bin build/nestest/nestest || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: nestest-log
+          path: nestest-output.log
