@@ -26,6 +26,7 @@ add_executable(${PROJECT_NAME}
     src/opcode.h
     src/test_cpu.cpp
     src/test_cpu_branch_instructions.cpp
+    src/test_cpu_move_instructions.cpp
     src/test_cpuintegration.cpp
     src/test_invalid_address.cpp
     src/test_mmu.cpp
