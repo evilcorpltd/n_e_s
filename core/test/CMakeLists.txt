@@ -26,6 +26,7 @@ add_executable(${PROJECT_NAME}
     src/mock_ppu.h
     src/opcode.h
     src/test_cpu.cpp
+    src/test_cpu_absolute_instructions.cpp
     src/test_cpu_branch_instructions.cpp
     src/test_cpu_immediate_instructions.cpp
     src/test_cpu_move_instructions.cpp
