@@ -18,6 +18,10 @@ public:
     [[nodiscard]] virtual uint8_t ppu_read_byte(uint16_t addr) const = 0;
     virtual void ppu_write_byte(uint16_t addr, uint8_t byte) = 0;
 
+    const INesHeader &header() const {
+        return header_;
+    }
+
 private:
     INesHeader header_;
 };
