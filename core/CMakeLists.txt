@@ -61,4 +61,5 @@ target_link_libraries(${PROJECT_NAME}
         n_e_s::warnings
 )
 
+add_subdirectory(test_utils)
 add_subdirectory(test)

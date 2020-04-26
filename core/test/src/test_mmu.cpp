@@ -2,7 +2,7 @@
 #include "nes/core/membank_factory.h"
 #include "nes/core/mmu_factory.h"
 
-#include "mock_ppu.h"
+#include "nes/core/test/mock_ppu.h"
 
 #include <gtest/gtest.h>
 

@@ -15,15 +15,10 @@ FetchContent_MakeAvailable(googletest)
 add_executable(${PROJECT_NAME}
     src/cast_helpers.h
     src/cpu_test.h
-    src/fake_mmu.h
-    src/fake_ppu.h
     src/hexprinter.h
     src/icpu_helpers.cpp
     src/icpu_helpers.h
     src/main.cpp
-    src/mock_membank.h
-    src/mock_mmu.h
-    src/mock_ppu.h
     src/opcode.h
     src/test_cpu.cpp
     src/test_cpu_absolute_indexed_instructions.cpp
@@ -62,6 +57,7 @@ set_target_properties(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         n_e_s::core
+        n_e_s::core::test_utils
         n_e_s::warnings
         gmock
 )
