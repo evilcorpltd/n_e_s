@@ -15,10 +15,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: ubuntu-18.04-gcc-8
+            os: ubuntu-18.04
+            compiler: gcc
+            version: "8"
+
           - name: ubuntu-18.04-gcc-9
             os: ubuntu-18.04
             compiler: gcc
             version: "9"
+
+          - name: ubuntu-18.04-clang-8
+            os: ubuntu-18.04
+            compiler: clang
+            version: "8"
 
           - name: ubuntu-18.04-clang-9
             os: ubuntu-18.04
