@@ -66,28 +66,14 @@ matrix:
             - g++-8
       env: MATRIX_EVAL="CXX=g++-8 BUILD_TYPE=Debug"
 
-    - name: "gcc 9"
-      addons: &gcc9
-        apt:
-          sources:
-            - sourceline: 'ppa:ubuntu-toolchain-r/test'
-          packages:
-            - *common-apt-packages
-            - g++-9
-      env: MATRIX_EVAL="CXX=g++-9 BUILD_TYPE=Debug"
-
-    - name: "gcc 9 release"
-      addons: &gcc9
-        apt:
-          sources:
-            - sourceline: 'ppa:ubuntu-toolchain-r/test'
-          packages:
-            - *common-apt-packages
-            - g++-9
-      env: MATRIX_EVAL="CXX=g++-9 BUILD_TYPE=Release"
-
     - name: "gcc 9 coverage"
-      addons: *gcc9
+      addons: &gcc9
+        apt:
+          sources:
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
+          packages:
+            - *common-apt-packages
+            - g++-9
       before_install: pip install gcovr --user
       script:
         - CXX=g++-9 CXXFLAGS="--coverage" LDFLAGS="--coverage" cmake ..
@@ -117,7 +103,7 @@ matrix:
             - libstdc++-8-dev
       env: MATRIX_EVAL="CXX=clang++-8 BUILD_TYPE=Debug"
 
-    - name: "clang 9"
+    - name: "clang 9 sanitizers"
       addons: &clang9
         apt:
           sources:
@@ -127,10 +113,6 @@ matrix:
             - *common-apt-packages
             - clang-9
             - libstdc++-8-dev
-      env: MATRIX_EVAL="CXX=clang++-9 BUILD_TYPE=Debug"
-
-    - name: "clang 9 sanitizers"
-      addons: *clang9
       env:
         - MATRIX_EVAL="CXX=clang++-9 BUILD_TYPE=Debug"
         - CMAKE_EXTRA_OPTIONS="-DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON"
