@@ -1,13 +1,7 @@
-#include "nes/core/cpu_factory.h"
-
 #include "cast_helpers.h"
 #include "cpu_test.h"
-#include "fake_ppu.h"
 #include "icpu_helpers.h"
-#include "mock_mmu.h"
 #include "opcode.h"
-
-#include <gtest/gtest.h>
 
 using namespace n_e_s::core;
 using namespace n_e_s::core::test;
@@ -20,254 +14,6 @@ const uint16_t kStackOffset = 0x0100;
 const uint16_t kResetAddress = 0xFFFC;
 const uint16_t kBrkAddress = 0xFFFE;
 const uint16_t kNmiAddress = 0xFFFA;
-
-class CpuAbsoluteIndexedTest : public CpuTest {
-public:
-    enum class IndexReg { X, Y };
-    void run_read_instruction_without_pagecrossing(uint8_t instruction,
-            IndexReg index_reg) {
-        registers.pc = expected.pc = start_pc;
-        stage_instruction(instruction);
-        expected.pc += 2;
-
-        const uint8_t index_reg_value{0x10};
-        set_index_reg(index_reg, index_reg_value);
-
-        const uint16_t effective_address = 0x5678 + index_reg_value;
-
-        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x78));
-        EXPECT_CALL(mmu, read_byte(start_pc + 2u)).WillOnce(Return(0x56));
-        EXPECT_CALL(mmu, read_byte(effective_address))
-                .WillOnce(Return(memory_content));
-
-        step_execution(4);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void run_read_instruction_with_pagecrossing(uint8_t instruction,
-            IndexReg index_reg) {
-        registers.pc = expected.pc = start_pc;
-        stage_instruction(instruction);
-        expected.pc += 2;
-
-        const uint8_t index_reg_value{0xAB};
-        set_index_reg(index_reg, index_reg_value);
-
-        const uint16_t effective_address = 0x5678 + index_reg_value;
-
-        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x78));
-        EXPECT_CALL(mmu, read_byte(start_pc + 2u)).WillOnce(Return(0x56));
-        EXPECT_CALL(mmu, read_byte(effective_address - 0x0100))
-                .WillOnce(Return(0xCD)); // Extra read
-        EXPECT_CALL(mmu, read_byte(effective_address))
-                .WillOnce(Return(memory_content));
-
-        step_execution(5);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void run_readwrite_instruction(uint8_t instruction,
-            IndexReg index_reg,
-            uint8_t new_memory_content) {
-        registers.pc = expected.pc = start_pc;
-        stage_instruction(instruction);
-        expected.pc += 2;
-
-        const uint8_t index_reg_value{0x91};
-        set_index_reg(index_reg, index_reg_value);
-
-        const uint16_t effective_address = 0x5678 + index_reg_value;
-
-        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x78));
-        EXPECT_CALL(mmu, read_byte(start_pc + 2u)).WillOnce(Return(0x56));
-        EXPECT_CALL(mmu, read_byte(0x5609))
-                .WillOnce(Return(
-                        0xCD)); // Dummy read with on wrong page (0x5678 + 0x91)
-        EXPECT_CALL(mmu, read_byte(effective_address))
-                .WillOnce(Return(memory_content));
-        EXPECT_CALL(mmu,
-                write_byte(effective_address, memory_content)); // Dummy write
-        EXPECT_CALL(mmu, write_byte(effective_address, new_memory_content));
-
-        step_execution(7);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void set_index_reg(const IndexReg index_reg, const uint8_t value) {
-        if (index_reg == IndexReg::X) {
-            registers.x = value;
-            expected.x = value;
-        } else {
-            registers.y = value;
-            expected.y = value;
-        }
-    }
-
-    uint16_t start_pc{0x1121};
-    uint8_t memory_content{0x42};
-};
-
-class CpuIndexedIndirectTest : public CpuTest {
-public:
-    void run_instruction(uint8_t instruction) {
-        registers.pc = expected.pc = start_pc;
-        registers.x = expected.x = 0xED;
-        stage_instruction(instruction);
-        expected.pc += 1;
-
-        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0xAB));
-        EXPECT_CALL(mmu, read_byte(0xAB)).WillOnce(Return(0x68)); // Dummy read
-        EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED)))
-                .WillOnce(Return(0x34));
-        EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED + 1u)))
-                .WillOnce(Return(0x12));
-        EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(memory_content));
-
-        step_execution(6);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void run_instruction_with_wraparound(uint8_t instruction) {
-        registers.pc = expected.pc = start_pc;
-        registers.x = expected.x = 0x00;
-        stage_instruction(instruction);
-        expected.pc += 1;
-
-        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0xFF));
-        EXPECT_CALL(mmu, read_byte(0xFF)).WillOnce(Return(0x68)); // Dummy read
-        EXPECT_CALL(mmu, read_byte(0xFF)).WillOnce(Return(0x34));
-        EXPECT_CALL(mmu, read_byte(0x00)).WillOnce(Return(0x12));
-        EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(memory_content));
-
-        step_execution(6);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void run_readwrite_instruction(uint8_t instruction,
-            uint8_t new_memory_content) {
-        registers.pc = expected.pc = start_pc;
-        registers.x = expected.x = 0xED;
-        stage_instruction(instruction);
-        expected.pc += 1;
-
-        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0xAB));
-        EXPECT_CALL(mmu, read_byte(0xAB)).WillOnce(Return(0x68)); // Dummy read
-        EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED)))
-                .WillOnce(Return(0x34));
-        EXPECT_CALL(mmu, read_byte(u16_to_u8(0xAB + 0xED + 1u)))
-                .WillOnce(Return(0x12));
-        EXPECT_CALL(mmu, read_byte(0x1234)).WillOnce(Return(memory_content));
-        EXPECT_CALL(mmu, write_byte(0x1234, memory_content));
-        EXPECT_CALL(mmu, write_byte(0x1234, new_memory_content));
-
-        step_execution(8);
-        EXPECT_EQ(expected, registers);
-    }
-
-    uint16_t start_pc{0x4322};
-    uint8_t memory_content{0x42};
-};
-
-class CpuIndirectIndexedTest : public CpuTest {
-public:
-    void run_read_instruction_without_pagecrossing(uint8_t instruction) {
-        registers.pc = expected.pc = start_pc;
-        registers.y = expected.y = 0x10;
-        stage_instruction(instruction);
-        expected.pc += 1;
-
-        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x42));
-        EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
-        EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
-
-        const uint16_t effective_address = 0x1234 + registers.y;
-        EXPECT_CALL(mmu, read_byte(effective_address))
-                .WillOnce(Return(memory_content));
-        step_execution(5);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void run_read_instruction_with_pagecrossing(uint8_t instruction) {
-        registers.pc = expected.pc = start_pc;
-        registers.y = expected.y = 0xED;
-        stage_instruction(instruction);
-        expected.pc += 1;
-
-        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x42));
-        EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
-        EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
-
-        const uint16_t effective_address = 0x1234 + registers.y;
-        EXPECT_CALL(mmu, read_byte(effective_address - 0x0100))
-                .WillOnce(Return(0x00)); // Dummy read
-        EXPECT_CALL(mmu, read_byte(effective_address))
-                .WillOnce(Return(memory_content));
-        step_execution(6);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void run_write_instruction_without_pagecrossing(uint8_t instruction) {
-        registers.pc = expected.pc = start_pc;
-        registers.y = expected.y = 0x0D;
-        stage_instruction(instruction);
-        expected.pc += 1;
-
-        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x42));
-        EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
-        EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
-
-        const uint16_t effective_address = 0x1234 + registers.y;
-        EXPECT_CALL(mmu, read_byte(effective_address))
-                .WillOnce(Return(0x00)); // Dummy read
-        EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
-        step_execution(6);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void run_write_instruction_with_pagecrossing(uint8_t instruction) {
-        registers.pc = expected.pc = start_pc;
-        registers.y = expected.y = 0xED;
-        stage_instruction(instruction);
-        expected.pc += 1;
-
-        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x42));
-        EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
-        EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
-
-        const uint16_t effective_address = 0x1234 + registers.y;
-        EXPECT_CALL(mmu, read_byte(effective_address - 0x0100))
-                .WillOnce(Return(0x00));
-        EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
-        step_execution(6);
-        EXPECT_EQ(expected, registers);
-    }
-
-    void run_readwrite_instruction_with_pagecrossing(uint8_t instruction,
-            uint8_t new_memory_content) {
-        registers.pc = expected.pc = start_pc;
-        registers.y = expected.y = 0x0D;
-        stage_instruction(instruction);
-        expected.pc += 1;
-
-        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x42));
-        EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
-        EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
-
-        const uint16_t effective_address = 0x1234 + 0x0D;
-        EXPECT_CALL(mmu, read_byte(effective_address))
-                .WillOnce(Return(0xFF)); // Dummy read
-        EXPECT_CALL(mmu, read_byte(effective_address))
-                .WillOnce(Return(memory_content));
-        EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
-        EXPECT_CALL(mmu, write_byte(effective_address, new_memory_content));
-
-        step_execution(8);
-        EXPECT_EQ(expected, registers);
-    }
-
-    uint16_t start_pc{0x4322};
-    uint8_t memory_content{0x42};
-};
 
 TEST_F(CpuTest, reset) {
     expected.pc = 0xDEAD;
@@ -402,11 +148,6 @@ TEST_F(CpuTest, asl_acc_set_c_and_z_flags_clears_n) {
     step_execution(2);
     EXPECT_EQ(expected, registers);
 }
-TEST_F(CpuAbsoluteIndexedTest, asl_absx_shifts) {
-    memory_content = 0b00100101;
-
-    run_readwrite_instruction(ASL_ABSX, IndexReg::X, 0b01001010);
-}
 
 TEST_F(CpuTest, php_sets_b_flag) {
     stage_instruction(PHP);
@@ -429,54 +170,6 @@ TEST_F(CpuTest, bpl_branch_not_taken) {
     expected.pc += 1;
     step_execution(2);
     EXPECT_EQ(expected, registers);
-}
-
-TEST_F(CpuAbsoluteIndexedTest, and_absx_without_page_crossing) {
-    registers.a = 0b10101010;
-    registers.p = Z_FLAG | N_FLAG;
-    expected.a = 0b00001010;
-    memory_content = 0b00001111;
-
-    run_read_instruction_without_pagecrossing(AND_ABSX, IndexReg::X);
-}
-TEST_F(CpuAbsoluteIndexedTest, and_absx_with_page_crossing) {
-    registers.a = 0b10101010;
-    registers.p = Z_FLAG | N_FLAG;
-    expected.a = 0b00001010;
-    memory_content = 0b00001111;
-
-    run_read_instruction_with_pagecrossing(AND_ABSX, IndexReg::X);
-}
-TEST_F(CpuAbsoluteIndexedTest, and_absy_without_page_crossing) {
-    registers.a = 0b10101010;
-    registers.p = Z_FLAG | N_FLAG;
-    expected.a = 0b00001010;
-    memory_content = 0b00001111;
-
-    run_read_instruction_without_pagecrossing(AND_ABSY, IndexReg::Y);
-}
-TEST_F(CpuAbsoluteIndexedTest, and_absy_with_page_crossing) {
-    registers.a = 0b10101010;
-    registers.p = Z_FLAG | N_FLAG;
-    expected.a = 0b00001010;
-    memory_content = 0b00001111;
-
-    run_read_instruction_with_pagecrossing(AND_ABSY, IndexReg::Y);
-}
-TEST_F(CpuIndexedIndirectTest, and) {
-    memory_content = 0b00001111;
-    registers.a = 0b11101101;
-    registers.p = Z_FLAG | N_FLAG;
-    expected.a = 0b00001101;
-
-    run_instruction(AND_INXIND);
-}
-TEST_F(CpuIndirectIndexedTest, and_indirect_indexed) {
-    registers.a = 0b01110000;
-    registers.p = Z_FLAG | N_FLAG;
-    expected.a = 0b01110000;
-    memory_content = 0b11111111;
-    run_read_instruction_without_pagecrossing(AND_INDINX);
 }
 
 TEST_F(CpuTest, plp_clears_b_and_sets_bit_5) {
@@ -667,90 +360,6 @@ TEST_F(CpuTest, bvc_branch_not_taken) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuAbsoluteIndexedTest, adc_absx_no_carry_or_overflow_no_pagecrossing) {
-    registers.a = 0x50;
-    registers.p = V_FLAG;
-    expected.a = 0x71;
-    memory_content = 0x21;
-
-    run_read_instruction_with_pagecrossing(ADC_ABSX, IndexReg::X);
-}
-
-TEST_F(CpuAbsoluteIndexedTest,
-        adc_absy_no_carry_or_overflow_with_pagecrossing) {
-    registers.a = 0x50;
-    registers.p = V_FLAG;
-    expected.a = 0x71;
-    memory_content = 0x21;
-
-    run_read_instruction_with_pagecrossing(ADC_ABSY, IndexReg::Y);
-}
-
-TEST_F(CpuIndexedIndirectTest, adc_indexed_indirect) {
-    registers.a = 0x07;
-    expected.a = 0x07 + 0x12;
-    memory_content = 0x12;
-
-    run_instruction(ADC_INDX);
-}
-
-TEST_F(CpuIndirectIndexedTest, adc_indirect_indexed) {
-    registers.a = 0x07;
-    expected.a = 0x07 + 0x12;
-    memory_content = 0x12;
-
-    run_read_instruction_without_pagecrossing(ADC_INDY);
-}
-
-TEST_F(CpuAbsoluteIndexedTest, sbc_absx_no_carry_or_overflow_no_pagecrossing) {
-    registers.a = 0xD0;
-    registers.p = V_FLAG | C_FLAG;
-    expected.p = N_FLAG;
-    expected.a = 0xE0;
-    memory_content = 0xF0;
-
-    run_read_instruction_without_pagecrossing(SBC_ABSX, IndexReg::X);
-}
-
-TEST_F(CpuAbsoluteIndexedTest,
-        sbc_absy_no_carry_or_overflow_with_pagecrossing) {
-    registers.a = 0xD0;
-    registers.p = V_FLAG | C_FLAG;
-    expected.p = N_FLAG;
-    expected.a = 0xE0;
-    memory_content = 0xF0;
-
-    run_read_instruction_with_pagecrossing(SBC_ABSX, IndexReg::X);
-}
-
-TEST_F(CpuIndexedIndirectTest, sbc) {
-    registers.a = 0xD0;
-    registers.p = C_FLAG;
-    expected.a = 0xE0;
-    expected.p = N_FLAG;
-    memory_content = 0xF0;
-
-    run_instruction(SBC_INXIND);
-}
-TEST_F(CpuIndexedIndirectTest, sbc_handles_wraparound) {
-    registers.a = 0xD0;
-    registers.p = C_FLAG;
-    expected.a = 0xE0;
-    expected.p = N_FLAG;
-    memory_content = 0xF0;
-
-    run_instruction_with_wraparound(SBC_INXIND);
-}
-
-TEST_F(CpuIndirectIndexedTest, sbc_indirect_indexed) {
-    registers.a = 0xD0;
-    registers.p = C_FLAG;
-    expected.a = 0xE0;
-    expected.p = N_FLAG;
-    memory_content = 0xF0;
-    run_read_instruction_without_pagecrossing(SBC_INDINX);
-}
-
 TEST_F(CpuTest, pla_sets_z_clears_n) {
     stage_instruction(PLA);
     registers.sp = 0x0A;
@@ -857,94 +466,6 @@ TEST_F(CpuTest, bcc_branch_not_taken) {
     EXPECT_EQ(expected, registers);
 }
 
-// LD absolute indexed
-// LDA_ABSY
-TEST_F(CpuAbsoluteIndexedTest, lda_abs_y_sets_reg) {
-    expected.a = memory_content = 0x37;
-    run_read_instruction_without_pagecrossing(LDA_ABSY, IndexReg::Y);
-}
-TEST_F(CpuAbsoluteIndexedTest, lda_abs_y_sets_reg_crossing_page) {
-    expected.a = memory_content = 0x78;
-    run_read_instruction_with_pagecrossing(LDA_ABSY, IndexReg::Y);
-}
-TEST_F(CpuAbsoluteIndexedTest, lda_abs_y_sets_z_flag) {
-    expected.a = memory_content = 0;
-    expected.p |= Z_FLAG;
-    registers.p |= N_FLAG;
-    run_read_instruction_without_pagecrossing(LDA_ABSY, IndexReg::Y);
-}
-// TODO(robinlinden): This test is probably broken.
-TEST_F(CpuAbsoluteIndexedTest, lda_abs_y_sets_n) {
-    expected.a = memory_content = 0x37;
-    run_read_instruction_without_pagecrossing(LDA_ABSY, IndexReg::Y);
-}
-// LDY_ABSX
-TEST_F(CpuAbsoluteIndexedTest, ldy_abs_x_sets_reg) {
-    expected.y = memory_content = 0x37;
-    run_read_instruction_without_pagecrossing(LDY_ABSX, IndexReg::X);
-}
-TEST_F(CpuAbsoluteIndexedTest, ldy_abs_x_sets_reg_crossing_page) {
-    expected.y = memory_content = 0x78;
-    run_read_instruction_with_pagecrossing(LDY_ABSX, IndexReg::X);
-}
-TEST_F(CpuAbsoluteIndexedTest, ldy_abs_x_sets_z_flag) {
-    expected.y = memory_content = 0;
-    expected.p |= Z_FLAG;
-    registers.p |= N_FLAG;
-    run_read_instruction_without_pagecrossing(LDY_ABSX, IndexReg::X);
-}
-// TODO(robinlinden): This test is probably broken.
-TEST_F(CpuAbsoluteIndexedTest, ldy_abs_x_sets_n) {
-    expected.y = memory_content = 0x37;
-    run_read_instruction_without_pagecrossing(LDY_ABSX, IndexReg::X);
-}
-// LDA_ABSX
-TEST_F(CpuAbsoluteIndexedTest, lda_abs_x_sets_reg) {
-    expected.a = memory_content = 0x37;
-    run_read_instruction_without_pagecrossing(LDA_ABSX, IndexReg::X);
-}
-TEST_F(CpuAbsoluteIndexedTest, lda_abs_x_sets_reg_crossing_page) {
-    expected.a = memory_content = 0x78;
-    run_read_instruction_with_pagecrossing(LDA_ABSX, IndexReg::X);
-}
-TEST_F(CpuAbsoluteIndexedTest, lda_abs_x_sets_z_flag) {
-    expected.a = memory_content = 0;
-    expected.p |= Z_FLAG;
-    registers.p |= N_FLAG;
-    run_read_instruction_without_pagecrossing(LDA_ABSX, IndexReg::X);
-}
-// TODO(robinlinden): This test is probably broken.
-TEST_F(CpuAbsoluteIndexedTest, lda_abs_x_sets_n) {
-    expected.a = memory_content = 0x37;
-    run_read_instruction_without_pagecrossing(LDA_ABSX, IndexReg::X);
-}
-// LDX_ABSY
-TEST_F(CpuAbsoluteIndexedTest, ldx_abs_y_sets_reg) {
-    expected.x = memory_content = 0x37;
-    run_read_instruction_without_pagecrossing(LDX_ABSY, IndexReg::Y);
-}
-TEST_F(CpuAbsoluteIndexedTest, ldx_abs_y_sets_reg_crossing_page) {
-    expected.x = memory_content = 0x78;
-    run_read_instruction_with_pagecrossing(LDX_ABSY, IndexReg::Y);
-}
-TEST_F(CpuAbsoluteIndexedTest, ldx_abs_y_sets_z_flag) {
-    expected.x = memory_content = 0;
-    expected.p |= Z_FLAG;
-    registers.p |= N_FLAG;
-    run_read_instruction_without_pagecrossing(LDX_ABSY, IndexReg::Y);
-}
-// TODO(robinlinden): This test is probably broken.
-TEST_F(CpuAbsoluteIndexedTest, ldx_abs_y_sets_n) {
-    expected.x = memory_content = 0x37;
-    run_read_instruction_without_pagecrossing(LDX_ABSY, IndexReg::Y);
-}
-// LDA indexed indirect
-TEST_F(CpuIndexedIndirectTest, lda_indexed_indirect) {
-    expected.a = 0x52;
-    memory_content = 0x52;
-
-    run_instruction(LDA_INXIND);
-}
 // LDA indirect indexed
 TEST_F(CpuTest, lda_indirect_indexed) {
     registers.pc = expected.pc = 0x4321;
@@ -968,18 +489,6 @@ TEST_F(CpuTest, lda_indirect_indexed) {
 }
 
 // LAX
-TEST_F(CpuAbsoluteIndexedTest, lax_absy_sets_reg_without_pagecrossing) {
-    expected.x = 0x42;
-    expected.a = 0x42;
-    memory_content = 0x42;
-    run_read_instruction_without_pagecrossing(LAX_ABSY, IndexReg::Y);
-}
-TEST_F(CpuAbsoluteIndexedTest, lax_absy_sets_reg_with_pagecrossing) {
-    expected.x = 0x42;
-    expected.a = 0x42;
-    memory_content = 0x42;
-    run_read_instruction_with_pagecrossing(LAX_ABSY, IndexReg::Y);
-}
 TEST_F(CpuTest, lax_indexed_indirect) {
     registers.pc = expected.pc = 0x4322;
     registers.x = 0xED;
@@ -1049,72 +558,6 @@ TEST_F(CpuTest, cld) {
 
     step_execution(2);
     EXPECT_EQ(expected, registers);
-}
-
-// CMP Absolute indexed mode
-// TODO(robinlinden): Either the names or the implementation of these tests
-// is broken.
-TEST_F(CpuAbsoluteIndexedTest, cmp_absx_sets_nc_without_pagecrossing) {
-    memory_content = registers.a = expected.a = 0x07;
-    registers.p |= N_FLAG;
-    expected.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
-    run_read_instruction_without_pagecrossing(CMP_ABSX, IndexReg::X);
-}
-
-TEST_F(CpuAbsoluteIndexedTest, cmp_absx_sets_nc_with_pagecrossing) {
-    memory_content = registers.a = expected.a = 0x07;
-    registers.p |= N_FLAG;
-    expected.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
-    run_read_instruction_with_pagecrossing(CMP_ABSX, IndexReg::X);
-}
-
-TEST_F(CpuAbsoluteIndexedTest, cmp_absy_sets_nc_without_pagecrossing) {
-    memory_content = registers.a = expected.a = 0x07;
-    registers.p |= N_FLAG;
-    expected.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
-    run_read_instruction_without_pagecrossing(CMP_ABSY, IndexReg::Y);
-}
-
-TEST_F(CpuAbsoluteIndexedTest, cmp_absy_sets_nc_with_pagecrossing) {
-    memory_content = registers.a = expected.a = 0x07;
-    registers.p |= N_FLAG;
-    expected.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
-    run_read_instruction_with_pagecrossing(CMP_ABSY, IndexReg::Y);
-}
-
-// CMP Indirect indexed mode
-TEST_F(CpuIndirectIndexedTest, cmp_with_pagecrossing_sets_nc) {
-    registers.a = expected.a = 180;
-    expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
-    registers.p |= Z_FLAG;
-    memory_content = 0x07;
-    run_read_instruction_with_pagecrossing(CMP_INDINX);
-}
-
-TEST_F(CpuIndirectIndexedTest, cmp_without_pagecrossing_sets_nc) {
-    registers.a = expected.a = 180;
-    expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
-    registers.p |= Z_FLAG;
-    memory_content = 0x07;
-    run_read_instruction_with_pagecrossing(CMP_INDINX);
-}
-
-TEST_F(CpuIndexedIndirectTest, cmp_indexed_indirect_sets_nc) {
-    registers.a = expected.a = 180;
-    expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
-    registers.p |= Z_FLAG;
-    memory_content = 0x07;
-
-    run_instruction(CMP_INXIND);
-}
-TEST_F(CpuIndexedIndirectTest,
-        cmp_indexed_indirect_handles_wraparound_sets_nc) {
-    registers.a = expected.a = 180;
-    expected.p |= static_cast<uint8_t>(N_FLAG | C_FLAG);
-    registers.p |= Z_FLAG;
-    memory_content = 0x07;
-
-    run_instruction_with_wraparound(CMP_INXIND);
 }
 
 // NOP
@@ -1244,11 +687,6 @@ TEST_F(CpuTest, inc_zerox_increments) {
     step_execution(6);
     EXPECT_EQ(expected, registers);
 }
-TEST_F(CpuAbsoluteIndexedTest, inc_absx_clears_n_flag) {
-    registers.p = N_FLAG;
-    memory_content = 125u;
-    run_readwrite_instruction(INC_ABSX, IndexReg::X, 126u);
-}
 
 // DEC
 TEST_F(CpuTest, dec_zerox_decrements) {
@@ -1266,38 +704,6 @@ TEST_F(CpuTest, dec_zerox_decrements) {
 
     step_execution(6);
     EXPECT_EQ(expected, registers);
-}
-TEST_F(CpuAbsoluteIndexedTest, dec_absx_clears_n_flag) {
-    registers.p = N_FLAG;
-    memory_content = 126;
-    run_readwrite_instruction(DEC_ABSX, IndexReg::X, 125);
-}
-
-// DCP
-TEST_F(CpuAbsoluteIndexedTest, dcp_absx_sets_n_flag) {
-    memory_content = 126;
-    expected.a = registers.a = 0x01;
-    expected.p = N_FLAG;
-    run_readwrite_instruction(DCP_ABSX, IndexReg::X, 125);
-}
-TEST_F(CpuAbsoluteIndexedTest, dcp_absy_sets_n_flag) {
-    memory_content = 126;
-    expected.a = registers.a = 0x01;
-    expected.p = N_FLAG;
-    run_readwrite_instruction(DCP_ABSY, IndexReg::Y, 125);
-}
-TEST_F(CpuIndexedIndirectTest, dcp_decrements_clears_n) {
-    memory_content = 0x12;
-    registers.p = N_FLAG;
-    expected.p = C_FLAG;
-    expected.a = registers.a = 0x42;
-    run_readwrite_instruction(DCP_INXIND, 0x11);
-}
-TEST_F(CpuIndirectIndexedTest, dcp_decrements_clears_ncz) {
-    memory_content = 0xFE;
-    registers.p = static_cast<uint8_t>(Z_FLAG | C_FLAG) | N_FLAG;
-    expected.a = registers.a = 0x02;
-    run_readwrite_instruction_with_pagecrossing(DCP_INDINX, 0xFD);
 }
 
 // INX
@@ -1480,18 +886,6 @@ TEST_F(CpuTest, sta_indexed_indirect_handles_wraparound) {
     step_execution(6);
 
     EXPECT_EQ(expected, registers);
-}
-
-TEST_F(CpuIndirectIndexedTest, sta_indirect_indexed_with_pagecrossing) {
-    registers.a = expected.a = 0x07;
-    memory_content = 0x07;
-    run_write_instruction_with_pagecrossing(STA_INDINX);
-}
-
-TEST_F(CpuIndirectIndexedTest, sta_indirect_indexed_without_pagecrossing) {
-    registers.a = expected.a = 0x07;
-    memory_content = 0x07;
-    run_write_instruction_without_pagecrossing(STA_INDINX);
 }
 
 TEST_F(CpuTest, txs) {
@@ -1685,23 +1079,6 @@ TEST_F(CpuTest, eor_absy_without_page_crossing) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuIndexedIndirectTest, eor_indexed_indirect) {
-    registers.a = 0xE0;
-    expected.a = 0x00;
-    expected.p = Z_FLAG;
-    memory_content = 0xE0;
-    run_instruction(EOR_INXIND);
-}
-
-TEST_F(CpuIndirectIndexedTest, eor_indirect_indexed) {
-    registers.a = 0x60;
-    registers.p = C_FLAG;
-    expected.a = 0x90;
-    expected.p = N_FLAG | C_FLAG;
-    memory_content = 0xF0;
-    run_read_instruction_with_pagecrossing(EOR_INDINX);
-}
-
 // ROL, ACC
 TEST_F(CpuTest, rol_a_rotates) {
     stage_instruction(ROL_ACC);
@@ -1840,48 +1217,6 @@ TEST_F(CpuTest, ror_absx_shifts) {
 
     step_execution(7);
     EXPECT_EQ(expected, registers);
-}
-
-// ORA, ABSY
-TEST_F(CpuAbsoluteIndexedTest, ora_absy_without_page_crossing) {
-    registers.a = 0b00111100;
-    expected.a = 0b11111100;
-    expected.p = N_FLAG;
-    memory_content = 0b11110000;
-
-    run_read_instruction_without_pagecrossing(ORA_ABSY, IndexReg::Y);
-}
-// ORA, ABSX
-TEST_F(CpuAbsoluteIndexedTest, ora_absx_without_page_crossing) {
-    registers.a = 0b00110000;
-    registers.p = Z_FLAG | N_FLAG;
-    expected.a = 0b00110011;
-    memory_content = 0b00100011;
-
-    run_read_instruction_without_pagecrossing(ORA_ABSX, IndexReg::X);
-}
-TEST_F(CpuAbsoluteIndexedTest, ora_absx_with_page_crossing) {
-    registers.a = 0b10000000;
-    registers.p = N_FLAG;
-    expected.a = 0b10000001;
-    expected.p = N_FLAG;
-    memory_content = 0b00000001;
-
-    run_read_instruction_with_pagecrossing(ORA_ABSX, IndexReg::X);
-}
-TEST_F(CpuIndexedIndirectTest, ora) {
-    memory_content = 0b00100011;
-    registers.a = 0b00110000;
-    registers.p = Z_FLAG | N_FLAG;
-    expected.a = 0b00110011;
-    run_instruction(ORA_INXIND);
-}
-TEST_F(CpuIndirectIndexedTest, ora_indirect_indexed) {
-    registers.a = 0b00110000;
-    registers.p = Z_FLAG | N_FLAG;
-    expected.a = 0b00110011;
-    memory_content = 0b00100011;
-    run_read_instruction_without_pagecrossing(ORA_INDINX);
 }
 
 } // namespace
