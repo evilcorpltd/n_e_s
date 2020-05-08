@@ -13,6 +13,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_executable(${PROJECT_NAME}
+    src/cast_helpers.h
     src/cpu_test.h
     src/fake_mmu.h
     src/fake_ppu.h

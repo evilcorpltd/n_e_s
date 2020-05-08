@@ -1,5 +1,6 @@
 #include "nes/core/cpu_factory.h"
 
+#include "cast_helpers.h"
 #include "cpu_test.h"
 #include "fake_ppu.h"
 #include "icpu_helpers.h"
@@ -14,10 +15,6 @@ using namespace n_e_s::core::test;
 using testing::Return;
 
 namespace {
-
-constexpr uint8_t u16_to_u8(uint16_t u16) {
-    return static_cast<uint8_t>(u16 % static_cast<uint16_t>(0x100));
-}
 
 const uint16_t kStackOffset = 0x0100;
 const uint16_t kResetAddress = 0xFFFC;
