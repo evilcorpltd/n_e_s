@@ -13,6 +13,8 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_executable(${PROJECT_NAME}
+    src/cast_helpers.h
+    src/cpu_test.h
     src/fake_mmu.h
     src/fake_ppu.h
     src/hexprinter.h
@@ -22,7 +24,20 @@ add_executable(${PROJECT_NAME}
     src/mock_membank.h
     src/mock_mmu.h
     src/mock_ppu.h
+    src/opcode.h
     src/test_cpu.cpp
+    src/test_cpu_absolute_indexed_instructions.cpp
+    src/test_cpu_absolute_instructions.cpp
+    src/test_cpu_branch_instructions.cpp
+    src/test_cpu_immediate_instructions.cpp
+    src/test_cpu_indexed_indirect_instructions.cpp
+    src/test_cpu_indirect_indexed_instructions.cpp
+    src/test_cpu_nop_implied_instructions.cpp
+    src/test_cpu_move_instructions.cpp
+    src/test_cpu_nop_absolute_x_instructions.cpp
+    src/test_cpu_nop_zeropage_x_instructions.cpp
+    src/test_cpu_zeropage_indexed_instructions.cpp
+    src/test_cpu_zeropage_instructions.cpp
     src/test_cpuintegration.cpp
     src/test_invalid_address.cpp
     src/test_mmu.cpp
