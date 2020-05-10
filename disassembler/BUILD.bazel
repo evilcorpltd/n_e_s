@@ -1,39 +1,32 @@
 cc_library(
-    name = "core",
+    name = "disassembler",
     srcs = glob([
         "src/**",
     ]),
     hdrs = glob([
         "include/**/*.h",
     ]),
-    copts = ["-Icore/src"],
+    copts = ["-Idisassembler/src"],
     strip_include_prefix = "include/",
     visibility = ["//visibility:public"],
-)
-
-cc_library(
-    name = "core_test_utils",
-    hdrs = glob([
-        "test_utils/include/**/*.h",
-    ]),
-    strip_include_prefix = "test_utils/include/",
-    visibility = ["//visibility:public"],
     deps = [
-        ":core",
-        "@gtest",
+        "//core",
+        "@fmtlib",
     ],
 )
 
 cc_test(
-    name = "core_test",
+    name = "disassembler_test",
     size = "small",
     srcs = glob([
         "test/src/*.cpp",
         "test/src/*.h",
     ]),
     deps = [
-        ":core",
-        ":core_test_utils",
+        ":disassembler",
+        "//core",
+        "//core:core_test_utils",
         "@gtest",
     ],
 )
+

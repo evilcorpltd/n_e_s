@@ -4,6 +4,7 @@ cc_binary(
     deps = [
         "//core",
         "//nes",
+        "//disassembler",
         "@fmtlib",
     ],
 )

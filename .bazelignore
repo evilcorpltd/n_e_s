@@ -1,4 +1,5 @@
 .git/
 build/
 buildclang/
+buildclang-cl/
 out/

@@ -1,8 +1,8 @@
 #include "nes/core/cpu_factory.h"
 
-#include "fake_mmu.h"
-#include "fake_ppu.h"
 #include "icpu_helpers.h"
+#include "nes/core/test/fake_mmu.h"
+#include "nes/core/test/fake_ppu.h"
 
 #include <gtest/gtest.h>
 

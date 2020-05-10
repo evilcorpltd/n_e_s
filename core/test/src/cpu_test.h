@@ -1,7 +1,7 @@
 #pragma once
 
-#include "fake_ppu.h"
-#include "mock_mmu.h"
+#include "nes/core/test/fake_ppu.h"
+#include "nes/core/test/mock_mmu.h"
 
 #include "nes/core/cpu_factory.h"
 #include "nes/core/imos6502.h"

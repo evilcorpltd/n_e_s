@@ -1,7 +1,7 @@
 #include "nes/core/invalid_address.h"
 #include "nes/core/ppu_factory.h"
 
-#include "mock_mmu.h"
+#include "nes/core/test/mock_mmu.h"
 
 #include <gtest/gtest.h>
 
