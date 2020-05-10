@@ -7,6 +7,7 @@ include(sanitizers)
 
 enable_testing()
 
+add_subdirectory(third_party)
 add_subdirectory(warnings)
 
 add_subdirectory(application)
