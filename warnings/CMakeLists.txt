@@ -70,7 +70,8 @@ target_compile_options(${PROJECT_NAME} INTERFACE
                  # cause unexpected runtime behavior.
         /w14928; # illegal copy-initialization; more than one user-defined
                  # conversion has been implicitly applied
-        /wd4244; # TODO(robinlinden): Enable this once IMmu::read_word is gone.
+        /wd4244; # 'argument': conversion from 'int' to 'unsigned char', possible
+                 # loss of data # This one is sort of required for gtest.
         /WX;
     >
 )
