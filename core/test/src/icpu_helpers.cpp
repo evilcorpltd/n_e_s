@@ -1,10 +1,7 @@
 #include "icpu_helpers.h"
 
-#include "hexprinter.h"
-
+#include <fmt/format.h>
 #include <ostream>
-
-using namespace n_e_s::core::test;
 
 namespace n_e_s::core {
 
@@ -16,20 +13,22 @@ bool operator==(const CpuRegisters &a, const CpuRegisters &b) {
 // Required by gtest to use pascal case.
 // NOLINTNEXTLINE(readability-identifier-naming)
 void PrintTo(const CpuRegisters &r, std::ostream *os) {
-    *os << "PC: " << hex_out_s(r.pc);
-    *os << " SP: " << hex_out_s(r.sp);
-    *os << " A: " << hex_out_s(r.a);
-    *os << " X: " << hex_out_s(r.x);
-    *os << " Y: " << hex_out_s(r.y);
-    *os << " P: ";
-    *os << (r.p & N_FLAG ? "N" : "-");
-    *os << (r.p & V_FLAG ? "V" : "-");
-    *os << (r.p & FLAG_5 ? "5" : "-");
-    *os << (r.p & B_FLAG ? "B" : "-");
-    *os << (r.p & D_FLAG ? "D" : "-");
-    *os << (r.p & I_FLAG ? "I" : "-");
-    *os << (r.p & Z_FLAG ? "Z" : "-");
-    *os << (r.p & C_FLAG ? "C" : "-");
+    *os << fmt::format(
+            "PC: {:#06x} SP: {:#04x} A: {:#04x} x: {:#04x} Y: {:#04x}",
+            r.pc,
+            r.sp,
+            r.a,
+            r.x,
+            r.y);
+    *os << fmt::format(" P: {}{}{}{}{}{}{}{}",
+            r.p & N_FLAG ? "N" : "-",
+            r.p & V_FLAG ? "V" : "-",
+            r.p & FLAG_5 ? "5" : "-",
+            r.p & B_FLAG ? "B" : "-",
+            r.p & D_FLAG ? "D" : "-",
+            r.p & I_FLAG ? "I" : "-",
+            r.p & Z_FLAG ? "Z" : "-",
+            r.p & C_FLAG ? "C" : "-");
     *os << std::endl;
 }
 
