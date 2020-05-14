@@ -5,7 +5,6 @@ project(test_n_e_s_core)
 add_executable(${PROJECT_NAME}
     src/cast_helpers.h
     src/cpu_test.h
-    src/hexprinter.h
     src/icpu_helpers.cpp
     src/icpu_helpers.h
     src/main.cpp
@@ -50,6 +49,7 @@ target_link_libraries(${PROJECT_NAME}
         n_e_s::core::test_utils
         n_e_s::warnings
         gmock
+        fmt
 )
 
 gtest_discover_tests(${PROJECT_NAME})

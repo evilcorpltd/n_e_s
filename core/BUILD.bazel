@@ -21,6 +21,7 @@ cc_library(
     deps = [
         ":core",
         "@gtest",
+        "@fmtlib",
     ],
 )
 
