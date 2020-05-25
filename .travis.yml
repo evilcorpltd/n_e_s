@@ -73,24 +73,6 @@ matrix:
         - ctest --output-on-failure
         - gcovr --gcov-executable gcov-9 -p --root .. --fail-under-line=94 --exclude 'CMakeFiles/' --exclude '_deps/' --exclude '(.+/)?test/' --exclude '.+/(application|nestest)/'
 
-    - name: "clang 9 sanitizers"
-      addons: &clang9
-        apt:
-          sources:
-            - sourceline: 'deb https://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main main'
-              key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
-          packages:
-            - *common-apt-packages
-            - clang-9
-            - libstdc++-8-dev
-      env:
-        - MATRIX_EVAL="CXX=clang++-9 BUILD_TYPE=Debug"
-        - CMAKE_EXTRA_OPTIONS="-DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON"
-        - ASAN_OPTIONS="strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1"
-        - UBSAN_OPTIONS="print_stacktrace=1:halt_on_error=1"
-        - ASAN_SYMBOLIZER_PATH="$(which llvm-symbolizer)"
-        - LLVM_SYMBOLIZER_PATH="$(which llvm-symbolizer)"
-
 install:
   - python3 -m pip install pip==19.3.1 --upgrade
   - python3 -m pip install cmake==3.16.3 ninja==1.9.0.post1 --upgrade --user
