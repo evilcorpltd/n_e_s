@@ -58,14 +58,6 @@ matrix:
         - find application core nes -name *.h -o -name *.cpp | xargs clang-format -style=file -i
         - git diff --exit-code
 
-    - name: "gcc 8"
-      addons: &gcc8
-        apt:
-          packages:
-            - *common-apt-packages
-            - g++-8
-      env: MATRIX_EVAL="CXX=g++-8 BUILD_TYPE=Debug"
-
     - name: "gcc 9 coverage"
       addons: &gcc9
         apt:
@@ -80,28 +72,6 @@ matrix:
         - make
         - ctest --output-on-failure
         - gcovr --gcov-executable gcov-9 -p --root .. --fail-under-line=94 --exclude 'CMakeFiles/' --exclude '_deps/' --exclude '(.+/)?test/' --exclude '.+/(application|nestest)/'
-
-    - name: "clang 7"
-      addons: &clang7
-        apt:
-          packages:
-            - *common-apt-packages
-            - clang-7
-            - libstdc++-7-dev
-      env: MATRIX_EVAL="CXX=clang++-7 BUILD_TYPE=Debug"
-
-    - name: "clang 7 release"
-      addons: *clang7
-      env: MATRIX_EVAL="CXX=clang++-7 BUILD_TYPE=Release"
-
-    - name: "clang 8"
-      addons: &clang8
-        apt:
-          packages:
-            - *common-apt-packages
-            - clang-8
-            - libstdc++-8-dev
-      env: MATRIX_EVAL="CXX=clang++-8 BUILD_TYPE=Debug"
 
     - name: "clang 9 sanitizers"
       addons: &clang9
