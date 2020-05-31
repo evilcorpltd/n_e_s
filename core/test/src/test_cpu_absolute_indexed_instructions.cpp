@@ -271,30 +271,28 @@ TEST_F(CpuAbsoluteIndexedTest, lax_absy_sets_reg_with_pagecrossing) {
 }
 
 // CMP Absolute indexed mode
-// TODO(robinlinden): Either the names or the implementation of these tests
-// is broken.
-TEST_F(CpuAbsoluteIndexedTest, cmp_absx_sets_nc_without_pagecrossing) {
+TEST_F(CpuAbsoluteIndexedTest, cmp_absx_sets_zc_without_pagecrossing) {
     memory_content = registers.a = expected.a = 0x07;
     registers.p |= N_FLAG;
     expected.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
     run_read_instruction_without_pagecrossing(CMP_ABSX, IndexReg::X);
 }
 
-TEST_F(CpuAbsoluteIndexedTest, cmp_absx_sets_nc_with_pagecrossing) {
+TEST_F(CpuAbsoluteIndexedTest, cmp_absx_sets_zc_with_pagecrossing) {
     memory_content = registers.a = expected.a = 0x07;
     registers.p |= N_FLAG;
     expected.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
     run_read_instruction_with_pagecrossing(CMP_ABSX, IndexReg::X);
 }
 
-TEST_F(CpuAbsoluteIndexedTest, cmp_absy_sets_nc_without_pagecrossing) {
+TEST_F(CpuAbsoluteIndexedTest, cmp_absy_sets_zc_without_pagecrossing) {
     memory_content = registers.a = expected.a = 0x07;
     registers.p |= N_FLAG;
     expected.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
     run_read_instruction_without_pagecrossing(CMP_ABSY, IndexReg::Y);
 }
 
-TEST_F(CpuAbsoluteIndexedTest, cmp_absy_sets_nc_with_pagecrossing) {
+TEST_F(CpuAbsoluteIndexedTest, cmp_absy_sets_zc_with_pagecrossing) {
     memory_content = registers.a = expected.a = 0x07;
     registers.p |= N_FLAG;
     expected.p |= static_cast<uint8_t>(Z_FLAG | C_FLAG);
