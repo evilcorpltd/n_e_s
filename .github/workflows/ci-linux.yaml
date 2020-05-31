@@ -21,6 +21,14 @@ jobs:
             version: "9"
             configuration: Debug
 
+          - name: ubuntu-18.04-gcc-9-coverage
+            os: ubuntu-18.04
+            compiler: gcc
+            version: "9"
+            configuration: Debug
+            coverage: true
+            cmake-args: -DENABLE_COVERAGE=ON
+
           - name: ubuntu-18.04-clang-8
             os: ubuntu-18.04
             compiler: clang
@@ -73,3 +81,9 @@ jobs:
           UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
         run: |
           (cd build && ctest -C ${{ matrix.configuration }} )
+
+      - name: Coverage
+        if: matrix.coverage
+        run: |
+          python3 -m pip install gcovr
+          (cd build && gcovr --gcov-executable gcov-9 -p --root .. --fail-under-line=94 --exclude 'CMakeFiles/' --exclude '_deps/' --exclude '(.+/)?test/' --exclude '.+/(application|nestest)/')
