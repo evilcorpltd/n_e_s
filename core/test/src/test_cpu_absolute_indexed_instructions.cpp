@@ -418,4 +418,34 @@ TEST_F(CpuAbsoluteIndexedTest, eor_absy_without_page_crossing) {
     run_read_instruction_without_pagecrossing(EOR_ABSY, IndexReg::Y);
 }
 
+// ROL
+TEST_F(CpuAbsoluteIndexedTest, rol_absx_shifts_without_pagecrossing) {
+    expected.p = N_FLAG;
+    memory_content = 0b01001000;
+
+    run_readwrite_instruction_without_pagecrossing(
+            ROL_ABSX, IndexReg::X, 0b10010000);
+}
+TEST_F(CpuAbsoluteIndexedTest, rol_absx_shifts_with_pagecrossing) {
+    expected.p = N_FLAG;
+    memory_content = 0b01001000;
+
+    run_readwrite_instruction_with_pagecrossing(
+            ROL_ABSX, IndexReg::X, 0b10010000);
+}
+
+// ROR
+TEST_F(CpuAbsoluteIndexedTest, ror_absx_shifts_without_pagecrossing) {
+    memory_content = 0b01001000;
+
+    run_readwrite_instruction_without_pagecrossing(
+            ROR_ABSX, IndexReg::X, 0b00100100);
+}
+TEST_F(CpuAbsoluteIndexedTest, ror_absx_shifts_with_pagecrossing) {
+    memory_content = 0b01001000;
+
+    run_readwrite_instruction_with_pagecrossing(
+            ROR_ABSX, IndexReg::X, 0b00100100);
+}
+
 } // namespace
