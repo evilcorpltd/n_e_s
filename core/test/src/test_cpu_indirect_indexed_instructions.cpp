@@ -109,7 +109,7 @@ public:
     void run_readwrite_instruction_with_pagecrossing(uint8_t instruction,
             uint8_t new_memory_content) {
         registers.pc = expected.pc = start_pc;
-        registers.y = expected.y = 0x0D;
+        registers.y = expected.y = 0xD2;
         stage_instruction(instruction);
         expected.pc += 1;
 
@@ -117,9 +117,9 @@ public:
         EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
         EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
 
-        const uint16_t effective_address = 0x1234 + 0x0D;
-        EXPECT_CALL(mmu, read_byte(effective_address))
-                .WillOnce(Return(0xFF)); // Dummy read
+        const uint16_t effective_address = 0x1234 + 0xD2;
+        EXPECT_CALL(mmu, read_byte(effective_address - 0x0100))
+                .WillOnce(Return(0xFF)); // Dummy read at wrong page
         EXPECT_CALL(mmu, read_byte(effective_address))
                 .WillOnce(Return(memory_content));
         EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
