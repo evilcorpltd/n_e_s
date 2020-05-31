@@ -594,9 +594,8 @@ TEST_F(CpuTest, nop44_zero) {
     step_execution(3);
     EXPECT_EQ(expected, registers);
 }
-// TODO(robinlinden): This test doesnt test what it says it tests.
 TEST_F(CpuTest, nop64_zero) {
-    stage_instruction(NOP_ZERO44);
+    stage_instruction(NOP_ZERO64);
     expected.pc += 1;
     EXPECT_CALL(mmu, read_byte(registers.pc + 1)).WillOnce(Return(0xCD));
 
