@@ -3,6 +3,7 @@
 #include "nes/core/imembank.h"
 
 #include <cstdint>
+#include <functional>
 
 namespace n_e_s::core {
 
@@ -21,7 +22,12 @@ public:
             "Size does not match address range");
 
     bool is_address_in_range(uint16_t addr) const override {
-        return addr >= StartAddr && addr <= EndAddr;
+        // Use std::greater/less_equal to work around gcc warning when StartAddr
+        // is 0:
+        // error: comparison is always true due to limited range of data type
+        // [-Werror=type-limits]
+        return std::greater_equal()(addr, StartAddr) &&
+               std::less_equal()(addr, EndAddr);
     }
 
 protected:
