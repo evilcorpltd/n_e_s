@@ -58,21 +58,6 @@ matrix:
         - find application core nes -name *.h -o -name *.cpp | xargs clang-format -style=file -i
         - git diff --exit-code
 
-    - name: "gcc 9 coverage"
-      addons: &gcc9
-        apt:
-          sources:
-            - sourceline: 'ppa:ubuntu-toolchain-r/test'
-          packages:
-            - *common-apt-packages
-            - g++-9
-      before_install: pip install gcovr --user
-      script:
-        - CXX=g++-9 CXXFLAGS="--coverage" LDFLAGS="--coverage" cmake ..
-        - make
-        - ctest --output-on-failure
-        - gcovr --gcov-executable gcov-9 -p --root .. --fail-under-line=94 --exclude 'CMakeFiles/' --exclude '_deps/' --exclude '(.+/)?test/' --exclude '.+/(application|nestest)/'
-
 install:
   - python3 -m pip install pip==19.3.1 --upgrade
   - python3 -m pip install cmake==3.16.3 ninja==1.9.0.post1 --upgrade --user
