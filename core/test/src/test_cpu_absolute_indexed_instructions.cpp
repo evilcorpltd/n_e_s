@@ -448,4 +448,12 @@ TEST_F(CpuAbsoluteIndexedTest, ror_absx_shifts_with_pagecrossing) {
             ROR_ABSX, IndexReg::X, 0b00100100);
 }
 
+// LSR
+TEST_F(CpuAbsoluteIndexedTest, lsr_absx_shifts_without_pagecrossing) {
+    memory_content = 0b01001000;
+
+    run_readwrite_instruction_without_pagecrossing(
+            LSR_ABSX, IndexReg::X, 0b00100100);
+}
+
 } // namespace

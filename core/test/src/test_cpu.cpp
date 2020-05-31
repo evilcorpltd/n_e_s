@@ -275,25 +275,6 @@ TEST_F(CpuTest, lsr_a_clears_c_z_n_flags) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, lsr_absx_shifts) {
-    registers.pc = expected.pc = 0x4321;
-    registers.x = expected.x = 0xED;
-
-    stage_instruction(LSR_ABSX);
-    expected.pc += 2;
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x34));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x12));
-    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
-            .WillOnce(Return(0xDEAD));
-    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED)).WillOnce(Return(0b01001000));
-    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0b01001000));
-    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0b00100100));
-
-    step_execution(7);
-    EXPECT_EQ(expected, registers);
-}
-
 TEST_F(CpuTest, pha) {
     stage_instruction(PHA);
     registers.sp = 0x05;
