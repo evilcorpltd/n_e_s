@@ -4,6 +4,8 @@
 #include "nes/core/imos6502.h"
 #include "nes/core/opcode.h"
 
+#include <cstdlib>
+
 namespace n_e_s::dis {
 
 constexpr int get_arg_count(n_e_s::core::AddressMode mode) {
@@ -25,7 +27,8 @@ constexpr int get_arg_count(n_e_s::core::AddressMode mode) {
     case n_e_s::core::AddressMode::Indirect:
         return 2;
     }
-    return 0;
+    // Should not happen
+    std::abort(); // GCOVR_EXCL_LINE
 }
 
 std::string disassemble(const uint16_t address,

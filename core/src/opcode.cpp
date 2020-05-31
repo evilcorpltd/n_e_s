@@ -467,7 +467,7 @@ MemoryAccess get_memory_access(const Family family) {
         return MemoryAccess::ReadWrite;
     }
     // Should not happen
-    throw std::logic_error("Unknown family");
+    throw std::logic_error("Unknown family"); // GCOVR_EXCL_LINE
 }
 
 std::string_view to_string(const Family family) {
@@ -595,7 +595,7 @@ std::string_view to_string(const Family family) {
     }
 
     // Should not happen
-    throw std::logic_error("Unknown family");
+    throw std::logic_error("Unknown family"); // GCOVR_EXCL_LINE
 }
 
 } // namespace n_e_s::core
