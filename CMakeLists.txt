@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 project(n_e_s)
 
 include(cmake/sanitizers.cmake)
+include(cmake/coverage.cmake)
 
 enable_testing()
 
