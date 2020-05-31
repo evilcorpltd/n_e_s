@@ -958,67 +958,6 @@ TEST_F(CpuTest, dex_clears_z_flag) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, eor_absx_without_page_crossing) {
-    registers.pc = expected.pc = 0x4321;
-    registers.a = 0b11111100;
-    registers.p = Z_FLAG | N_FLAG;
-    registers.x = expected.x = 0x10;
-
-    stage_instruction(EOR_ABSX);
-
-    expected.pc += 2;
-    expected.a = 0b00110011;
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x78));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x56));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0x10)).WillOnce(Return(0b11001111));
-
-    step_execution(4);
-    EXPECT_EQ(expected, registers);
-}
-
-TEST_F(CpuTest, eor_absx_with_page_crossing) {
-    registers.pc = expected.pc = 0x4321;
-    registers.a = 0b11110000;
-    registers.p = N_FLAG;
-    registers.x = expected.x = 0xAB;
-
-    stage_instruction(EOR_ABSX);
-
-    expected.pc += 2;
-    expected.a = 0b00000000;
-    expected.p = Z_FLAG;
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x78));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x56));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB - 0x0100))
-            .WillOnce(Return(0xDEAD));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB)).WillOnce(Return(0b11110000));
-
-    step_execution(5);
-    EXPECT_EQ(expected, registers);
-}
-
-TEST_F(CpuTest, eor_absy_without_page_crossing) {
-    registers.pc = expected.pc = 0x4321;
-    registers.a = 0b00111100;
-    registers.p = Z_FLAG | N_FLAG;
-    registers.y = expected.y = 0x10;
-
-    stage_instruction(EOR_ABSY);
-
-    expected.pc += 2;
-    expected.a = 0b10011001;
-    expected.p = N_FLAG;
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x78));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x56));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0x10)).WillOnce(Return(0b10100101));
-
-    step_execution(4);
-    EXPECT_EQ(expected, registers);
-}
-
 // ROL, ACC
 TEST_F(CpuTest, rol_a_rotates) {
     stage_instruction(ROL_ACC);

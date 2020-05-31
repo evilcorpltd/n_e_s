@@ -389,4 +389,33 @@ TEST_F(CpuAbsoluteIndexedTest, ora_absx_with_page_crossing) {
     run_read_instruction_with_pagecrossing(ORA_ABSX, IndexReg::X);
 }
 
+// EOR
+TEST_F(CpuAbsoluteIndexedTest, eor_absx_with_page_crossing) {
+    registers.a = 0b11110000;
+    registers.p = N_FLAG;
+    expected.a = 0b00000000;
+    expected.p = Z_FLAG;
+    memory_content = 0b11110000;
+
+    run_read_instruction_with_pagecrossing(EOR_ABSX, IndexReg::X);
+}
+TEST_F(CpuAbsoluteIndexedTest, eor_absx_without_page_crossing) {
+    registers.pc = expected.pc = 0x4321;
+    registers.a = 0b11111100;
+    registers.p = Z_FLAG | N_FLAG;
+    expected.a = 0b00110011;
+    memory_content = 0b11001111;
+
+    run_read_instruction_without_pagecrossing(EOR_ABSX, IndexReg::X);
+}
+TEST_F(CpuAbsoluteIndexedTest, eor_absy_without_page_crossing) {
+    registers.a = 0b00111100;
+    registers.p = Z_FLAG | N_FLAG;
+    expected.a = 0b10011001;
+    expected.p = N_FLAG;
+    memory_content = 0b10100101;
+
+    run_read_instruction_without_pagecrossing(EOR_ABSY, IndexReg::Y);
+}
+
 } // namespace
