@@ -54,6 +54,32 @@ public:
         EXPECT_EQ(expected, registers);
     }
 
+    void run_readwrite_instruction_without_pagecrossing(uint8_t instruction,
+            IndexReg index_reg,
+            uint8_t new_memory_content) {
+        registers.pc = expected.pc = start_pc;
+        stage_instruction(instruction);
+        expected.pc += 2;
+
+        const uint8_t index_reg_value{0x21};
+        set_index_reg(index_reg, index_reg_value);
+
+        const uint16_t effective_address = 0x5678 + index_reg_value;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x78));
+        EXPECT_CALL(mmu, read_byte(start_pc + 2u)).WillOnce(Return(0x56));
+        EXPECT_CALL(mmu, read_byte(0x5699))
+                .WillOnce(Return(0xCD)); // Dummy read
+        EXPECT_CALL(mmu, read_byte(effective_address))
+                .WillOnce(Return(memory_content));
+        EXPECT_CALL(mmu,
+                write_byte(effective_address, memory_content)); // Dummy write
+        EXPECT_CALL(mmu, write_byte(effective_address, new_memory_content));
+
+        step_execution(7);
+        EXPECT_EQ(expected, registers);
+    }
+
     void run_readwrite_instruction_with_pagecrossing(uint8_t instruction,
             IndexReg index_reg,
             uint8_t new_memory_content) {
@@ -96,7 +122,12 @@ public:
 };
 
 // ASL
-TEST_F(CpuAbsoluteIndexedTest, asl_absx_shifts) {
+TEST_F(CpuAbsoluteIndexedTest, asl_absx_shifts_without_pagecrossing) {
+    memory_content = 0b00100101;
+    run_readwrite_instruction_without_pagecrossing(
+            ASL_ABSX, IndexReg::X, 0b01001010);
+}
+TEST_F(CpuAbsoluteIndexedTest, asl_absx_shifts_with_pagecrossing) {
     memory_content = 0b00100101;
     run_readwrite_instruction_with_pagecrossing(
             ASL_ABSX, IndexReg::X, 0b01001010);
