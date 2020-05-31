@@ -48,6 +48,13 @@ jobs:
             configuration: Debug
             cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON
 
+          - name: ubuntu-18.04-clang-10-sanitizers
+            os: ubuntu-18.04
+            compiler: clang
+            version: "10"
+            configuration: Debug
+            cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON
+
     steps:
       - uses: actions/checkout@v2
 
@@ -57,6 +64,8 @@ jobs:
           python3 -m pip install pip --upgrade
           python3 -m pip install cmake==3.14.4 ninja==1.9.0.post1 --upgrade
 
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo add-apt-repository 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-10 main' -y
           sudo apt update
 
           if [ "${{ matrix.compiler }}" = "gcc" ]; then
