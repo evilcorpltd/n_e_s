@@ -83,7 +83,7 @@ public:
         EXPECT_EQ(expected, registers);
     }
 
-    void run_readwrite_instruction_with_pagecrossing(uint8_t instruction,
+    void run_readwrite_instruction_without_pagecrossing(uint8_t instruction,
             uint8_t new_memory_content) {
         registers.pc = expected.pc = start_pc;
         registers.y = expected.y = 0x0D;
@@ -97,6 +97,29 @@ public:
         const uint16_t effective_address = 0x1234 + 0x0D;
         EXPECT_CALL(mmu, read_byte(effective_address))
                 .WillOnce(Return(0xFF)); // Dummy read
+        EXPECT_CALL(mmu, read_byte(effective_address))
+                .WillOnce(Return(memory_content));
+        EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
+        EXPECT_CALL(mmu, write_byte(effective_address, new_memory_content));
+
+        step_execution(8);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void run_readwrite_instruction_with_pagecrossing(uint8_t instruction,
+            uint8_t new_memory_content) {
+        registers.pc = expected.pc = start_pc;
+        registers.y = expected.y = 0xD2;
+        stage_instruction(instruction);
+        expected.pc += 1;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x42));
+        EXPECT_CALL(mmu, read_byte(0x42)).WillOnce(Return(0x34));
+        EXPECT_CALL(mmu, read_byte(0x43)).WillOnce(Return(0x12));
+
+        const uint16_t effective_address = 0x1234 + 0xD2;
+        EXPECT_CALL(mmu, read_byte(effective_address - 0x0100))
+                .WillOnce(Return(0xFF)); // Dummy read at wrong page
         EXPECT_CALL(mmu, read_byte(effective_address))
                 .WillOnce(Return(memory_content));
         EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
@@ -128,7 +151,13 @@ TEST_F(CpuIndirectIndexedTest, cmp_without_pagecrossing_sets_nc) {
 }
 
 // DCP
-TEST_F(CpuIndirectIndexedTest, dcp_decrements_clears_ncz) {
+TEST_F(CpuIndirectIndexedTest, dcp_decrements_clears_ncz_without_pagecrossing) {
+    memory_content = 0xFE;
+    registers.p = static_cast<uint8_t>(Z_FLAG | C_FLAG) | N_FLAG;
+    expected.a = registers.a = 0x02;
+    run_readwrite_instruction_without_pagecrossing(DCP_INDINX, 0xFD);
+}
+TEST_F(CpuIndirectIndexedTest, dcp_decrements_clears_ncz_with_pagecrossing) {
     memory_content = 0xFE;
     registers.p = static_cast<uint8_t>(Z_FLAG | C_FLAG) | N_FLAG;
     expected.a = registers.a = 0x02;
