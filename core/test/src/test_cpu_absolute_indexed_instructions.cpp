@@ -190,9 +190,9 @@ TEST_F(CpuAbsoluteIndexedTest, lda_abs_y_sets_z_flag) {
     registers.p |= N_FLAG;
     run_read_instruction_without_pagecrossing(LDA_ABSY, IndexReg::Y);
 }
-// TODO(robinlinden): This test is probably broken.
 TEST_F(CpuAbsoluteIndexedTest, lda_abs_y_sets_n) {
-    expected.a = memory_content = 0x37;
+    expected.a = memory_content = 0xA7;
+    expected.p |= N_FLAG;
     run_read_instruction_without_pagecrossing(LDA_ABSY, IndexReg::Y);
 }
 // LDY_ABSX
@@ -210,9 +210,9 @@ TEST_F(CpuAbsoluteIndexedTest, ldy_abs_x_sets_z_flag) {
     registers.p |= N_FLAG;
     run_read_instruction_without_pagecrossing(LDY_ABSX, IndexReg::X);
 }
-// TODO(robinlinden): This test is probably broken.
 TEST_F(CpuAbsoluteIndexedTest, ldy_abs_x_sets_n) {
-    expected.y = memory_content = 0x37;
+    expected.y = memory_content = 0xA7;
+    expected.p |= N_FLAG;
     run_read_instruction_without_pagecrossing(LDY_ABSX, IndexReg::X);
 }
 // LDA_ABSX
@@ -230,9 +230,9 @@ TEST_F(CpuAbsoluteIndexedTest, lda_abs_x_sets_z_flag) {
     registers.p |= N_FLAG;
     run_read_instruction_without_pagecrossing(LDA_ABSX, IndexReg::X);
 }
-// TODO(robinlinden): This test is probably broken.
 TEST_F(CpuAbsoluteIndexedTest, lda_abs_x_sets_n) {
-    expected.a = memory_content = 0x37;
+    expected.a = memory_content = 0xA7;
+    expected.p |= N_FLAG;
     run_read_instruction_without_pagecrossing(LDA_ABSX, IndexReg::X);
 }
 // LDX_ABSY
@@ -250,9 +250,9 @@ TEST_F(CpuAbsoluteIndexedTest, ldx_abs_y_sets_z_flag) {
     registers.p |= N_FLAG;
     run_read_instruction_without_pagecrossing(LDX_ABSY, IndexReg::Y);
 }
-// TODO(robinlinden): This test is probably broken.
 TEST_F(CpuAbsoluteIndexedTest, ldx_abs_y_sets_n) {
-    expected.x = memory_content = 0x37;
+    expected.x = memory_content = 0xA7;
+    expected.p |= N_FLAG;
     run_read_instruction_without_pagecrossing(LDX_ABSY, IndexReg::Y);
 }
 
