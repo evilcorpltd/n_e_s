@@ -728,46 +728,6 @@ TEST_F(CpuTest, sed) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, sta_abs_x_indexed) {
-    registers.pc = expected.pc = 0x4321;
-    registers.x = expected.x = 0xED;
-    registers.a = expected.a = 0x07;
-
-    stage_instruction(STA_ABSX);
-
-    expected.pc += 2;
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x34));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x12));
-    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
-            .WillOnce(Return(0xDEAD));
-    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
-
-    step_execution(5);
-
-    EXPECT_EQ(expected, registers);
-}
-
-TEST_F(CpuTest, sta_abs_y_indexed) {
-    registers.pc = expected.pc = 0x4321;
-    registers.y = expected.y = 0xED;
-    registers.a = expected.a = 0x07;
-
-    stage_instruction(STA_ABSY);
-
-    expected.pc += 2;
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x34));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x12));
-    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
-            .WillOnce(Return(0xDEAD));
-    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
-
-    step_execution(5);
-
-    EXPECT_EQ(expected, registers);
-}
-
 TEST_F(CpuTest, sta_indexed_indirect) {
     registers.pc = expected.pc = 0x4321;
     registers.x = expected.x = 0xED;

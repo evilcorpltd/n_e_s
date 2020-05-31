@@ -54,6 +54,48 @@ public:
         EXPECT_EQ(expected, registers);
     }
 
+    void run_write_instruction_without_pagecrossing(uint8_t instruction,
+            IndexReg index_reg) {
+        registers.pc = expected.pc = start_pc;
+        stage_instruction(instruction);
+        expected.pc += 2;
+
+        const uint8_t index_reg_value{0x10};
+        set_index_reg(index_reg, index_reg_value);
+
+        const uint16_t effective_address = 0x5678 + index_reg_value;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x78));
+        EXPECT_CALL(mmu, read_byte(start_pc + 2u)).WillOnce(Return(0x56));
+        EXPECT_CALL(mmu, read_byte(effective_address))
+                .WillOnce(Return(0xCD)); // Extra read
+        EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
+
+        step_execution(5);
+        EXPECT_EQ(expected, registers);
+    }
+
+    void run_write_instruction_with_pagecrossing(uint8_t instruction,
+            IndexReg index_reg) {
+        registers.pc = expected.pc = start_pc;
+        stage_instruction(instruction);
+        expected.pc += 2;
+
+        const uint8_t index_reg_value{0xAB};
+        set_index_reg(index_reg, index_reg_value);
+
+        const uint16_t effective_address = 0x5678 + index_reg_value;
+
+        EXPECT_CALL(mmu, read_byte(start_pc + 1u)).WillOnce(Return(0x78));
+        EXPECT_CALL(mmu, read_byte(start_pc + 2u)).WillOnce(Return(0x56));
+        EXPECT_CALL(mmu, read_byte(effective_address - 0x0100))
+                .WillOnce(Return(0xCD)); // Extra read
+        EXPECT_CALL(mmu, write_byte(effective_address, memory_content));
+
+        step_execution(5);
+        EXPECT_EQ(expected, registers);
+    }
+
     void run_readwrite_instruction_without_pagecrossing(uint8_t instruction,
             IndexReg index_reg,
             uint8_t new_memory_content) {
@@ -454,6 +496,20 @@ TEST_F(CpuAbsoluteIndexedTest, lsr_absx_shifts_without_pagecrossing) {
 
     run_readwrite_instruction_without_pagecrossing(
             LSR_ABSX, IndexReg::X, 0b00100100);
+}
+
+TEST_F(CpuAbsoluteIndexedTest, sta_abs_x_indexed_with_pagecrossing) {
+    registers.a = expected.a = 0x07;
+    memory_content = 0x07;
+
+    run_write_instruction_with_pagecrossing(STA_ABSX, IndexReg::X);
+}
+
+TEST_F(CpuAbsoluteIndexedTest, sta_abs_y_indexed_without_pagecrossing) {
+    registers.a = expected.a = 0x07;
+    memory_content = 0x07;
+
+    run_write_instruction_without_pagecrossing(STA_ABSY, IndexReg::Y);
 }
 
 } // namespace
