@@ -18,6 +18,7 @@ target_compile_options(${PROJECT_NAME} INTERFACE
         -ftrapv;
         -pedantic-errors;
         -Wall;
+        -Wcast-align;
         -Wdouble-promotion;
         -Werror;
         -Wextra;
@@ -26,6 +27,7 @@ target_compile_options(${PROJECT_NAME} INTERFACE
         -Wnon-virtual-dtor;
         -Wnull-dereference;
         -Wold-style-cast;
+        -Woverloaded-virtual;
         -Wshadow;
         -Wsign-compare;
         -Wundef;
