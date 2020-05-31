@@ -275,25 +275,6 @@ TEST_F(CpuTest, lsr_a_clears_c_z_n_flags) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, lsr_absx_shifts) {
-    registers.pc = expected.pc = 0x4321;
-    registers.x = expected.x = 0xED;
-
-    stage_instruction(LSR_ABSX);
-    expected.pc += 2;
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x34));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x12));
-    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
-            .WillOnce(Return(0xDEAD));
-    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED)).WillOnce(Return(0b01001000));
-    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0b01001000));
-    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0b00100100));
-
-    step_execution(7);
-    EXPECT_EQ(expected, registers);
-}
-
 TEST_F(CpuTest, pha) {
     stage_instruction(PHA);
     registers.sp = 0x05;
@@ -746,46 +727,6 @@ TEST_F(CpuTest, sed) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, sta_abs_x_indexed) {
-    registers.pc = expected.pc = 0x4321;
-    registers.x = expected.x = 0xED;
-    registers.a = expected.a = 0x07;
-
-    stage_instruction(STA_ABSX);
-
-    expected.pc += 2;
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x34));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x12));
-    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
-            .WillOnce(Return(0xDEAD));
-    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
-
-    step_execution(5);
-
-    EXPECT_EQ(expected, registers);
-}
-
-TEST_F(CpuTest, sta_abs_y_indexed) {
-    registers.pc = expected.pc = 0x4321;
-    registers.y = expected.y = 0xED;
-    registers.a = expected.a = 0x07;
-
-    stage_instruction(STA_ABSY);
-
-    expected.pc += 2;
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x34));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x12));
-    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
-            .WillOnce(Return(0xDEAD));
-    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0x07));
-
-    step_execution(5);
-
-    EXPECT_EQ(expected, registers);
-}
-
 TEST_F(CpuTest, sta_indexed_indirect) {
     registers.pc = expected.pc = 0x4321;
     registers.x = expected.x = 0xED;
@@ -957,67 +898,6 @@ TEST_F(CpuTest, dex_clears_z_flag) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(CpuTest, eor_absx_without_page_crossing) {
-    registers.pc = expected.pc = 0x4321;
-    registers.a = 0b11111100;
-    registers.p = Z_FLAG | N_FLAG;
-    registers.x = expected.x = 0x10;
-
-    stage_instruction(EOR_ABSX);
-
-    expected.pc += 2;
-    expected.a = 0b00110011;
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x78));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x56));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0x10)).WillOnce(Return(0b11001111));
-
-    step_execution(4);
-    EXPECT_EQ(expected, registers);
-}
-
-TEST_F(CpuTest, eor_absx_with_page_crossing) {
-    registers.pc = expected.pc = 0x4321;
-    registers.a = 0b11110000;
-    registers.p = N_FLAG;
-    registers.x = expected.x = 0xAB;
-
-    stage_instruction(EOR_ABSX);
-
-    expected.pc += 2;
-    expected.a = 0b00000000;
-    expected.p = Z_FLAG;
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x78));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x56));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB - 0x0100))
-            .WillOnce(Return(0xDEAD));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0xAB)).WillOnce(Return(0b11110000));
-
-    step_execution(5);
-    EXPECT_EQ(expected, registers);
-}
-
-TEST_F(CpuTest, eor_absy_without_page_crossing) {
-    registers.pc = expected.pc = 0x4321;
-    registers.a = 0b00111100;
-    registers.p = Z_FLAG | N_FLAG;
-    registers.y = expected.y = 0x10;
-
-    stage_instruction(EOR_ABSY);
-
-    expected.pc += 2;
-    expected.a = 0b10011001;
-    expected.p = N_FLAG;
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x78));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x56));
-    EXPECT_CALL(mmu, read_byte(0x5678 + 0x10)).WillOnce(Return(0b10100101));
-
-    step_execution(4);
-    EXPECT_EQ(expected, registers);
-}
-
 // ROL, ACC
 TEST_F(CpuTest, rol_a_rotates) {
     stage_instruction(ROL_ACC);
@@ -1065,25 +945,6 @@ TEST_F(CpuTest, rol_a_clear_neg_retain_c) {
     expected.p = C_FLAG;
 
     step_execution(2);
-    EXPECT_EQ(expected, registers);
-}
-TEST_F(CpuTest, rol_absx_shifts) {
-    registers.pc = expected.pc = 0x4321;
-    registers.x = expected.x = 0xED;
-    expected.p = N_FLAG;
-
-    stage_instruction(ROL_ABSX);
-    expected.pc += 2;
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x34));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x12));
-    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
-            .WillOnce(Return(0xDEAD));
-    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED)).WillOnce(Return(0b01001000));
-    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0b01001000));
-    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0b10010000));
-
-    step_execution(7);
     EXPECT_EQ(expected, registers);
 }
 
@@ -1136,25 +997,6 @@ TEST_F(CpuTest, ror_a_set_neg_retain_c) {
     expected.p = C_FLAG | N_FLAG;
 
     step_execution(2);
-    EXPECT_EQ(expected, registers);
-}
-
-TEST_F(CpuTest, ror_absx_shifts) {
-    registers.pc = expected.pc = 0x4321;
-    registers.x = expected.x = 0xED;
-
-    stage_instruction(ROR_ABSX);
-    expected.pc += 2;
-
-    EXPECT_CALL(mmu, read_byte(registers.pc + 1u)).WillOnce(Return(0x34));
-    EXPECT_CALL(mmu, read_byte(registers.pc + 2u)).WillOnce(Return(0x12));
-    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED - 0x0100))
-            .WillOnce(Return(0xDEAD));
-    EXPECT_CALL(mmu, read_byte(0x1234 + 0xED)).WillOnce(Return(0b01001000));
-    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0b01001000));
-    EXPECT_CALL(mmu, write_byte(0x1234 + 0xED, 0b00100100));
-
-    step_execution(7);
     EXPECT_EQ(expected, registers);
 }
 
