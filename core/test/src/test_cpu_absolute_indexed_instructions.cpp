@@ -54,7 +54,7 @@ public:
         EXPECT_EQ(expected, registers);
     }
 
-    void run_readwrite_instruction(uint8_t instruction,
+    void run_readwrite_instruction_with_pagecrossing(uint8_t instruction,
             IndexReg index_reg,
             uint8_t new_memory_content) {
         registers.pc = expected.pc = start_pc;
@@ -98,7 +98,8 @@ public:
 // ASL
 TEST_F(CpuAbsoluteIndexedTest, asl_absx_shifts) {
     memory_content = 0b00100101;
-    run_readwrite_instruction(ASL_ABSX, IndexReg::X, 0b01001010);
+    run_readwrite_instruction_with_pagecrossing(
+            ASL_ABSX, IndexReg::X, 0b01001010);
 }
 
 TEST_F(CpuAbsoluteIndexedTest, and_absx_without_page_crossing) {
@@ -304,14 +305,14 @@ TEST_F(CpuAbsoluteIndexedTest, cmp_absy_sets_nc_with_pagecrossing) {
 TEST_F(CpuAbsoluteIndexedTest, inc_absx_clears_n_flag) {
     registers.p = N_FLAG;
     memory_content = 125u;
-    run_readwrite_instruction(INC_ABSX, IndexReg::X, 126u);
+    run_readwrite_instruction_with_pagecrossing(INC_ABSX, IndexReg::X, 126u);
 }
 
 // DEC
 TEST_F(CpuAbsoluteIndexedTest, dec_absx_clears_n_flag) {
     registers.p = N_FLAG;
     memory_content = 126;
-    run_readwrite_instruction(DEC_ABSX, IndexReg::X, 125);
+    run_readwrite_instruction_with_pagecrossing(DEC_ABSX, IndexReg::X, 125);
 }
 
 // DCP
@@ -319,13 +320,13 @@ TEST_F(CpuAbsoluteIndexedTest, dcp_absx_sets_n_flag) {
     memory_content = 126;
     expected.a = registers.a = 0x01;
     expected.p = N_FLAG;
-    run_readwrite_instruction(DCP_ABSX, IndexReg::X, 125);
+    run_readwrite_instruction_with_pagecrossing(DCP_ABSX, IndexReg::X, 125);
 }
 TEST_F(CpuAbsoluteIndexedTest, dcp_absy_sets_n_flag) {
     memory_content = 126;
     expected.a = registers.a = 0x01;
     expected.p = N_FLAG;
-    run_readwrite_instruction(DCP_ABSY, IndexReg::Y, 125);
+    run_readwrite_instruction_with_pagecrossing(DCP_ABSY, IndexReg::Y, 125);
 }
 
 // ORA, ABSY
