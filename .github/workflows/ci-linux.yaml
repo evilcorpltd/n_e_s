@@ -15,12 +15,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: ubuntu-18.04-gcc-8
-            os: ubuntu-18.04
-            compiler: gcc
-            version: "8"
-            configuration: Debug
-
           - name: ubuntu-18.04-gcc-9
             os: ubuntu-18.04
             compiler: gcc
