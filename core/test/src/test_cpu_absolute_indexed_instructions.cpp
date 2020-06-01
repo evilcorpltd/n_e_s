@@ -245,7 +245,7 @@ TEST_F(CpuAbsoluteIndexedTest,
     expected.a = 0xE0;
     memory_content = 0xF0;
 
-    run_read_instruction_with_pagecrossing(SBC_ABSX, IndexReg::X);
+    run_read_instruction_with_pagecrossing(SBC_ABSY, IndexReg::Y);
 }
 
 // LD absolute indexed
