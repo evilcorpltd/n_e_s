@@ -9,6 +9,12 @@ addons:
 matrix:
   include:
     - name: "bazel"
+      addons: &gcc9
+        apt:
+          sources:
+            - sourceline: 'ppa:ubuntu-toolchain-r/test'
+          packages:
+            - g++-9
       before_install:
         - OS=linux
         - ARCH=x86_64
@@ -25,7 +31,7 @@ matrix:
       before_script: []
       script:
       - |
-        bazel \
+        CC=gcc-9 CXX=g++-9 bazel \
           --output_base=$HOME/.cache/bazel \
           test \
           --config=gnulike \
