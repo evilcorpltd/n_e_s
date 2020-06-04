@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cstring>
 #include <fstream>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <type_traits>
