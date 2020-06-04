@@ -11,6 +11,8 @@ class IPpu;
 struct PpuRegisters;
 
 class IMmu;
+
+class IRom;
 } // namespace n_e_s::core
 
 namespace n_e_s::nes {
@@ -53,6 +55,8 @@ private:
 
     std::unique_ptr<n_e_s::core::CpuRegisters> cpu_registers_;
     std::unique_ptr<n_e_s::core::IMos6502> cpu_;
+
+    std::unique_ptr<n_e_s::core::IRom> rom_;
 
     uint64_t cycle_{};
 };

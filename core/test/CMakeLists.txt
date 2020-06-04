@@ -23,6 +23,7 @@ add_executable(${PROJECT_NAME}
     src/test_cpu_zeropage_indexed_instructions.cpp
     src/test_cpu_zeropage_instructions.cpp
     src/test_cpuintegration.cpp
+    src/test_ines_header.cpp
     src/test_invalid_address.cpp
     src/test_mmu.cpp
     src/test_opcode.cpp

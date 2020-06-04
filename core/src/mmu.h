@@ -13,7 +13,10 @@ class Mmu final : public IMmu {
 public:
     Mmu();
 
+    void clear();
+
     void add_mem_bank(std::unique_ptr<IMemBank> mem_bank);
+    void set_mem_banks(MemBankList mem_banks) override;
 
     uint8_t read_byte(uint16_t addr) const override;
     void write_byte(uint16_t addr, uint8_t byte) override;

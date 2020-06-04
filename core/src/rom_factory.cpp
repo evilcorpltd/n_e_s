@@ -7,9 +7,12 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <type_traits>
 #include <vector>
 
 static_assert(sizeof(n_e_s::core::INesHeader) == 16);
+static_assert(std::is_trivially_copyable<n_e_s::core::INesHeader>::value,
+        "INesHeader must be trivially copyable for memcpy to work");
 
 namespace {
 

@@ -18,8 +18,16 @@ auto equal(uint16_t addr) {
 
 Mmu::Mmu() : mem_banks_() {}
 
+void Mmu::clear() {
+    mem_banks_.clear();
+}
+
 void Mmu::add_mem_bank(std::unique_ptr<IMemBank> mem_bank) {
     mem_banks_.push_back(std::move(mem_bank));
+}
+
+void Mmu::set_mem_banks(MemBankList mem_banks) {
+    mem_banks_ = std::move(mem_banks);
 }
 
 IMemBank *Mmu::get_mem_bank(uint16_t addr) const {

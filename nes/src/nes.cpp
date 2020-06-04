@@ -37,12 +37,10 @@ private:
 } // namespace
 
 Nes::Nes()
-        : ppu_mmu_(MmuFactory::create(
-                  MemBankFactory::create_nes_ppu_mem_banks())),
+        : ppu_mmu_(MmuFactory::create_empty()),
           ppu_registers_(std::make_unique<n_e_s::core::PpuRegisters>()),
           ppu_(PpuFactory::create(ppu_registers_.get(), ppu_mmu_.get())),
-          mmu_(MmuFactory::create(
-                  MemBankFactory::create_nes_mem_banks(ppu_.get()))),
+          mmu_(MmuFactory::create_empty()),
           cpu_registers_(std::make_unique<n_e_s::core::CpuRegisters>()),
           cpu_(CpuFactory::create_mos6502(cpu_registers_.get(),
                   mmu_.get(),
@@ -70,21 +68,15 @@ void Nes::reset() {
 }
 
 void Nes::load_rom(const std::string &filepath) {
-    std::unique_ptr<IRom> rom{RomFactory::from_file(filepath)};
+    rom_ = RomFactory::from_file(filepath);
 
-    MemBankList ppu_membanks{MemBankFactory::create_nes_ppu_mem_banks()};
+    MemBankList ppu_membanks{
+            MemBankFactory::create_nes_ppu_mem_banks(rom_.get())};
+    ppu_mmu_->set_mem_banks(std::move(ppu_membanks));
 
-    ppu_membanks.push_back(std::make_unique<MemBankReference>(rom.get()));
-
-    ppu_mmu_ = MmuFactory::create(std::move(ppu_membanks));
-    ppu_ = PpuFactory::create(ppu_registers_.get(), ppu_mmu_.get());
-
-    MemBankList cpu_membanks{MemBankFactory::create_nes_mem_banks(ppu_.get())};
-    cpu_membanks.push_back(std::move(rom));
-
-    mmu_ = MmuFactory::create(std::move(cpu_membanks));
-    cpu_ = CpuFactory::create_mos6502(
-            cpu_registers_.get(), mmu_.get(), ppu_.get());
+    MemBankList cpu_membanks{
+            MemBankFactory::create_nes_mem_banks(ppu_.get(), rom_.get())};
+    mmu_->set_mem_banks(std::move(cpu_membanks));
 
     reset();
 }

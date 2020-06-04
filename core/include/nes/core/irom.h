@@ -1,26 +1,26 @@
 #pragma once
 
-#include "nes/core/imembank.h"
-
-#include <cstdint>
+#include "nes/core/ines_header.h"
 
 namespace n_e_s::core {
 
-struct INesHeader {
-    uint8_t nes[4]{'N', 'E', 'S', 26}; // NES + MS-DOS EOF
-    uint8_t prg_rom_size; // in 16 KB units.
-    uint8_t chr_rom_size; // in 8 KB units.
-    uint8_t flags_6;
-    uint8_t flags_7;
-    uint8_t prg_ram_size; // in 8 KB units.
-    uint8_t flags_9;
-    uint8_t flags_10;
-    uint8_t zeros[5]{0};
-};
-
-class IRom : public IMemBank {
+class IRom {
 public:
     explicit IRom(const INesHeader &h) : header_(h) {}
+
+    virtual ~IRom() = default;
+
+    [[nodiscard]] virtual bool is_cpu_address_in_range(uint16_t addr) const = 0;
+    [[nodiscard]] virtual uint8_t cpu_read_byte(uint16_t addr) const = 0;
+    virtual void cpu_write_byte(uint16_t addr, uint8_t byte) = 0;
+
+    [[nodiscard]] virtual bool is_ppu_address_in_range(uint16_t addr) const = 0;
+    [[nodiscard]] virtual uint8_t ppu_read_byte(uint16_t addr) const = 0;
+    virtual void ppu_write_byte(uint16_t addr, uint8_t byte) = 0;
+
+    const INesHeader &header() const {
+        return header_;
+    }
 
 private:
     INesHeader header_;

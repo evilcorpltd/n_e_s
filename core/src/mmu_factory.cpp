@@ -5,6 +5,10 @@
 
 namespace n_e_s::core {
 
+std::unique_ptr<IMmu> MmuFactory::create_empty() {
+    return std::make_unique<Mmu>();
+}
+
 std::unique_ptr<IMmu> MmuFactory::create(MemBankList mem_banks) {
     std::unique_ptr<IMmu> immu = std::make_unique<Mmu>();
     auto mmu = static_cast<Mmu *>(immu.get());
