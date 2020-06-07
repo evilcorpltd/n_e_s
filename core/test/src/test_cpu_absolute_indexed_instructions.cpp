@@ -248,6 +248,27 @@ TEST_F(CpuAbsoluteIndexedTest,
     run_read_instruction_with_pagecrossing(SBC_ABSY, IndexReg::Y);
 }
 
+TEST_F(CpuAbsoluteIndexedTest, isb_absx_no_carry_or_overflow_no_pagecrossing) {
+    registers.a = 0xD0;
+    registers.p = V_FLAG | C_FLAG;
+    expected.p = N_FLAG;
+    expected.a = 0xE0;
+    memory_content = 0xF0 - 0x01;
+
+    run_readwrite_instruction_without_pagecrossing(ISB_ABSX, IndexReg::X, 0xF0);
+}
+
+TEST_F(CpuAbsoluteIndexedTest,
+        isb_absy_no_carry_or_overflow_with_pagecrossing) {
+    registers.a = 0xD0;
+    registers.p = V_FLAG | C_FLAG;
+    expected.p = N_FLAG;
+    expected.a = 0xE0;
+    memory_content = 0xF0 - 0x01;
+
+    run_readwrite_instruction_with_pagecrossing(ISB_ABSY, IndexReg::Y, 0xF0);
+}
+
 // LD absolute indexed
 // LDA_ABSY
 TEST_F(CpuAbsoluteIndexedTest, lda_abs_y_sets_reg) {

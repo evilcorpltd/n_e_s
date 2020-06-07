@@ -75,7 +75,9 @@ TEST_F(CpuTest, state_opcode_returns_instruction) {
 }
 
 TEST_F(CpuTest, unsupported_instruction) {
-    stage_instruction(0xFF);
+    // This opcode should not be used as it jams the machine according to
+    // http://atarihq.com/danb/files/64doc.txt
+    stage_instruction(0x02);
 
     EXPECT_THROW(step_execution(1), std::logic_error);
 }

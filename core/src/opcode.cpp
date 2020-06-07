@@ -279,12 +279,16 @@ Opcode decode(const uint8_t op) {
         return {Family::CPX, CpxImmediate, AddressMode::Immediate};
     case SbcIndirectX:
         return {Family::SBC, SbcIndirectX, AddressMode::IndexedIndirect};
+    case IsbIndexedIndirect:
+        return {Family::ISB, IsbIndexedIndirect, AddressMode::IndexedIndirect};
     case CpxZeropage:
         return {Family::CPX, CpxZeropage, AddressMode::Zeropage};
     case SbcZeropage:
         return {Family::SBC, SbcZeropage, AddressMode::Zeropage};
     case IncZeropage:
         return {Family::INC, IncZeropage, AddressMode::Zeropage};
+    case IsbZeropage:
+        return {Family::ISB, IsbZeropage, AddressMode::Zeropage};
     case InxImplied:
         return {Family::INX, InxImplied, AddressMode::Implied};
     case SbcImmediate:
@@ -299,22 +303,30 @@ Opcode decode(const uint8_t op) {
         return {Family::SBC, SbcAbsolute, AddressMode::Absolute};
     case IncAbsolute:
         return {Family::INC, IncAbsolute, AddressMode::Absolute};
+    case IsbAbsolute:
+        return {Family::ISB, IsbAbsolute, AddressMode::Absolute};
     case BeqRelative:
         return {Family::BEQ, BeqRelative, AddressMode::Relative};
     case SbcIndirectY:
         return {Family::SBC, SbcIndirectY, AddressMode::IndirectIndexed};
+    case IsbIndirectIndexed:
+        return {Family::ISB, IsbIndirectIndexed, AddressMode::IndirectIndexed};
     case NopZeropageXF4:
         return {Family::NOP, NopZeropageXF4, AddressMode::ZeropageX};
     case SbcZeropageX:
         return {Family::SBC, SbcZeropageX, AddressMode::ZeropageX};
     case IncZeropageX:
         return {Family::INC, IncZeropageX, AddressMode::ZeropageX};
+    case IsbZeropageX:
+        return {Family::ISB, IsbZeropageX, AddressMode::ZeropageX};
     case SedImplied:
         return {Family::SED, SedImplied, AddressMode::Implied};
     case SbcAbsoluteY:
         return {Family::SBC, SbcAbsoluteY, AddressMode::AbsoluteY};
     case NopImpliedFA:
         return {Family::NOP, NopImpliedFA, AddressMode::Implied};
+    case IsbAbsoluteY:
+        return {Family::ISB, IsbAbsoluteY, AddressMode::AbsoluteY};
     case SbcAbsoluteX:
         return {Family::SBC, SbcAbsoluteX, AddressMode::AbsoluteX};
     case IncAbsoluteX:
@@ -391,6 +403,8 @@ Opcode decode(const uint8_t op) {
         return {Family::SAX, SaxAbsolute, AddressMode::Absolute};
     case SaxZeropageY:
         return {Family::SAX, SaxZeropageY, AddressMode::ZeropageY};
+    case IsbAbsoluteX:
+        return {Family::ISB, IsbAbsoluteX, AddressMode::AbsoluteX};
     default:
         // Since this is an invalid opcode the instruction and address mode
         // have no real meaning, so we just use 0, 0 for them.
@@ -464,6 +478,7 @@ MemoryAccess get_memory_access(const Family family) {
     case Family::ASL:
     case Family::LSR:
     case Family::DCP:
+    case Family::ISB:
         return MemoryAccess::ReadWrite;
     }
     // Should not happen
@@ -592,6 +607,8 @@ std::string_view to_string(const Family family) {
         return "SAX";
     case Family::DCP:
         return "DCP";
+    case Family::ISB:
+        return "ISB";
     }
 
     // Should not happen

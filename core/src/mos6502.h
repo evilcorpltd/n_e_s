@@ -92,6 +92,7 @@ private:
     void adc_impl(uint8_t addend);
     Pipeline create_add_instruction(Opcode opcode);
     Pipeline create_sub_instruction(Opcode opcode);
+    Pipeline create_isb_instruction(Opcode opcode);
     Pipeline create_and_instruction(Opcode opcode);
     Pipeline create_store_instruction(Opcode opcode);
     Pipeline create_load_instruction(Opcode opcode);
