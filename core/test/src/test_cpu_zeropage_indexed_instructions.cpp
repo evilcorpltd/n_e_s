@@ -134,6 +134,16 @@ TEST_F(CpuZeropageIndexedTest, sbc_zero_x) {
     run_read_instruction(SBC_ZEROX, IndexReg::X);
 }
 
+TEST_F(CpuZeropageIndexedTest, isb_zero_x) {
+    registers.a = 0x50;
+    registers.p = V_FLAG | C_FLAG;
+    expected.p = C_FLAG;
+    expected.a = 0x50 - 0x07;
+    memory_content = 0x07 - 0x01;
+
+    run_readwrite_instruction(ISB_ZEROX, IndexReg::X, 0x07);
+}
+
 // LD Zeropage X
 TEST_F(CpuZeropageIndexedTest, lda_zeropagex_sets_reg) {
     load_sets_reg(LDA_ZEROX, &expected.a, IndexReg::X);

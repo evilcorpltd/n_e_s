@@ -257,6 +257,15 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::SbcIndirectY:
         result.append(create_sub_instruction(*state_.current_opcode));
         break;
+    case Instruction::IsbZeropage:
+    case Instruction::IsbZeropageX:
+    case Instruction::IsbAbsolute:
+    case Instruction::IsbAbsoluteX:
+    case Instruction::IsbAbsoluteY:
+    case Instruction::IsbIndirectIndexed:
+    case Instruction::IsbIndexedIndirect:
+        result.append(create_isb_instruction(*state_.current_opcode));
+        break;
     case Instruction::PlaImplied:
         result.push([]() { /* Do nothing. */ });
         result.push([]() { /* Do nothing. */ });
@@ -730,6 +739,28 @@ Pipeline Mos6502::create_sub_instruction(Opcode opcode) {
         // performs an ADC See:
         // http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
         const uint8_t addend = mmu_->read_byte(effective_address_);
+        adc_impl(~addend);
+    });
+
+    return result;
+}
+
+Pipeline Mos6502::create_isb_instruction(Opcode opcode) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
+    Pipeline result;
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
+
+    // ISB = INC + SBC
+    result.push([this]() {
+        const uint8_t new_value = tmp_ + static_cast<uint8_t>(1);
+        set_zero(new_value);
+        set_negative(new_value);
+        mmu_->write_byte(effective_address_, new_value);
+
+        // SBC simply takes the ones complement of the second value and then
+        // performs an ADC See:
+        // http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
+        const uint8_t addend = new_value;
         adc_impl(~addend);
     });
 

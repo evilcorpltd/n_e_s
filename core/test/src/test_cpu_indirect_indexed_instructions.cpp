@@ -219,4 +219,13 @@ TEST_F(CpuIndirectIndexedTest, sbc_indirect_indexed) {
     run_read_instruction_without_pagecrossing(SBC_INDINX);
 }
 
+TEST_F(CpuIndirectIndexedTest, isb_indirect_indexed) {
+    registers.a = 0xD0;
+    registers.p = C_FLAG;
+    expected.a = 0xE0;
+    expected.p = N_FLAG;
+    memory_content = 0xF0 - 0x01;
+    run_readwrite_instruction_without_pagecrossing(ISB_INDINX, 0xF0);
+}
+
 } // namespace

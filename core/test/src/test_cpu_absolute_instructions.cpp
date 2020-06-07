@@ -198,6 +198,15 @@ TEST_F(CpuAbsoluteTest, sbc_abs_no_carry_or_overflow) {
     run_read_instruction(SBC_ABS);
 }
 
+TEST_F(CpuAbsoluteTest, isb_abs_no_carry_or_overflow) {
+    registers.a = 0x50;
+    registers.p = V_FLAG | C_FLAG;
+    expected.a = 0x60;
+    memory_content = 0xF0 - 0x01;
+
+    run_readwrite_instruction(ISB_ABS, 0xF0);
+}
+
 // LDX Absolute mode
 TEST_F(CpuAbsoluteTest, ldx_abs_sets_reg) {
     load_absolute_sets_reg(LDX_ABS, &expected.x);

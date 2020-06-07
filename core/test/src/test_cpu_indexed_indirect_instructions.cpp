@@ -159,4 +159,14 @@ TEST_F(CpuIndexedIndirectTest, ora) {
     run_instruction(ORA_INXIND);
 }
 
+// ISB
+TEST_F(CpuIndexedIndirectTest, isb_zero_no_carry_or_overflow) {
+    registers.a = 0x50;
+    registers.p = V_FLAG | C_FLAG;
+    expected.a = 0x60;
+    memory_content = 0xF0 - 0x01;
+
+    run_readwrite_instruction(ISB_INXIND, 0xF0);
+}
+
 } // namespace

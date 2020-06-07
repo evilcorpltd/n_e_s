@@ -141,6 +141,16 @@ TEST_F(CpuZeropageTest, sbc_zero_no_carry_or_overflow) {
     run_read_instruction(SBC_ZERO);
 }
 
+// ISB
+TEST_F(CpuZeropageTest, isb_zero_no_carry_or_overflow) {
+    registers.a = 0x50;
+    registers.p = V_FLAG | C_FLAG;
+    expected.a = 0x60;
+    memory_content = 0xF0 - 0x01;
+
+    run_readwrite_instruction(ISB_ZERO, 0xF0);
+}
+
 // LD Zeropage
 TEST_F(CpuZeropageTest, lda_zeropage_sets_reg) {
     load_sets_reg(LDA_ZERO, &expected.a);
