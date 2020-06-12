@@ -69,6 +69,7 @@ TEST(Opcode, Family) {
     EXPECT_EQ("SAX", to_string(Family::SAX));
     EXPECT_EQ("DCP", to_string(Family::DCP));
     EXPECT_EQ("ISB", to_string(Family::ISB));
+    EXPECT_EQ("SLO", to_string(Family::SLO));
 }
 
 } // namespace

@@ -551,6 +551,15 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::DcpIndexedIndirect:
         result.append(create_dcp_instruction(*state_.current_opcode));
         break;
+    case Instruction::SloZeropage:
+    case Instruction::SloZeropageX:
+    case Instruction::SloAbsolute:
+    case Instruction::SloAbsoluteX:
+    case Instruction::SloAbsoluteY:
+    case Instruction::SloIndirectIndexed:
+    case Instruction::SloIndexedIndirect:
+        result.append(create_slo_instruction(*state_.current_opcode));
+        break;
     }
     return result;
 } // namespace n_e_s::core
@@ -908,6 +917,28 @@ Pipeline Mos6502::create_ora_instruction(Opcode opcode) {
         const uint8_t operand = mmu_->read_byte(effective_address_);
         registers_->a |= operand;
 
+        set_zero(registers_->a);
+        set_negative(registers_->a);
+    });
+
+    return result;
+}
+
+Pipeline Mos6502::create_slo_instruction(Opcode opcode) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
+    Pipeline result;
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
+
+    // SLO = ASL + ORA
+    result.push([this]() {
+        // ASL
+        const uint16_t temp_result = tmp_ << 1u;
+        const auto result_8bit = static_cast<uint8_t>(temp_result);
+        set_carry(temp_result > 0xFF);
+        mmu_->write_byte(effective_address_, result_8bit);
+
+        // ORA
+        registers_->a |= result_8bit;
         set_zero(registers_->a);
         set_negative(registers_->a);
     });

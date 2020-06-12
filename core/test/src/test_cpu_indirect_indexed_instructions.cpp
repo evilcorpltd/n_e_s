@@ -228,4 +228,13 @@ TEST_F(CpuIndirectIndexedTest, isb_indirect_indexed) {
     run_readwrite_instruction_without_pagecrossing(ISB_INDINX, 0xF0);
 }
 
+// SLO
+TEST_F(CpuIndirectIndexedTest, slo) {
+    registers.p = Z_FLAG;
+    registers.a = 0b01110000;
+    expected.a = 0b01110010;
+    memory_content = 0b00000001;
+    run_readwrite_instruction_without_pagecrossing(SLO_INDINX, 0b00000010);
+}
+
 } // namespace

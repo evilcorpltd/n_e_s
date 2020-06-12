@@ -386,4 +386,15 @@ TEST_F(CpuAbsoluteTest, ora_abs_set_neg_clears_zero) {
     run_read_instruction(ORA_ABS);
 }
 
+// SLO
+TEST_F(CpuAbsoluteTest, slo_sets_c_and_n) {
+    registers.p = Z_FLAG;
+    registers.a = 0b11110000;
+    expected.a = 0b11110010;
+    expected.p = C_FLAG | N_FLAG;
+    memory_content = 0b10000001;
+
+    run_readwrite_instruction(SLO_ABS, 0b00000010);
+}
+
 } // namespace

@@ -235,4 +235,13 @@ TEST_F(CpuZeropageIndexedTest, ora_zero_x) {
     run_read_instruction(ORA_ZEROX, IndexReg::X);
 }
 
+// SLO
+TEST_F(CpuZeropageIndexedTest, slo_sets_z) {
+    registers.a = 0b00000000;
+    expected.a = 0b00000000;
+    expected.p = Z_FLAG;
+    memory_content = 0b00000000;
+    run_readwrite_instruction(SLO_ZEROX, IndexReg::X, 0b00000000);
+}
+
 } // namespace
