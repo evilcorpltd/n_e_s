@@ -55,12 +55,17 @@ Nes::Nes()
 
 Nes::~Nes() = default;
 
+// https://wiki.nesdev.com/w/index.php/Cycle_reference_chart#Clock_rates
 void Nes::execute() {
-    if (cycle_++ % 3 == 0) {
+    if (cycle_++ % 12 == 0) {
         cpu_->execute();
     }
 
-    ppu_->execute();
+    if (cycle_++ % 4 == 0) {
+        ppu_->execute();
+    }
+
+    // The APU runs at master clock % 24. (every other CPU tick)
 }
 
 void Nes::reset() {

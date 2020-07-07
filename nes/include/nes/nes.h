@@ -22,6 +22,7 @@ public:
     Nes();
     ~Nes();
 
+    // Run at 263.25 / 11 Mhz for NTSC "realtime."
     void execute();
     void reset();
     void load_rom(const std::string &filepath);
