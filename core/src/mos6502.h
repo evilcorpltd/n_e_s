@@ -100,6 +100,7 @@ private:
     Pipeline create_dcp_instruction(Opcode opcode);
     Pipeline create_eor_instruction(Opcode opcode);
     Pipeline create_ora_instruction(Opcode opcode);
+    Pipeline create_slo_instruction(Opcode opcode);
     Pipeline create_left_shift_instruction(Opcode opcode, bool shift_in_carry);
     Pipeline create_right_shift_instruction(Opcode opcode, bool shift_in_carry);
 

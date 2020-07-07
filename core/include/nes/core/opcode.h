@@ -8,26 +8,33 @@ namespace n_e_s::core {
 enum Instruction : uint8_t {
     BrkImplied = 0x00,
     OraIndexedIndirect = 0x01,
+    SloIndexedIndirect = 0x03, // Undocumented
     NopZeropage04 = 0x04, // Undocumented
     OraZeropage = 0x05,
     AslZeropage = 0x06,
+    SloZeropage = 0x07, // Undocumented
     PhpImplied = 0x08,
     OraImmediate = 0x09,
     AslAccumulator = 0x0A,
     NopAbsolute0C = 0x0C, // Undocumented
     OraAbsolute = 0x0D,
     AslAbsolute = 0x0E,
+    SloAbsolute = 0x0F, // Undocumented
     BplRelative = 0x10,
     OraIndirectIndexed = 0x11,
+    SloIndirectIndexed = 0x13, // Undocumented
     NopZeropageX14 = 0x14, // Undocumented
     OraZeropageX = 0x15,
     AslZeropageX = 0x16,
+    SloZeropageX = 0x17, // Undocumented
     ClcImplied = 0x18,
     OraAbsoluteY = 0x19,
     NopImplied1A = 0x1A, // Undocumented
+    SloAbsoluteY = 0x1B, // Undocumented
     NopAbsoluteX1C = 0x1C, // Undocumented
     OraAbsoluteX = 0x1D,
     AslAbsoluteX = 0x1E,
+    SloAbsoluteX = 0x1F, // Undocumented
     JsrAbsolute = 0x20,
     AndIndirectX = 0x21,
     BitZeropage = 0x24,
@@ -148,8 +155,8 @@ enum Instruction : uint8_t {
     LaxAbsoluteY = 0xBF, // Undocumented
     CpyImmediate = 0xC0,
     CmpIndirectX = 0xC1,
-    CpyZeropage = 0xC4,
     DcpIndexedIndirect = 0xC3, // Undocumented
+    CpyZeropage = 0xC4,
     CmpZeropage = 0xC5,
     DecZeropage = 0xC6,
     DcpZeropage = 0xC7, // Undocumented
@@ -269,6 +276,7 @@ enum class Family {
     SAX,
     DCP,
     ISB,
+    SLO,
 };
 
 enum class AddressMode {

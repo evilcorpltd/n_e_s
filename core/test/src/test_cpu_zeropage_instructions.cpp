@@ -307,4 +307,14 @@ TEST_F(CpuZeropageTest, ora_zero_set_neg_clears_zero) {
     run_read_instruction(ORA_ZERO);
 }
 
+// SLO
+TEST_F(CpuZeropageTest, slo_zero_sets_n) {
+    registers.p = C_FLAG | Z_FLAG;
+    registers.a = 0b11110000;
+    expected.a = 0b11111010;
+    expected.p = N_FLAG;
+    memory_content = 0b01010101;
+    run_readwrite_instruction(SLO_ZERO, 0b10101010);
+}
+
 } // namespace

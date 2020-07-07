@@ -169,4 +169,13 @@ TEST_F(CpuIndexedIndirectTest, isb_zero_no_carry_or_overflow) {
     run_readwrite_instruction(ISB_INXIND, 0xF0);
 }
 
+// SLO
+TEST_F(CpuIndexedIndirectTest, slo) {
+    registers.p = Z_FLAG;
+    registers.a = 0b01110000;
+    expected.a = 0b01110010;
+    memory_content = 0b00000001;
+    run_readwrite_instruction(SLO_INXIND, 0b00000010);
+}
+
 } // namespace

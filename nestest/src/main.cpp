@@ -33,6 +33,9 @@ constexpr bool is_undocumented(const n_e_s::core::Opcode &opcode) {
     if (opcode.family == n_e_s::core::Family::ISB) {
         return true;
     }
+    if (opcode.family == n_e_s::core::Family::SLO) {
+        return true;
+    }
     return false;
 }
 

@@ -405,6 +405,20 @@ Opcode decode(const uint8_t op) {
         return {Family::SAX, SaxZeropageY, AddressMode::ZeropageY};
     case IsbAbsoluteX:
         return {Family::ISB, IsbAbsoluteX, AddressMode::AbsoluteX};
+    case SloIndexedIndirect:
+        return {Family::SLO, SloIndexedIndirect, AddressMode::IndexedIndirect};
+    case SloZeropage:
+        return {Family::SLO, SloZeropage, AddressMode::Zeropage};
+    case SloAbsolute:
+        return {Family::SLO, SloAbsolute, AddressMode::Absolute};
+    case SloIndirectIndexed:
+        return {Family::SLO, SloIndirectIndexed, AddressMode::IndirectIndexed};
+    case SloZeropageX:
+        return {Family::SLO, SloZeropageX, AddressMode::ZeropageX};
+    case SloAbsoluteY:
+        return {Family::SLO, SloAbsoluteY, AddressMode::AbsoluteY};
+    case SloAbsoluteX:
+        return {Family::SLO, SloAbsoluteX, AddressMode::AbsoluteX};
     default:
         // Since this is an invalid opcode the instruction and address mode
         // have no real meaning, so we just use 0, 0 for them.
@@ -479,6 +493,7 @@ MemoryAccess get_memory_access(const Family family) {
     case Family::LSR:
     case Family::DCP:
     case Family::ISB:
+    case Family::SLO:
         return MemoryAccess::ReadWrite;
     }
     // Should not happen
@@ -609,6 +624,8 @@ std::string_view to_string(const Family family) {
         return "DCP";
     case Family::ISB:
         return "ISB";
+    case Family::SLO:
+        return "SLO";
     }
 
     // Should not happen
