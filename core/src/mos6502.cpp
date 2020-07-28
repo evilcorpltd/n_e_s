@@ -560,6 +560,15 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::SloIndexedIndirect:
         result.append(create_slo_instruction(*state_.current_opcode));
         break;
+    case Instruction::RlaZeropage:
+    case Instruction::RlaZeropageX:
+    case Instruction::RlaAbsolute:
+    case Instruction::RlaAbsoluteX:
+    case Instruction::RlaAbsoluteY:
+    case Instruction::RlaIndirectIndexed:
+    case Instruction::RlaIndexedIndirect:
+        result.append(create_rla_instruction(*state_.current_opcode));
+        break;
     }
     return result;
 } // namespace n_e_s::core
@@ -939,6 +948,31 @@ Pipeline Mos6502::create_slo_instruction(Opcode opcode) {
 
         // ORA
         registers_->a |= result_8bit;
+        set_zero(registers_->a);
+        set_negative(registers_->a);
+    });
+
+    return result;
+}
+
+Pipeline Mos6502::create_rla_instruction(Opcode opcode) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
+    Pipeline result;
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
+
+    // RLA = ROL + AND
+    result.push([this]() {
+        // ROL
+        uint16_t temp_result = tmp_ << 1u;
+        const uint8_t carry = registers_->p & C_FLAG ? 0x01u : 0x00u;
+        temp_result |= carry;
+        const auto result_8bit = static_cast<uint8_t>(temp_result);
+
+        set_carry(temp_result > 0xFF);
+        mmu_->write_byte(effective_address_, result_8bit);
+
+        // AND
+        registers_->a &= result_8bit;
         set_zero(registers_->a);
         set_negative(registers_->a);
     });
