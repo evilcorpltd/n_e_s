@@ -58,7 +58,7 @@ jobs:
           ./build/nestest/nestest nestest.nes > nestest-output.log
 
       - name: Diff output
-        run: python3 nestest/test_nestest.py --nestest-log nestest.log --nestest-rom nestest.nes --nestest-bin build/nestest/nestest --min-matching-lines 7000
+        run: python3 nestest/test_nestest.py --nestest-log nestest.log --nestest-rom nestest.nes --nestest-bin build/nestest/nestest --min-matching-lines 8970
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1

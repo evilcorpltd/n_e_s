@@ -575,6 +575,15 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::SreIndexedIndirect:
         result.append(create_sre_instruction(*state_.current_opcode));
         break;
+    case Instruction::RraZeropage:
+    case Instruction::RraZeropageX:
+    case Instruction::RraAbsolute:
+    case Instruction::RraAbsoluteX:
+    case Instruction::RraAbsoluteY:
+    case Instruction::RraIndirectIndexed:
+    case Instruction::RraIndexedIndirect:
+        result.append(create_rra_instruction(*state_.current_opcode));
+        break;
     }
     return result;
 } // namespace n_e_s::core
@@ -1002,6 +1011,29 @@ Pipeline Mos6502::create_sre_instruction(Opcode opcode) {
         registers_->a ^= shifted_value;
         set_zero(registers_->a);
         set_negative(registers_->a);
+    });
+
+    return result;
+}
+
+Pipeline Mos6502::create_rra_instruction(Opcode opcode) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
+    Pipeline result;
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
+
+    // RRA = ROR + ADC
+    result.push([this]() {
+        // ROR
+        uint8_t shifted_value = tmp_ >> 1u;
+        const auto carry = registers_->p & C_FLAG
+                                   ? static_cast<uint8_t>(0b1000'0000)
+                                   : 0x00u;
+        shifted_value |= carry;
+        set_carry(tmp_ & 0x01u);
+        mmu_->write_byte(effective_address_, shifted_value);
+
+        // ADC
+        adc_impl(shifted_value);
     });
 
     return result;

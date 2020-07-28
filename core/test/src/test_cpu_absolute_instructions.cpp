@@ -419,4 +419,14 @@ TEST_F(CpuAbsoluteTest, sre_sets_c_and_n) {
     run_readwrite_instruction(SRE_ABS, 0b01000001);
 }
 
+// RRA
+TEST_F(CpuAbsoluteTest, rra_no_carry_or_overflow) {
+    registers.a = 0x50;
+    registers.p = V_FLAG;
+    expected.a = 0x60;
+    memory_content = 0x20;
+
+    run_readwrite_instruction(RRA_ABS, 0x10);
+}
+
 } // namespace
