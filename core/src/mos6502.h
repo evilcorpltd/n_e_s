@@ -102,6 +102,7 @@ private:
     Pipeline create_ora_instruction(Opcode opcode);
     Pipeline create_slo_instruction(Opcode opcode);
     Pipeline create_rla_instruction(Opcode opcode);
+    Pipeline create_sre_instruction(Opcode opcode);
     Pipeline create_left_shift_instruction(Opcode opcode, bool shift_in_carry);
     Pipeline create_right_shift_instruction(Opcode opcode, bool shift_in_carry);
 

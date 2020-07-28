@@ -433,6 +433,20 @@ Opcode decode(const uint8_t op) {
         return {Family::RLA, RlaAbsoluteY, AddressMode::AbsoluteY};
     case RlaAbsoluteX:
         return {Family::RLA, RlaAbsoluteX, AddressMode::AbsoluteX};
+    case SreIndexedIndirect:
+        return {Family::SRE, SreIndexedIndirect, AddressMode::IndexedIndirect};
+    case SreZeropage:
+        return {Family::SRE, SreZeropage, AddressMode::Zeropage};
+    case SreAbsolute:
+        return {Family::SRE, SreAbsolute, AddressMode::Absolute};
+    case SreIndirectIndexed:
+        return {Family::SRE, SreIndirectIndexed, AddressMode::IndirectIndexed};
+    case SreZeropageX:
+        return {Family::SRE, SreZeropageX, AddressMode::ZeropageX};
+    case SreAbsoluteY:
+        return {Family::SRE, SreAbsoluteY, AddressMode::AbsoluteY};
+    case SreAbsoluteX:
+        return {Family::SRE, SreAbsoluteX, AddressMode::AbsoluteX};
     default:
         // Since this is an invalid opcode the instruction and address mode
         // have no real meaning, so we just use 0, 0 for them.
@@ -509,6 +523,7 @@ MemoryAccess get_memory_access(const Family family) {
     case Family::ISB:
     case Family::SLO:
     case Family::RLA:
+    case Family::SRE:
         return MemoryAccess::ReadWrite;
     }
     // Should not happen
@@ -643,6 +658,8 @@ std::string_view to_string(const Family family) {
         return "SLO";
     case Family::RLA:
         return "RLA";
+    case Family::SRE:
+        return "SRE";
     }
 
     // Should not happen

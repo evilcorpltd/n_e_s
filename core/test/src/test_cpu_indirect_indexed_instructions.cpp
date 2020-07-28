@@ -246,4 +246,13 @@ TEST_F(CpuIndirectIndexedTest, rla) {
     run_readwrite_instruction_without_pagecrossing(RLA_INDINX, 0b00000010);
 }
 
+// SRE
+TEST_F(CpuIndirectIndexedTest, sre) {
+    registers.p = Z_FLAG;
+    registers.a = 0b01110111;
+    expected.a = 0b01110110;
+    memory_content = 0b00000010;
+    run_readwrite_instruction_without_pagecrossing(SRE_INDINX, 0b00000001);
+}
+
 } // namespace

@@ -71,6 +71,7 @@ TEST(Opcode, Family) {
     EXPECT_EQ("ISB", to_string(Family::ISB));
     EXPECT_EQ("SLO", to_string(Family::SLO));
     EXPECT_EQ("RLA", to_string(Family::RLA));
+    EXPECT_EQ("SRE", to_string(Family::SRE));
 }
 
 } // namespace

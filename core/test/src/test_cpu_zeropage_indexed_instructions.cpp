@@ -253,4 +253,13 @@ TEST_F(CpuZeropageIndexedTest, rla_sets_z) {
     run_readwrite_instruction(RLA_ZEROX, IndexReg::X, 0b00000000);
 }
 
+// SRE
+TEST_F(CpuZeropageIndexedTest, sre_sets_z) {
+    registers.a = 0b00000000;
+    expected.a = 0b00000000;
+    expected.p = Z_FLAG;
+    memory_content = 0b00000000;
+    run_readwrite_instruction(SRE_ZEROX, IndexReg::X, 0b00000000);
+}
+
 } // namespace

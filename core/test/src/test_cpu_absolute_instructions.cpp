@@ -408,4 +408,15 @@ TEST_F(CpuAbsoluteTest, rla_sets_c_and_n) {
     run_readwrite_instruction(RLA_ABS, 0b10000010);
 }
 
+// SRE
+TEST_F(CpuAbsoluteTest, sre_sets_c_and_n) {
+    registers.p = Z_FLAG;
+    registers.a = 0b11110000;
+    expected.a = 0b10110001;
+    expected.p = C_FLAG | N_FLAG;
+    memory_content = 0b10000011;
+
+    run_readwrite_instruction(SRE_ABS, 0b01000001);
+}
+
 } // namespace

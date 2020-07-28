@@ -327,4 +327,14 @@ TEST_F(CpuZeropageTest, rla_zero_sets_n_shifts_in_carry) {
     run_readwrite_instruction(RLA_ZERO, 0b10101011);
 }
 
+// SRE
+TEST_F(CpuZeropageTest, sre_zero_sets_n) {
+    registers.p = C_FLAG | Z_FLAG;
+    registers.a = 0b11111101;
+    expected.a = 0b11010111;
+    expected.p = N_FLAG;
+    memory_content = 0b01010100;
+    run_readwrite_instruction(SRE_ZERO, 0b00101010);
+}
+
 } // namespace

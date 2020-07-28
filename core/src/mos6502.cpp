@@ -569,6 +569,15 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::RlaIndexedIndirect:
         result.append(create_rla_instruction(*state_.current_opcode));
         break;
+    case Instruction::SreZeropage:
+    case Instruction::SreZeropageX:
+    case Instruction::SreAbsolute:
+    case Instruction::SreAbsoluteX:
+    case Instruction::SreAbsoluteY:
+    case Instruction::SreIndirectIndexed:
+    case Instruction::SreIndexedIndirect:
+        result.append(create_sre_instruction(*state_.current_opcode));
+        break;
     }
     return result;
 } // namespace n_e_s::core
@@ -973,6 +982,27 @@ Pipeline Mos6502::create_rla_instruction(Opcode opcode) {
 
         // AND
         registers_->a &= result_8bit;
+        set_zero(registers_->a);
+        set_negative(registers_->a);
+    });
+
+    return result;
+}
+
+Pipeline Mos6502::create_sre_instruction(Opcode opcode) {
+    const MemoryAccess memory_access = get_memory_access(opcode.family);
+    Pipeline result;
+    result.append(create_addressing_steps(opcode.address_mode, memory_access));
+
+    // SRE = LSR + EOR
+    result.push([this]() {
+        // LSR
+        const uint8_t shifted_value = tmp_ >> 1u;
+        set_carry(tmp_ & 0x01u);
+        mmu_->write_byte(effective_address_, shifted_value);
+
+        // EOR
+        registers_->a ^= shifted_value;
         set_zero(registers_->a);
         set_negative(registers_->a);
     });
