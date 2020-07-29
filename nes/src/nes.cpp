@@ -61,7 +61,7 @@ void Nes::execute() {
         cpu_->execute();
     }
 
-    if (cycle_++ % 4 == 0) {
+    if (cycle_ % 4 == 0) {
         ppu_->execute();
     }
 
