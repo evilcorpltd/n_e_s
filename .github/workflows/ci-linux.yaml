@@ -62,7 +62,7 @@ jobs:
         run: |
           echo "::add-path::/home/runner/.local/bin"
           python3 -m pip install pip --upgrade
-          python3 -m pip install cmake==3.16.3 ninja==1.10.0 --upgrade
+          python3 -m pip install cmake==3.18.0 ninja==1.10.0.post1 --upgrade
 
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo add-apt-repository 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-10 main' -y
