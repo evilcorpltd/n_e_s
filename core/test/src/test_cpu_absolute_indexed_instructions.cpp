@@ -550,7 +550,7 @@ TEST_F(CpuAbsoluteIndexedTest, slo_absy_sets_c_without_pagecrossing) {
     expected.p = C_FLAG;
     memory_content = 0b10000001;
     run_readwrite_instruction_without_pagecrossing(
-            SLO_ABSX, IndexReg::X, 0b00000010);
+            SLO_ABSY, IndexReg::Y, 0b00000010);
 }
 
 } // namespace
