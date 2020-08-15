@@ -4,10 +4,12 @@ import pathlib
 import subprocess
 import sys
 import typing
+import re
 from pathlib import Path
 
 
 THIS_FILE = pathlib.Path(__file__).absolute().parent
+REMOVE_REGEX = re.compile('PPU:\s*[-0-9]+,\s*[0-9]+')
 
 
 def parse_args():
@@ -34,7 +36,7 @@ def run_nestest(nestest_bin: Path, nestest_rom: Path) -> typing.List[str]:
         if 'Bad instruction' in l:
             lines.append(l.strip())
             break
-        line = l[0:l.index('PPU:')].strip()
+        line = REMOVE_REGEX.sub('', l).strip()
         lines.append(line)
     return lines
 
@@ -44,7 +46,7 @@ def load_log(nestest_log: Path) -> typing.List[str]:
     lines = []
     with nestest_log.open('r') as f:
         for l in f:
-            line = l[0:l.index('PPU:')].strip()
+            line = REMOVE_REGEX.sub('', l).strip()
             lines.append(line)
     return lines
 
