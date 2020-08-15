@@ -37,26 +37,33 @@ enum Instruction : uint8_t {
     SloAbsoluteX = 0x1F, // Undocumented
     JsrAbsolute = 0x20,
     AndIndirectX = 0x21,
+    RlaIndexedIndirect = 0x23, // Undocumented
     BitZeropage = 0x24,
     AndZeropage = 0x25,
     RolZeropage = 0x26,
+    RlaZeropage = 0x27, // Undocumented
     PlpImplied = 0x28,
     AndImmediate = 0x29,
     RolAccumulator = 0x2A,
     BitAbsolute = 0x2C,
     AndAbsolute = 0x2D,
     RolAbsolute = 0x2E,
+    RlaAbsolute = 0x2F, // Undocumented
     BmiRelative = 0x30,
     AndIndirectY = 0x31,
+    RlaIndirectIndexed = 0x33, // Undocumented
     NopZeropageX34 = 0x34, // Undocumented
     AndZeropageX = 0x35,
     RolZeropageX = 0x36,
+    RlaZeropageX = 0x37, // Undocumented
     SecImplied = 0x38,
     AndAbsoluteY = 0x39,
     NopImplied3A = 0x3A, // Undocumented
+    RlaAbsoluteY = 0x3B, // Undocumented
     NopAbsoluteX3C = 0x3C, // Undocumented
     AndAbsoluteX = 0x3D,
     RolAbsoluteX = 0x3E,
+    RlaAbsoluteX = 0x3F, // Undocumented
     RtiImplied = 0x40,
     EorIndirectX = 0x41,
     NopZeropage44 = 0x44, // Undocumented
@@ -277,6 +284,7 @@ enum class Family {
     DCP,
     ISB,
     SLO,
+    RLA,
 };
 
 enum class AddressMode {

@@ -178,4 +178,13 @@ TEST_F(CpuIndexedIndirectTest, slo) {
     run_readwrite_instruction(SLO_INXIND, 0b00000010);
 }
 
+// RLA
+TEST_F(CpuIndexedIndirectTest, rla_shifts_in_carry) {
+    registers.p = C_FLAG;
+    registers.a = 0b01110111;
+    expected.a = 0b00000011;
+    memory_content = 0b00000001;
+    run_readwrite_instruction(RLA_INXIND, 0b00000011);
+}
+
 } // namespace
