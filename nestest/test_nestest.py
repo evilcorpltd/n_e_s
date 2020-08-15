@@ -22,6 +22,8 @@ def parse_args():
                         default="nestest.nes")
     parser.add_argument("--nestest-bin",
                         type=pathlib.Path)
+    parser.add_argument("--min-matching-lines",
+                        type=int)
     args = parser.parse_args()
     return args
 
@@ -66,6 +68,12 @@ def main():
             print(f'Missmatch detected on line: {line}')
             print('\n'.join(diff))
 
+    if args.min_matching_lines:
+        if line < args.min_matching_lines:
+            print(f'Expected at least: {args.min_matching_lines} successful lines')
+            sys.exit(1)
+        else:
+            sys.exit(0)
     sys.exit(0 if success else 1)
 
 
