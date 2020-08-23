@@ -98,7 +98,7 @@ std::string get_execution_string(const n_e_s::nes::Nes &nes) {
             reg_string,
             nes.ppu().cycle() - 1,
             nes.ppu().scanline(),
-            nes.current_cycle() / 3 + 7);
+            nes.current_cycle() / 12 + 7);
 
     return result;
 }
@@ -119,6 +119,9 @@ int main(int argc, char **argv) {
         n_e_s::core::CpuState prev_state{};
 
         for (int i = 0; i < 1000000; ++i) {
+            nes.execute();
+            nes.execute();
+            nes.execute();
             nes.execute();
 
             const auto state = nes.cpu().state();
