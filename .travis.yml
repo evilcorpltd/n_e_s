@@ -53,17 +53,6 @@ matrix:
         - CXX=clang++-9 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
         - travis_wait run-clang-tidy-9.py -q -p . "application|core|nes" -header-filter="(nes|core)/"
 
-    - name: "clang-format"
-      addons:
-        apt:
-          packages:
-            - *common-apt-packages
-            - clang-format
-      before_script: []
-      script:
-        - find application core nes -name *.h -o -name *.cpp | xargs clang-format -style=file -i
-        - git diff --exit-code
-
 install:
   - python3 -m pip install pip==20.2.1 --upgrade
   - python3 -m pip install cmake==3.18.0 ninja==1.10.0.post1 --upgrade --user
