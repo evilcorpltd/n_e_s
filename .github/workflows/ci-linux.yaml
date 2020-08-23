@@ -3,6 +3,18 @@ name: Linux CI
 on: [push, pull_request]
 
 jobs:
+  clang-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run clang-format
+        uses: DoozyX/clang-format-lint-action@v0.8
+        with:
+          source: .
+          clangFormatVersion: 10
+
   ci:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
