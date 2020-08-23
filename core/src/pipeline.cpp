@@ -1,5 +1,7 @@
 #include "pipeline.h"
 
+#include <iterator>
+
 namespace n_e_s::core {
 
 void Pipeline::push(const StepT &step) {
