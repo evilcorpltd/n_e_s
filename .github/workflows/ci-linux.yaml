@@ -128,4 +128,4 @@ jobs:
       - name: Clang-tidy
         if: matrix.clang-tidy
         run: |
-          run-clang-tidy-${{ matrix.version }}.py -q -p build "application|core|nes" -header-filter="(nes|core)/"
+          run-clang-tidy-${{ matrix.version }}.py -q -p build "application|core|disassembler|nes" -header-filter="(nes|core)/"
