@@ -18,12 +18,7 @@ const uint16_t kBrkAddress = 0xFFFE;
 
 class CpuIntegrationTest : public ::testing::Test {
 public:
-    CpuIntegrationTest()
-            : registers(),
-              mmu(),
-              ppu(),
-              cpu{CpuFactory::create_mos6502(&registers, &mmu, &ppu)},
-              expected() {
+    CpuIntegrationTest() : registers(), mmu(), ppu(), expected() {
         registers.sp = expected.sp = 0xFF;
     }
 
@@ -78,7 +73,8 @@ public:
     CpuRegisters registers;
     FakeMmu mmu;
     FakePpu ppu;
-    std::unique_ptr<IMos6502> cpu;
+    std::unique_ptr<IMos6502> cpu{
+            CpuFactory::create_mos6502(&registers, &mmu, &ppu)};
 
     CpuRegisters expected;
 };
