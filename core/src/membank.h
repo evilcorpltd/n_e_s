@@ -11,8 +11,6 @@ namespace n_e_s::core {
 template <uint16_t StartAddr, uint16_t EndAddr, uint16_t Size>
 class MemBank final : public MemBankBase<StartAddr, EndAddr, Size> {
 public:
-    MemBank() : bank_() {}
-
     uint8_t read_byte(uint16_t addr) const override {
         return *get_location(addr);
     }
@@ -31,7 +29,7 @@ private:
         return &bank_.data()[addr];
     }
 
-    std::array<uint8_t, Size> bank_;
+    std::array<uint8_t, Size> bank_{};
 };
 
 } // namespace n_e_s::core

@@ -11,9 +11,7 @@ namespace {
 
 class PpuMembankTest : public ::testing::Test {
 public:
-    PpuMembankTest() : rom{} {}
-
-    test::MockIRom rom;
+    test::MockIRom rom{};
     std::unique_ptr<IMmu> mmu{
             MmuFactory::create(MemBankFactory::create_nes_ppu_mem_banks(&rom))};
 };

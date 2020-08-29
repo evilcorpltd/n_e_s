@@ -11,8 +11,6 @@ namespace n_e_s::core {
 
 class Mmu final : public IMmu {
 public:
-    Mmu();
-
     void clear();
 
     void add_mem_bank(std::unique_ptr<IMemBank> mem_bank);
@@ -24,7 +22,7 @@ public:
 private:
     IMemBank *get_mem_bank(uint16_t addr) const;
 
-    std::vector<std::unique_ptr<IMemBank>> mem_banks_;
+    std::vector<std::unique_ptr<IMemBank>> mem_banks_{};
 };
 
 } // namespace n_e_s::core

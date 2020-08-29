@@ -16,8 +16,6 @@ auto equal(uint16_t addr) {
 
 } // namespace
 
-Mmu::Mmu() : mem_banks_() {}
-
 void Mmu::clear() {
     mem_banks_.clear();
 }

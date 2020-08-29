@@ -54,10 +54,7 @@ void Mos6502::Stack::push_byte(uint8_t byte) {
 }
 
 Mos6502::Mos6502(CpuRegisters *const registers, IMmu *const mmu)
-        : registers_(registers),
-          mmu_(mmu),
-          stack_(registers_, mmu_),
-          pipeline_() {}
+        : registers_(registers), mmu_(mmu), stack_(registers_, mmu_) {}
 
 void Mos6502::execute() {
     if (pipeline_.done()) {

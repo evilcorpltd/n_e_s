@@ -25,11 +25,11 @@ private:
     PpuRegisters *const registers_;
     IMmu *const mmu_;
 
-    std::function<void()> on_nmi_;
+    std::function<void()> on_nmi_{[] {}};
 
-    uint16_t scanline_;
-    uint16_t cycle_;
-    uint8_t read_buffer_;
+    uint16_t scanline_{0};
+    uint16_t cycle_{0};
+    uint8_t read_buffer_{0};
 
     // Object Atribute Memory
     constexpr static uint16_t kOamSize{256};
