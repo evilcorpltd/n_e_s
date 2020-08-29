@@ -16,7 +16,7 @@ jobs:
       matrix:
         include:
           - name: nestest-clang-9
-            os: ubuntu-18.04
+            os: ubuntu-20.04
             compiler: clang
             version: "9"
             cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON -DCMAKE_BUILD_TYPE=Debug
@@ -32,7 +32,7 @@ jobs:
 
           sudo apt update
 
-          sudo apt-get install -y clang-${{ matrix.version }} g++-multilib python3.7
+          sudo apt-get install -y clang-${{ matrix.version }} g++-multilib
           echo "::set-env name=CC::clang-${{ matrix.version }}"
           echo "::set-env name=CXX::clang++-${{ matrix.version }}"
 
@@ -58,7 +58,7 @@ jobs:
           ./build/nestest/nestest nestest.nes > nestest-output.log
 
       - name: Diff output
-        run: python3.7 nestest/test_nestest.py --nestest-log nestest.log --nestest-rom nestest.nes --nestest-bin build/nestest/nestest --min-matching-lines 7000
+        run: python3 nestest/test_nestest.py --nestest-log nestest.log --nestest-rom nestest.nes --nestest-bin build/nestest/nestest --min-matching-lines 7000
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
