@@ -8,7 +8,7 @@
 
 namespace n_e_s::core {
 
-enum CpuFlag {
+enum CpuFlag : uint8_t {
     C_FLAG = 1u << 0u, // carry
     Z_FLAG = 1u << 1u, // zero
     I_FLAG = 1u << 2u, // interrupt disable
