@@ -95,7 +95,7 @@ std::string get_execution_string(const n_e_s::nes::Nes &nes) {
 
     const std::string reg_string = get_reg_string(nes.cpu_registers());
 
-    const std::string result = fmt::format("{} {:<28}{} PPU:{:3},{:3} CYC:{}",
+    std::string result = fmt::format("{} {:<28}{} PPU:{:3},{:3} CYC:{}",
             opcode_string,
             memory_string,
             reg_string,

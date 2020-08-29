@@ -11,13 +11,11 @@ namespace {
 
 class PpuMembankTest : public ::testing::Test {
 public:
-    PpuMembankTest()
-            : rom{},
-              mmu{MmuFactory::create(
-                      MemBankFactory::create_nes_ppu_mem_banks(&rom))} {}
+    PpuMembankTest() : rom{} {}
 
     test::MockIRom rom;
-    std::unique_ptr<IMmu> mmu;
+    std::unique_ptr<IMmu> mmu{
+            MmuFactory::create(MemBankFactory::create_nes_ppu_mem_banks(&rom))};
 };
 
 // Palette memory

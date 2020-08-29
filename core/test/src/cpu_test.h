@@ -14,12 +14,7 @@ namespace n_e_s::core::test {
 
 class CpuTest : public ::testing::Test {
 public:
-    CpuTest()
-            : registers(),
-              mmu(),
-              ppu(),
-              cpu{CpuFactory::create_mos6502(&registers, &mmu, &ppu)},
-              expected() {
+    CpuTest() : registers(), mmu(), ppu(), expected() {
         registers.sp = expected.sp = 0xFF;
     }
 
@@ -38,7 +33,8 @@ public:
     CpuRegisters registers;
     testing::NiceMock<MockMmu> mmu;
     FakePpu ppu;
-    std::unique_ptr<IMos6502> cpu;
+    std::unique_ptr<IMos6502> cpu{
+            CpuFactory::create_mos6502(&registers, &mmu, &ppu)};
 
     CpuRegisters expected;
 

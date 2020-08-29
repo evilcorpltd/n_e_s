@@ -21,22 +21,17 @@ std::vector<uint16_t> get_addr_list() {
 
 class NesMmuTest : public ::testing::Test {
 public:
-    NesMmuTest()
-            : ppu{},
-              rom{},
-              mmu{MmuFactory::create(
-                      MemBankFactory::create_nes_mem_banks(&ppu, &rom))} {}
+    NesMmuTest() : ppu{}, rom{} {}
 
     MockPpu ppu;
     MockIRom rom;
-    std::unique_ptr<IMmu> mmu;
+    std::unique_ptr<IMmu> mmu{MmuFactory::create(
+            MemBankFactory::create_nes_mem_banks(&ppu, &rom))};
 };
 
 class MmuTest : public ::testing::Test {
 public:
-    MmuTest() : mmu{MmuFactory::create(MemBankList())} {}
-
-    std::unique_ptr<IMmu> mmu;
+    std::unique_ptr<IMmu> mmu{MmuFactory::create(MemBankList())};
 };
 
 TEST_F(NesMmuTest, read_write_byte) {
