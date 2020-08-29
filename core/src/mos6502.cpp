@@ -95,19 +95,19 @@ Pipeline Mos6502::parse_next_instruction() {
     Pipeline result;
     switch (state_.current_opcode->instruction) {
     case Instruction::BrkImplied:
-        result.push([this]() {
+        result.push([this] {
             // Dummy read
             mmu_->read_byte(registers_->pc++);
         });
-        result.push([this]() {
+        result.push([this] {
             stack_.push_byte(static_cast<uint8_t>(registers_->pc >> 8u));
         });
-        result.push([this]() {
+        result.push([this] {
             stack_.push_byte(static_cast<uint8_t>(registers_->pc & 0xFFu));
         });
-        result.push([this]() { stack_.push_byte(registers_->p | B_FLAG); });
-        result.push([this]() { tmp_ = mmu_->read_byte(kBrkAddress); });
-        result.push([this]() {
+        result.push([this] { stack_.push_byte(registers_->p | B_FLAG); });
+        result.push([this] { tmp_ = mmu_->read_byte(kBrkAddress); });
+        result.push([this] {
             const uint16_t pch = mmu_->read_byte(kBrkAddress + 1) << 8u;
             registers_->pc = pch | tmp_;
         });
@@ -121,19 +121,19 @@ Pipeline Mos6502::parse_next_instruction() {
                 create_left_shift_instruction(*state_.current_opcode, false));
         break;
     case Instruction::PhpImplied:
-        result.push([]() { /* Do nothing. */ });
-        result.push([this]() { stack_.push_byte(registers_->p | B_FLAG); });
+        result.push([] { /* Do nothing. */ });
+        result.push([this] { stack_.push_byte(registers_->p | B_FLAG); });
         break;
     case Instruction::BplRelative:
         result.append(create_branch_instruction(
-                [this]() { return !(registers_->p & N_FLAG); }));
+                [this] { return !(registers_->p & N_FLAG); }));
         break;
     case Instruction::BitZeropage:
     case Instruction::BitAbsolute:
         result.append(create_addressing_steps(
                 state_.current_opcode->address_mode, memory_access));
 
-        result.push([this]() {
+        result.push([this] {
             const uint8_t value = mmu_->read_byte(effective_address_);
             set_zero(value & registers_->a);
             set_negative(value);
@@ -145,9 +145,9 @@ Pipeline Mos6502::parse_next_instruction() {
         });
         break;
     case Instruction::PlpImplied:
-        result.push([]() { /* Do nothing. */ });
-        result.push([]() { /* Do nothing. */ });
-        result.push([this]() {
+        result.push([] { /* Do nothing. */ });
+        result.push([] { /* Do nothing. */ });
+        result.push([this] {
             registers_->p = stack_.pop_byte();
             set_flag(FLAG_5);
             clear_flag(B_FLAG);
@@ -164,30 +164,30 @@ Pipeline Mos6502::parse_next_instruction() {
         result.append(create_and_instruction(*state_.current_opcode));
         break;
     case Instruction::ClcImplied:
-        result.push([this]() { clear_flag(C_FLAG); });
+        result.push([this] { clear_flag(C_FLAG); });
         break;
     case Instruction::JsrAbsolute:
-        result.push([this]() { tmp_ = mmu_->read_byte(registers_->pc++); });
-        result.push([]() { /* Do nothing. */ });
-        result.push([this]() {
+        result.push([this] { tmp_ = mmu_->read_byte(registers_->pc++); });
+        result.push([] { /* Do nothing. */ });
+        result.push([this] {
             const auto pch = static_cast<uint8_t>(registers_->pc >> 8u);
             stack_.push_byte(pch);
         });
-        result.push([this]() {
+        result.push([this] {
             const auto pcl = static_cast<uint8_t>(registers_->pc);
             stack_.push_byte(pcl);
         });
-        result.push([this]() {
+        result.push([this] {
             const uint16_t pch = mmu_->read_byte(registers_->pc) << 8u;
             registers_->pc = pch | tmp_;
         });
         break;
     case Instruction::BmiRelative:
         result.append(create_branch_instruction(
-                [this]() { return registers_->p & N_FLAG; }));
+                [this] { return registers_->p & N_FLAG; }));
         break;
     case Instruction::SecImplied:
-        result.push([this]() { set_flag(C_FLAG); });
+        result.push([this] { set_flag(C_FLAG); });
         break;
     case Instruction::LsrZeropage:
     case Instruction::LsrAbsolute:
@@ -198,25 +198,25 @@ Pipeline Mos6502::parse_next_instruction() {
                 create_right_shift_instruction(*state_.current_opcode, false));
         break;
     case Instruction::PhaImplied:
-        result.push([]() { /* Do nothing. */ });
-        result.push([this]() { stack_.push_byte(registers_->a); });
+        result.push([] { /* Do nothing. */ });
+        result.push([this] { stack_.push_byte(registers_->a); });
         break;
     case Instruction::JmpAbsolute:
-        result.push([this]() { tmp_ = mmu_->read_byte(registers_->pc++); });
-        result.push([this]() {
+        result.push([this] { tmp_ = mmu_->read_byte(registers_->pc++); });
+        result.push([this] {
             const uint16_t pch = mmu_->read_byte(registers_->pc) << 8u;
             registers_->pc = pch | tmp_;
         });
         break;
     case Instruction::JmpIndirect:
-        result.push([this]() { tmp_ = mmu_->read_byte(registers_->pc++); });
-        result.push([this]() { tmp2_ = mmu_->read_byte(registers_->pc++); });
-        result.push([this]() {
+        result.push([this] { tmp_ = mmu_->read_byte(registers_->pc++); });
+        result.push([this] { tmp2_ = mmu_->read_byte(registers_->pc++); });
+        result.push([this] {
             const uint16_t ptraddress =
                     static_cast<uint16_t>(tmp2_ << 8u) | tmp_;
             effective_address_ = mmu_->read_byte(ptraddress);
         });
-        result.push([this]() {
+        result.push([this] {
             // The PCH will always be fetched from the same page
             // as PCL, i.e. page boundary crossing is not handled.
             const uint8_t low_address = tmp_ + 1u;
@@ -228,10 +228,10 @@ Pipeline Mos6502::parse_next_instruction() {
         break;
     case Instruction::BvcRelative:
         result.append(create_branch_instruction(
-                [this]() { return !(registers_->p & V_FLAG); }));
+                [this] { return !(registers_->p & V_FLAG); }));
         break;
     case Instruction::CliImplied:
-        result.push([this]() { clear_flag(I_FLAG); });
+        result.push([this] { clear_flag(I_FLAG); });
         break;
     case Instruction::AdcZeropage:
     case Instruction::AdcZeropageX:
@@ -264,50 +264,50 @@ Pipeline Mos6502::parse_next_instruction() {
         result.append(create_isb_instruction(*state_.current_opcode));
         break;
     case Instruction::PlaImplied:
-        result.push([]() { /* Do nothing. */ });
-        result.push([]() { /* Do nothing. */ });
-        result.push([this]() {
+        result.push([] { /* Do nothing. */ });
+        result.push([] { /* Do nothing. */ });
+        result.push([this] {
             registers_->a = stack_.pop_byte();
             set_zero(registers_->a);
             set_negative(registers_->a);
         });
         break;
     case Instruction::RtsImplied:
-        result.push([this]() {
+        result.push([this] {
             // Dummy read
             mmu_->read_byte(registers_->pc);
         });
-        result.push([]() { /* Do nothing. */ });
-        result.push([this]() { tmp_ = stack_.pop_byte(); });
-        result.push([this]() {
+        result.push([] { /* Do nothing. */ });
+        result.push([this] { tmp_ = stack_.pop_byte(); });
+        result.push([this] {
             const uint16_t pch = stack_.pop_byte() << 8u;
             registers_->pc = pch | tmp_;
         });
-        result.push([this]() { ++registers_->pc; });
+        result.push([this] { ++registers_->pc; });
         break;
     case Instruction::RtiImplied:
-        result.push([this]() {
+        result.push([this] {
             // Dummy read
             mmu_->read_byte(registers_->pc);
         });
-        result.push([]() { /* Do nothing. */ });
-        result.push([this]() {
+        result.push([] { /* Do nothing. */ });
+        result.push([this] {
             registers_->p = stack_.pop_byte();
             set_flag(FLAG_5);
             clear_flag(B_FLAG);
         });
-        result.push([this]() { tmp_ = stack_.pop_byte(); });
-        result.push([this]() {
+        result.push([this] { tmp_ = stack_.pop_byte(); });
+        result.push([this] {
             const uint16_t pch = stack_.pop_byte() << 8u;
             registers_->pc = pch | tmp_;
         });
         break;
     case Instruction::BvsRelative:
         result.append(create_branch_instruction(
-                [this]() { return registers_->p & V_FLAG; }));
+                [this] { return registers_->p & V_FLAG; }));
         break;
     case Instruction::SeiImplied:
-        result.push([this]() { set_flag(I_FLAG); });
+        result.push([this] { set_flag(I_FLAG); });
         break;
     case Instruction::StaIndexedIndirect:
     case Instruction::StaZeropage:
@@ -329,38 +329,38 @@ Pipeline Mos6502::parse_next_instruction() {
         result.append(create_store_instruction(*state_.current_opcode));
         break;
     case Instruction::TxsImplied:
-        result.push([this]() { registers_->sp = registers_->x; });
+        result.push([this] { registers_->sp = registers_->x; });
         break;
     case Instruction::TyaImplied:
-        result.push([this]() {
+        result.push([this] {
             registers_->a = registers_->y;
             set_zero(registers_->a);
             set_negative(registers_->a);
         });
         break;
     case Instruction::TayImplied:
-        result.push([this]() {
+        result.push([this] {
             registers_->y = registers_->a;
             set_zero(registers_->y);
             set_negative(registers_->y);
         });
         break;
     case Instruction::TaxImplied:
-        result.push([this]() {
+        result.push([this] {
             registers_->x = registers_->a;
             set_zero(registers_->x);
             set_negative(registers_->x);
         });
         break;
     case Instruction::TsxImplied:
-        result.push([this]() {
+        result.push([this] {
             registers_->x = registers_->sp;
             set_zero(registers_->x);
             set_negative(registers_->x);
         });
         break;
     case Instruction::TxaImplied:
-        result.push([this]() {
+        result.push([this] {
             registers_->a = registers_->x;
             set_zero(registers_->a);
             set_negative(registers_->a);
@@ -368,7 +368,7 @@ Pipeline Mos6502::parse_next_instruction() {
         break;
     case Instruction::BccRelative:
         result.append(create_branch_instruction(
-                [this]() { return !(registers_->p & C_FLAG); }));
+                [this] { return !(registers_->p & C_FLAG); }));
         break;
     case Instruction::LdaZeropage:
     case Instruction::LdaImmediate:
@@ -392,17 +392,17 @@ Pipeline Mos6502::parse_next_instruction() {
         break;
     case Instruction::BcsRelative:
         result.append(create_branch_instruction(
-                [this]() { return registers_->p & C_FLAG; }));
+                [this] { return registers_->p & C_FLAG; }));
         break;
     case Instruction::ClvImplied:
-        result.push([this]() { clear_flag(V_FLAG); });
+        result.push([this] { clear_flag(V_FLAG); });
         break;
     case Instruction::BneRelative:
         result.append(create_branch_instruction(
-                [this]() { return !(registers_->p & Z_FLAG); }));
+                [this] { return !(registers_->p & Z_FLAG); }));
         break;
     case Instruction::CldImplied:
-        result.push([this]() { clear_flag(D_FLAG); });
+        result.push([this] { clear_flag(D_FLAG); });
         break;
     case Instruction::CpxImmediate:
     case Instruction::CpxZeropage:
@@ -446,7 +446,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::NopAbsoluteXFC:
         result.append(create_addressing_steps(
                 state_.current_opcode->address_mode, memory_access));
-        result.push([]() { /* Do nothing. */ });
+        result.push([] { /* Do nothing. */ });
         break;
     case Instruction::IncZeropage:
     case Instruction::IncZeropageX:
@@ -461,28 +461,28 @@ Pipeline Mos6502::parse_next_instruction() {
         result.append(create_dec_instruction(*state_.current_opcode));
         break;
     case Instruction::InxImplied:
-        result.push([this]() {
+        result.push([this] {
             ++registers_->x;
             set_zero(registers_->x);
             set_negative(registers_->x);
         });
         break;
     case Instruction::DexImplied:
-        result.push([this]() {
+        result.push([this] {
             --registers_->x;
             set_zero(registers_->x);
             set_negative(registers_->x);
         });
         break;
     case Instruction::InyImplied:
-        result.push([this]() {
+        result.push([this] {
             ++registers_->y;
             set_zero(registers_->y);
             set_negative(registers_->y);
         });
         break;
     case Instruction::DeyImplied:
-        result.push([this]() {
+        result.push([this] {
             --registers_->y;
             set_zero(registers_->y);
             set_negative(registers_->y);
@@ -490,10 +490,10 @@ Pipeline Mos6502::parse_next_instruction() {
         break;
     case Instruction::BeqRelative:
         result.append(create_branch_instruction(
-                [this]() { return registers_->p & Z_FLAG; }));
+                [this] { return registers_->p & Z_FLAG; }));
         break;
     case Instruction::SedImplied:
-        result.push([this]() { set_flag(D_FLAG); });
+        result.push([this] { set_flag(D_FLAG); });
         break;
     case Instruction::EorIndirectX:
     case Instruction::EorZeropage:
@@ -647,19 +647,19 @@ Pipeline Mos6502::create_nmi() {
     mmu_->read_byte(registers_->pc);
     Pipeline result;
 
-    result.push([this]() {
+    result.push([this] {
         // Dummy read
         mmu_->read_byte(registers_->pc);
     });
-    result.push([this]() {
+    result.push([this] {
         stack_.push_byte(static_cast<uint8_t>(registers_->pc >> 8u));
     });
-    result.push([this]() {
+    result.push([this] {
         stack_.push_byte(static_cast<uint8_t>(registers_->pc & 0xFFu));
     });
-    result.push([this]() { stack_.push_byte(registers_->p); });
-    result.push([this]() { tmp_ = mmu_->read_byte(0xFFFA); });
-    result.push([this]() {
+    result.push([this] { stack_.push_byte(registers_->p); });
+    result.push([this] { tmp_ = mmu_->read_byte(0xFFFA); });
+    result.push([this] {
         const uint16_t pch = mmu_->read_byte(0xFFFB) << 8u;
         registers_->pc = pch | tmp_;
     });
@@ -671,7 +671,7 @@ Pipeline Mos6502::create_branch_instruction(
         const std::function<bool()> &condition) {
     Pipeline result;
 
-    result.push_conditional([this, condition]() {
+    result.push_conditional([this, condition] {
         if (!condition()) {
             ++registers_->pc;
             return StepResult::Stop;
@@ -679,7 +679,7 @@ Pipeline Mos6502::create_branch_instruction(
         return StepResult::Continue;
     });
 
-    result.push_conditional([this]() {
+    result.push_conditional([this] {
         const uint8_t offset = mmu_->read_byte(registers_->pc++);
         const uint16_t page = high_byte(registers_->pc);
 
@@ -692,7 +692,7 @@ Pipeline Mos6502::create_branch_instruction(
         return StepResult::Stop;
     });
 
-    result.push([]() { /* Do nothing. */ });
+    result.push([] { /* Do nothing. */ });
 
     return result;
 }
@@ -702,7 +702,7 @@ Pipeline Mos6502::create_inc_instruction(const Opcode opcode) {
     Pipeline result;
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
-    result.push([this]() {
+    result.push([this] {
         const uint8_t new_value = tmp_ + static_cast<uint8_t>(1);
         set_zero(new_value);
         set_negative(new_value);
@@ -717,7 +717,7 @@ Pipeline Mos6502::create_dec_instruction(const Opcode opcode) {
     Pipeline result;
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
-    result.push([this]() {
+    result.push([this] {
         const uint8_t new_value = tmp_ - static_cast<uint8_t>(1);
         set_zero(new_value);
         set_negative(new_value);
@@ -745,7 +745,7 @@ Pipeline Mos6502::create_add_instruction(Opcode opcode) {
     Pipeline result;
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
-    result.push([this]() {
+    result.push([this] {
         const uint8_t addend = mmu_->read_byte(effective_address_);
         adc_impl(addend);
     });
@@ -758,7 +758,7 @@ Pipeline Mos6502::create_sub_instruction(Opcode opcode) {
     Pipeline result;
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
-    result.push([this]() {
+    result.push([this] {
         // SBC simply takes the ones complement of the second value and then
         // performs an ADC See:
         // http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
@@ -775,7 +775,7 @@ Pipeline Mos6502::create_isb_instruction(Opcode opcode) {
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
     // ISB = INC + SBC
-    result.push([this]() {
+    result.push([this] {
         const uint8_t new_value = tmp_ + static_cast<uint8_t>(1);
         set_zero(new_value);
         set_negative(new_value);
@@ -796,7 +796,7 @@ Pipeline Mos6502::create_and_instruction(Opcode opcode) {
     Pipeline result;
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
-    result.push([this]() {
+    result.push([this] {
         const uint8_t operand = mmu_->read_byte(effective_address_);
         registers_->a &= operand;
 
@@ -823,7 +823,7 @@ Pipeline Mos6502::create_store_instruction(Opcode opcode) {
         reg = &registers_->a;
         reg2 = &registers_->x;
     }
-    result.push([this, reg, reg2]() {
+    result.push([this, reg, reg2] {
         const uint8_t value = reg2 == nullptr ? *reg : *reg & *reg2;
         mmu_->write_byte(effective_address_, value);
     });
@@ -849,7 +849,7 @@ Pipeline Mos6502::create_load_instruction(Opcode opcode) {
     Pipeline result;
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
-    result.push([this, reg, reg2]() {
+    result.push([this, reg, reg2] {
         const uint8_t value = mmu_->read_byte(effective_address_);
         *reg = value;
         set_zero(value);
@@ -875,7 +875,7 @@ Pipeline Mos6502::create_compare_instruction(Opcode opcode) {
     const MemoryAccess memory_access = get_memory_access(opcode.family);
     Pipeline result;
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
-    result.push([this, reg]() {
+    result.push([this, reg] {
         const uint8_t value = mmu_->read_byte(effective_address_);
         // Compare instructions are not affected be the
         // carry flag when executing the subtraction.
@@ -891,7 +891,7 @@ Pipeline Mos6502::create_dcp_instruction(Opcode opcode) {
     const MemoryAccess memory_access = get_memory_access(opcode.family);
     Pipeline result;
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
-    result.push([this]() {
+    result.push([this] {
         // DEC
         const uint8_t new_value = tmp_ - static_cast<uint8_t>(1);
         mmu_->write_byte(effective_address_, new_value);
@@ -912,7 +912,7 @@ Pipeline Mos6502::create_eor_instruction(Opcode opcode) {
     Pipeline result;
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
-    result.push([this]() {
+    result.push([this] {
         const uint8_t operand = mmu_->read_byte(effective_address_);
         registers_->a ^= operand;
 
@@ -928,7 +928,7 @@ Pipeline Mos6502::create_ora_instruction(Opcode opcode) {
     Pipeline result;
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
-    result.push([this]() {
+    result.push([this] {
         const uint8_t operand = mmu_->read_byte(effective_address_);
         registers_->a |= operand;
 
@@ -945,7 +945,7 @@ Pipeline Mos6502::create_slo_instruction(Opcode opcode) {
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
     // SLO = ASL + ORA
-    result.push([this]() {
+    result.push([this] {
         // ASL
         const uint16_t temp_result = tmp_ << 1u;
         const auto result_8bit = static_cast<uint8_t>(temp_result);
@@ -967,7 +967,7 @@ Pipeline Mos6502::create_rla_instruction(Opcode opcode) {
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
     // RLA = ROL + AND
-    result.push([this]() {
+    result.push([this] {
         // ROL
         uint16_t temp_result = tmp_ << 1u;
         const uint8_t carry = registers_->p & C_FLAG ? 0x01u : 0x00u;
@@ -992,7 +992,7 @@ Pipeline Mos6502::create_sre_instruction(Opcode opcode) {
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
     // SRE = LSR + EOR
-    result.push([this]() {
+    result.push([this] {
         // LSR
         const uint8_t shifted_value = tmp_ >> 1u;
         set_carry(tmp_ & 0x01u);
@@ -1013,7 +1013,7 @@ Pipeline Mos6502::create_left_shift_instruction(Opcode opcode,
     Pipeline result;
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
-    result.push([this, opcode, shift_in_carry]() {
+    result.push([this, opcode, shift_in_carry] {
         const uint8_t source_value =
                 opcode.address_mode == AddressMode::Accumulator ? registers_->a
                                                                 : tmp_;
@@ -1043,7 +1043,7 @@ Pipeline Mos6502::create_right_shift_instruction(Opcode opcode,
     Pipeline result;
     result.append(create_addressing_steps(opcode.address_mode, memory_access));
 
-    result.push([this, opcode, shift_in_carry]() {
+    result.push([this, opcode, shift_in_carry] {
         const uint8_t source_value =
                 opcode.address_mode == AddressMode::Accumulator ? registers_->a
                                                                 : tmp_;
@@ -1111,17 +1111,17 @@ Pipeline Mos6502::create_addressing_steps(AddressMode address_mode,
 Pipeline Mos6502::create_zeropage_addressing_steps(MemoryAccess access) {
     Pipeline result;
     if (access == MemoryAccess::Read || access == MemoryAccess::Write) {
-        result.push([this]() {
+        result.push([this] {
             effective_address_ = mmu_->read_byte(registers_->pc);
             ++registers_->pc;
         });
     } else {
-        result.push([this]() {
+        result.push([this] {
             effective_address_ = mmu_->read_byte(registers_->pc);
             ++registers_->pc;
         });
-        result.push([this]() { tmp_ = mmu_->read_byte(effective_address_); });
-        result.push([this]() {
+        result.push([this] { tmp_ = mmu_->read_byte(effective_address_); });
+        result.push([this] {
             // Extra write with the old value
             mmu_->write_byte(effective_address_, tmp_);
         });
@@ -1134,23 +1134,23 @@ Pipeline Mos6502::create_zeropage_indexed_addressing_steps(
         MemoryAccess access) {
     Pipeline result;
     if (access == MemoryAccess::Read || access == MemoryAccess::Write) {
-        result.push([this]() { tmp_ = mmu_->read_byte(registers_->pc++); });
-        result.push([this, index_reg]() {
+        result.push([this] { tmp_ = mmu_->read_byte(registers_->pc++); });
+        result.push([this, index_reg] {
             // Dummy read
             mmu_->read_byte(tmp_);
             const uint8_t effective_address_low = tmp_ + *index_reg;
             effective_address_ = effective_address_low;
         });
     } else if (access == MemoryAccess::ReadWrite) {
-        result.push([this]() { tmp_ = mmu_->read_byte(registers_->pc++); });
-        result.push([this, index_reg]() {
+        result.push([this] { tmp_ = mmu_->read_byte(registers_->pc++); });
+        result.push([this, index_reg] {
             // Dummy read
             mmu_->read_byte(tmp_);
             const uint8_t effective_address_low = tmp_ + *index_reg;
             effective_address_ = effective_address_low;
         });
-        result.push([this]() { tmp_ = mmu_->read_byte(effective_address_); });
-        result.push([this]() {
+        result.push([this] { tmp_ = mmu_->read_byte(effective_address_); });
+        result.push([this] {
             // Extra write to effective address with old value.
             mmu_->write_byte(effective_address_, tmp_);
         });
@@ -1160,14 +1160,14 @@ Pipeline Mos6502::create_zeropage_indexed_addressing_steps(
 
 Pipeline Mos6502::create_absolute_addressing_steps(const MemoryAccess access) {
     Pipeline result;
-    result.push([this]() { tmp_ = mmu_->read_byte(registers_->pc++); });
-    result.push([this]() {
+    result.push([this] { tmp_ = mmu_->read_byte(registers_->pc++); });
+    result.push([this] {
         const uint16_t upper = mmu_->read_byte(registers_->pc++) << 8u;
         effective_address_ = upper | tmp_;
     });
     if (access == MemoryAccess::ReadWrite) {
-        result.push([this]() { tmp_ = mmu_->read_byte(effective_address_); });
-        result.push([this]() {
+        result.push([this] { tmp_ = mmu_->read_byte(effective_address_); });
+        result.push([this] {
             // Extra write with the old value
             mmu_->write_byte(effective_address_, tmp_);
         });
@@ -1179,8 +1179,8 @@ Pipeline Mos6502::create_absolute_indexed_addressing_steps(
         const uint8_t *index_reg,
         const MemoryAccess access) {
     Pipeline result;
-    result.push([this]() { tmp_ = mmu_->read_byte(registers_->pc++); });
-    result.push([this, index_reg]() {
+    result.push([this] { tmp_ = mmu_->read_byte(registers_->pc++); });
+    result.push([this, index_reg] {
         const uint16_t address_high = mmu_->read_byte(registers_->pc++) << 8u;
         const uint16_t abs_address = address_high | tmp_;
         const uint8_t offset = *index_reg;
@@ -1190,7 +1190,7 @@ Pipeline Mos6502::create_absolute_indexed_addressing_steps(
     });
 
     if (access == MemoryAccess::Write) {
-        result.push([this]() {
+        result.push([this] {
             if (is_crossing_page_boundary_) {
                 // The high byte of the effective address is invalid
                 // at this time (smaller by $100), but a read is still
@@ -1203,7 +1203,7 @@ Pipeline Mos6502::create_absolute_indexed_addressing_steps(
             }
         });
     } else if (access == MemoryAccess::Read) {
-        result.push_conditional([this]() {
+        result.push_conditional([this] {
             if (is_crossing_page_boundary_) {
                 // The high byte of the effective address is invalid
                 // at this time (smaller by $100), but a read is still
@@ -1215,7 +1215,7 @@ Pipeline Mos6502::create_absolute_indexed_addressing_steps(
             return StepResult::Skip;
         });
     } else {
-        result.push([this]() {
+        result.push([this] {
             if (is_crossing_page_boundary_) {
                 // The high byte of the effective address is invalid
                 // at this time (smaller by $100), but a read is still
@@ -1227,11 +1227,11 @@ Pipeline Mos6502::create_absolute_indexed_addressing_steps(
                 mmu_->read_byte(effective_address_);
             }
         });
-        result.push([this]() {
+        result.push([this] {
             // Extra read from effective address.
             tmp_ = mmu_->read_byte(effective_address_);
         });
-        result.push([this]() {
+        result.push([this] {
             // Extra write.
             mmu_->write_byte(effective_address_, tmp_);
         });
@@ -1242,24 +1242,24 @@ Pipeline Mos6502::create_absolute_indexed_addressing_steps(
 Pipeline Mos6502::create_indexed_indirect_addressing_steps(
         const MemoryAccess access) {
     Pipeline result;
-    result.push([this]() { tmp_ = mmu_->read_byte(registers_->pc++); });
-    result.push([this]() {
+    result.push([this] { tmp_ = mmu_->read_byte(registers_->pc++); });
+    result.push([this] {
         // Dummy read
         mmu_->read_byte(tmp_);
     });
-    result.push([this]() {
+    result.push([this] {
         const uint8_t address = tmp_ + registers_->x;
         tmp2_ = mmu_->read_byte(address);
     });
-    result.push([this]() {
+    result.push([this] {
         // Effective address is always fetched from zero page
         const uint8_t address = tmp_ + registers_->x + 1u;
         const uint16_t upper = mmu_->read_byte(address) << 8u;
         effective_address_ = upper | tmp2_;
     });
     if (access == MemoryAccess::ReadWrite) {
-        result.push([this]() { tmp_ = mmu_->read_byte(effective_address_); });
-        result.push([this]() { mmu_->write_byte(effective_address_, tmp_); });
+        result.push([this] { tmp_ = mmu_->read_byte(effective_address_); });
+        result.push([this] { mmu_->write_byte(effective_address_, tmp_); });
     }
     return result;
 }
@@ -1267,9 +1267,9 @@ Pipeline Mos6502::create_indexed_indirect_addressing_steps(
 Pipeline Mos6502::create_indirect_indexed_addressing_steps(
         const MemoryAccess access) {
     Pipeline result;
-    result.push([this]() { tmp_ = mmu_->read_byte(registers_->pc++); });
-    result.push([this]() { tmp2_ = mmu_->read_byte(tmp_); });
-    result.push([this]() {
+    result.push([this] { tmp_ = mmu_->read_byte(registers_->pc++); });
+    result.push([this] { tmp2_ = mmu_->read_byte(tmp_); });
+    result.push([this] {
         // The effective address is always fetched from zero page
         const uint16_t upper = mmu_->read_byte(static_cast<uint8_t>(tmp_ + 1u))
                                << 8u;
@@ -1280,7 +1280,7 @@ Pipeline Mos6502::create_indirect_indexed_addressing_steps(
         effective_address_ = address + offset;
     });
     if (access == MemoryAccess::Write) {
-        result.push([this]() {
+        result.push([this] {
             if (is_crossing_page_boundary_) {
                 // The high byte of the effective address is invalid
                 // at this time (smaller by $100), but a read is still
@@ -1293,7 +1293,7 @@ Pipeline Mos6502::create_indirect_indexed_addressing_steps(
             }
         });
     } else if (access == MemoryAccess::Read) {
-        result.push_conditional([this]() {
+        result.push_conditional([this] {
             if (is_crossing_page_boundary_) {
                 // The high byte of the effective address is invalid
                 // at this time (smaller by $100), but a read is still
@@ -1305,7 +1305,7 @@ Pipeline Mos6502::create_indirect_indexed_addressing_steps(
             return StepResult::Skip;
         });
     } else {
-        result.push([this]() {
+        result.push([this] {
             if (is_crossing_page_boundary_) {
                 // The high byte of the effective address is invalid
                 // at this time (smaller by $100), but a read is still
@@ -1317,8 +1317,8 @@ Pipeline Mos6502::create_indirect_indexed_addressing_steps(
                 mmu_->read_byte(effective_address_);
             }
         });
-        result.push([this]() { tmp_ = mmu_->read_byte(effective_address_); });
-        result.push([this]() { mmu_->write_byte(effective_address_, tmp_); });
+        result.push([this] { tmp_ = mmu_->read_byte(effective_address_); });
+        result.push([this] { mmu_->write_byte(effective_address_, tmp_); });
     }
     return result;
 }

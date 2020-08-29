@@ -74,7 +74,7 @@ TEST_F(PpuTest, clear_status_when_reading_status) {
 TEST_F(PpuTest, nmi_is_triggered_when_it_should) {
     bool triggered = false;
     registers.ctrl = expected.ctrl = 0b1000'0000;
-    ppu->set_nmi_handler([&]() { triggered = true; });
+    ppu->set_nmi_handler([&] { triggered = true; });
 
     // Nmi shouldn't get triggered before the start of vblanking.
     step_execution(341 * 241 + 1);
@@ -91,7 +91,7 @@ TEST_F(PpuTest, nmi_is_triggered_when_it_should) {
 TEST_F(PpuTest, nmi_is_not_triggered_if_disabled) {
     bool triggered = false;
     registers.ctrl = expected.ctrl = 0x00;
-    ppu->set_nmi_handler([&]() { triggered = true; });
+    ppu->set_nmi_handler([&] { triggered = true; });
 
     // Nmi shouldn't get triggered since bit 7 in ctrl is 0.
     step_execution(341 * 1000);
