@@ -51,7 +51,7 @@ private:
     bool nmi_{false};
 
     // Holds the atoms staged to be executed.
-    Pipeline pipeline_;
+    Pipeline pipeline_{};
 
     // Effective address calculated by an address mode during pipeline
     // execution.

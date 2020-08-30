@@ -5,7 +5,7 @@
 namespace n_e_s::core {
 
 void Pipeline::push(const StepT &step) {
-    steps_.emplace_back([step]() {
+    steps_.emplace_back([step] {
         step();
         return StepResult::Continue;
     });
