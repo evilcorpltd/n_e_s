@@ -27,48 +27,48 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: ubuntu-18.04-gcc-9
-            os: ubuntu-18.04
+          - name: ubuntu-20.04-gcc-9
+            os: ubuntu-20.04
             compiler: gcc
             version: "9"
             configuration: Debug
 
-          - name: ubuntu-18.04-gcc-9-coverage
-            os: ubuntu-18.04
+          - name: ubuntu-20.04-gcc-9-coverage
+            os: ubuntu-20.04
             compiler: gcc
             version: "9"
             configuration: Debug
             coverage: true
             cmake-args: -DENABLE_COVERAGE=ON
 
-          - name: ubuntu-18.04-gcc-10
-            os: ubuntu-18.04
+          - name: ubuntu-20.04-gcc-10
+            os: ubuntu-20.04
             compiler: gcc
             version: "10"
             configuration: Debug
 
-          - name: ubuntu-18.04-clang-8
-            os: ubuntu-18.04
+          - name: ubuntu-20.04-clang-8
+            os: ubuntu-20.04
             compiler: clang
             version: "8"
             configuration: Debug
 
-          - name: ubuntu-18.04-clang-9-sanitizers
-            os: ubuntu-18.04
+          - name: ubuntu-20.04-clang-9-sanitizers
+            os: ubuntu-20.04
             compiler: clang
             version: "9"
             configuration: Debug
             cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON
 
-          - name: ubuntu-18.04-clang-10-sanitizers
-            os: ubuntu-18.04
+          - name: ubuntu-20.04-clang-10-sanitizers
+            os: ubuntu-20.04
             compiler: clang
             version: "10"
             configuration: Debug
             cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON
 
-          - name: ubuntu-18.04-clang-tidy-10
-            os: ubuntu-18.04
+          - name: ubuntu-20.04-clang-tidy-10
+            os: ubuntu-20.04
             compiler: clang
             version: "10"
             configuration: Debug
@@ -85,7 +85,7 @@ jobs:
           python3 -m pip install cmake==3.18.0 ninja==1.10.0.post1 --upgrade
 
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo add-apt-repository 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-10 main' -y
+          sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-10 main' -y
           sudo apt update
 
           if [ "${{ matrix.compiler }}" = "gcc" ]; then
