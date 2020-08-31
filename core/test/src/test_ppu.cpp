@@ -98,6 +98,28 @@ TEST_F(PpuTest, nmi_is_not_triggered_if_disabled) {
     ASSERT_FALSE(triggered);
 }
 
+TEST_F(PpuTest, nmi_triggered_when_enabled_during_vblank) {
+    bool triggered = false;
+    expected.ctrl = 0b1000'0000;
+    ppu->set_nmi_handler([&] { triggered = true; });
+
+    step_execution(341 * 241 + 1);
+    ASSERT_FALSE(triggered);
+
+    step_execution(1);
+    ASSERT_FALSE(triggered);
+
+    // Trigger nmi by enabling it during vblank.
+    ppu->write_byte(0x2000, 0b1000'0000);
+    ASSERT_TRUE(triggered);
+
+    triggered = false;
+
+    // Nmi should only be triggered when the bit goes from 0 to 1.
+    ppu->write_byte(0x2000, 0b1000'0000);
+    ASSERT_FALSE(triggered);
+}
+
 TEST_F(PpuTest, set_vblank_flag_during_vertical_blanking) {
     registers.status = 0x00;
     expected.status = 0x80;

@@ -57,9 +57,12 @@ uint8_t Ppu::read_byte(uint16_t addr) {
 
 void Ppu::write_byte(uint16_t addr, uint8_t byte) {
     if (addr == kPpuCtrl) {
-        // When we have implemented NMI we should check if NMI is set to be
-        // enabled (bit 7). If this is the case and we currently are in
-        // vertical blanking a NMI shall be generated.
+        // Trigger nmi if the nmi-enabled flag goes from 0 to 1 during vblank.
+        if (!(registers_->ctrl & (1u << 7u)) && byte & (1u << 7u) &&
+                registers_->status & (1u << 7u)) {
+            on_nmi_();
+        }
+
         registers_->ctrl = byte;
         auto name_table_bits = static_cast<uint16_t>(byte & 3u);
         registers_->temp_vram_addr &=
