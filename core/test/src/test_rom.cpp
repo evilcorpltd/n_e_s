@@ -40,12 +40,6 @@ std::string nrom_bytes(const uint8_t prg_rom_size, const uint8_t chr_rom_size) {
     return bytes;
 }
 
-TEST(RomFactory, cant_open_files_that_dont_exist) {
-    EXPECT_THROW(auto tmp = RomFactory::from_file(
-                         "this_file_hopefully_doesnt_exist"),
-            std::invalid_argument);
-}
-
 TEST(RomFactory, doesnt_parse_streams_with_too_few_bytes) {
     std::string bytes(15, 0);
     std::stringstream ss(bytes);

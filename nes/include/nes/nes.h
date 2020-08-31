@@ -25,7 +25,7 @@ public:
     // Run at 263.25 / 11 Mhz for NTSC "realtime."
     void execute();
     void reset();
-    void load_rom(const std::string &filepath);
+    void load_rom(std::istream &bytestream);
 
     n_e_s::core::IMos6502 &cpu();
     const n_e_s::core::IMos6502 &cpu() const;

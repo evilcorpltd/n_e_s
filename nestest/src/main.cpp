@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
@@ -116,7 +117,8 @@ int main(int argc, char **argv) {
 
     try {
         n_e_s::nes::Nes nes;
-        nes.load_rom(argv[1]);
+        std::ifstream fs(argv[1], std::ios::binary);
+        nes.load_rom(fs);
         nes.cpu_registers().pc = 0xC000;
 
         n_e_s::core::CpuState prev_state{};
