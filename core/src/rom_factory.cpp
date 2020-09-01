@@ -4,7 +4,6 @@
 
 #include <cassert>
 #include <cstring>
-#include <fstream>
 #include <limits>
 #include <sstream>
 #include <stdexcept>
@@ -30,15 +29,6 @@ size_t streamsize(std::istream &stream) {
 } // namespace
 
 namespace n_e_s::core {
-
-std::unique_ptr<IRom> RomFactory::from_file(const std::string &filepath) {
-    std::ifstream file(filepath, std::ios::binary);
-    if (!file) {
-        throw std::invalid_argument("Unable to open file: " + filepath);
-    }
-
-    return from_bytes(file);
-}
 
 std::unique_ptr<IRom> RomFactory::from_bytes(std::istream &bytestream) {
     std::vector<uint8_t> bytes(streamsize(bytestream));

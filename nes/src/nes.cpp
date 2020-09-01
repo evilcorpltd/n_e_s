@@ -10,6 +10,8 @@
 #include "nes/core/ppu_factory.h"
 #include "nes/core/rom_factory.h"
 
+#include <fstream>
+
 using namespace n_e_s::core;
 
 namespace n_e_s::nes {
@@ -72,8 +74,8 @@ void Nes::reset() {
     cpu_->reset();
 }
 
-void Nes::load_rom(const std::string &filepath) {
-    rom_ = RomFactory::from_file(filepath);
+void Nes::load_rom(std::istream &bytestream) {
+    rom_ = RomFactory::from_bytes(bytestream);
 
     MemBankList ppu_membanks{
             MemBankFactory::create_nes_ppu_mem_banks(rom_.get())};
