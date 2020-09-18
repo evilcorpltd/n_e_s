@@ -77,12 +77,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
 
       - name: Install
         run: |
-          echo "::add-path::/home/runner/.local/bin"
-          python3 -m pip install pip --upgrade
-          python3 -m pip install cmake==3.18.0 ninja==1.10.0.post1 --upgrade
+          pip install cmake==3.18.0 ninja==1.10.0.post1 --upgrade
 
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-10 main' -y
@@ -122,7 +123,7 @@ jobs:
       - name: Coverage
         if: matrix.coverage
         run: |
-          python3 -m pip install gcovr
+          pip install gcovr
           (cd build && gcovr --gcov-executable gcov-9 -p --root .. --fail-under-line=94 --exclude 'CMakeFiles/' --exclude '_deps/' --exclude '(.+/)?test/' --exclude '.+/(application|nestest)/')
 
       - name: Clang-tidy
