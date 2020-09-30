@@ -196,4 +196,14 @@ TEST_F(CpuIndexedIndirectTest, sre_sets_carry) {
     run_readwrite_instruction(SRE_INXIND, 0b00000001);
 }
 
+// RRA
+TEST_F(CpuIndexedIndirectTest, rra_sets_carry) {
+    registers.p = Z_FLAG;
+    registers.a = 0b1100'0000;
+    expected.a = 0b0000'1010;
+    expected.p = C_FLAG;
+    memory_content = 0b1001'0100;
+    run_readwrite_instruction(RRA_INXIND, 0b0100'1010);
+}
+
 } // namespace

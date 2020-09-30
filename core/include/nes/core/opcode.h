@@ -95,26 +95,33 @@ enum Instruction : uint8_t {
     SreAbsoluteX = 0x5F, // Undocumented
     RtsImplied = 0x60,
     AdcIndirectX = 0x61,
+    RraIndexedIndirect = 0x63, // Undocumented
     NopZeropage64 = 0x64, // Undocumented
     AdcZeropage = 0x65,
     RorZeropage = 0x66,
+    RraZeropage = 0x67, // Undocumented
     PlaImplied = 0x68,
     AdcImmediate = 0x69,
     RorAccumulator = 0x6A,
     JmpIndirect = 0x6C,
     AdcAbsolute = 0x6D,
     RorAbsolute = 0x6E,
+    RraAbsolute = 0x6F, // Undocumented
     BvsRelative = 0x70,
     AdcIndirectY = 0x71,
+    RraIndirectIndexed = 0x73, // Undocumented
     NopZeropageX74 = 0x74, // Undocumented
     AdcZeropageX = 0x75,
     RorZeropageX = 0x76,
+    RraZeropageX = 0x77, // Undocumented
     SeiImplied = 0x78,
     AdcAbsoluteY = 0x79,
     NopImplied7A = 0x7A, // Undocumented
+    RraAbsoluteY = 0x7B, // Undocumented
     NopAbsoluteX7C = 0x7C, // Undocumented
     AdcAbsoluteX = 0x7D,
     RorAbsoluteX = 0x7E,
+    RraAbsoluteX = 0x7F, // Undocumented
     NopImmediate80 = 0x80, // Undocumented
     StaIndexedIndirect = 0x81,
     SaxIndirectX = 0x83, // Undocumented
@@ -293,6 +300,7 @@ enum class Family {
     SLO,
     RLA,
     SRE,
+    RRA,
 };
 
 enum class AddressMode {

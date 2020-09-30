@@ -597,4 +597,25 @@ TEST_F(CpuAbsoluteIndexedTest, sre_absy_sets_c_without_pagecrossing) {
             SRE_ABSY, IndexReg::Y, 0b01000000);
 }
 
+// RRA
+TEST_F(CpuAbsoluteIndexedTest,
+        rra_absx_no_carry_or_overflow_with_pagecrossing) {
+    registers.a = 0x50;
+    registers.p = V_FLAG;
+    expected.a = 0x71;
+    memory_content = 0x42;
+
+    run_readwrite_instruction_with_pagecrossing(RRA_ABSX, IndexReg::X, 0x21);
+}
+
+TEST_F(CpuAbsoluteIndexedTest, rra_carry_but_no_overflow_without_pagecrossing) {
+    registers.a = 0xD0;
+    registers.p = V_FLAG;
+    expected.p = C_FLAG;
+    expected.a = 0x20;
+    memory_content = 0xA0;
+
+    run_readwrite_instruction_without_pagecrossing(RRA_ABSY, IndexReg::Y, 0x50);
+}
+
 } // namespace
