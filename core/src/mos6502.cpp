@@ -121,7 +121,9 @@ Pipeline Mos6502::parse_next_instruction() {
                 create_left_shift_instruction(*state_.current_opcode, false));
         break;
     case Instruction::PhpImplied:
-        result.push([] { /* Do nothing. */ });
+        result.push([this] { /* dummy read */
+            mmu_->read_byte(registers_->pc);
+        });
         result.push([this] { stack_.push_byte(registers_->p | B_FLAG); });
         break;
     case Instruction::BplRelative:
@@ -198,7 +200,9 @@ Pipeline Mos6502::parse_next_instruction() {
                 create_right_shift_instruction(*state_.current_opcode, false));
         break;
     case Instruction::PhaImplied:
-        result.push([] { /* Do nothing. */ });
+        result.push([this] { /* dummy read */
+            mmu_->read_byte(registers_->pc);
+        });
         result.push([this] { stack_.push_byte(registers_->a); });
         break;
     case Instruction::JmpAbsolute:
