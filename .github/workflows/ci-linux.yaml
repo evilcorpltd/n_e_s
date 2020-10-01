@@ -83,7 +83,7 @@ jobs:
 
       - name: Install
         run: |
-          pip install cmake==3.18.0 ninja==1.10.0.post1 --upgrade
+          pip install cmake==3.18.2.post1 ninja==1.10.0.post1 --upgrade
 
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
           sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-10 main' -y

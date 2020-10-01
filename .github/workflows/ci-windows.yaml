@@ -42,7 +42,7 @@ jobs:
 
       - name: Install
         run: |
-          pip install cmake==3.18.0 ninja==1.10.0.post1 --upgrade
+          pip install cmake==3.18.2.post1 ninja==1.10.0.post1 --upgrade
           cmake --version
           ninja --version
           echo "Generator: ${{ matrix.generator }}"
