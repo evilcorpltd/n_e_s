@@ -15,10 +15,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: nestest-clang-9
+          - name: nestest-clang-10
             os: ubuntu-20.04
             compiler: clang
-            version: "9"
+            version: "10"
             cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON -DCMAKE_BUILD_TYPE=Debug
 
     steps:
