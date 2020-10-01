@@ -52,6 +52,8 @@ TEST_F(CpuTest, state_is_initialized) {
 TEST_F(CpuTest, state_opcode_returns_instruction) {
     registers.pc = 0x1234;
     stage_instruction(PHP);
+    // Dummy read
+    EXPECT_CALL(mmu, read_byte(0x1235));
     step_execution(1);
 
     const CpuState state = cpu->state();
@@ -159,6 +161,8 @@ TEST_F(CpuTest, php_sets_b_flag) {
     expected.sp = 0x09;
     expected.p = registers.p;
 
+    // Dummy read
+    EXPECT_CALL(mmu, read_byte(expected.pc));
     EXPECT_CALL(
             mmu, write_byte(kStackOffset + registers.sp, registers.p | B_FLAG));
 
@@ -282,6 +286,8 @@ TEST_F(CpuTest, pha) {
     registers.sp = 0x05;
     registers.a = 0x84;
 
+    // Dummy read
+    EXPECT_CALL(mmu, read_byte(expected.pc));
     EXPECT_CALL(mmu, write_byte(kStackOffset + registers.sp, registers.a));
 
     expected.sp = 0x04;
