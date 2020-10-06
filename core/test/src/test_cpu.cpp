@@ -186,6 +186,8 @@ TEST_F(CpuTest, plp_clears_b_and_sets_bit_5) {
     expected.sp = registers.sp + static_cast<uint8_t>(1u);
     expected.p = static_cast<uint8_t>(FLAG_5 | C_FLAG) | N_FLAG;
 
+    // Dummy read
+    EXPECT_CALL(mmu, read_byte(expected.pc));
     EXPECT_CALL(mmu, read_byte(kStackOffset + expected.sp))
             .WillOnce(Return(static_cast<uint8_t>(B_FLAG | C_FLAG) | N_FLAG));
 
@@ -359,6 +361,8 @@ TEST_F(CpuTest, pla_sets_z_clears_n) {
     expected.a = 0x00;
     expected.p = Z_FLAG;
 
+    // Dummy read
+    EXPECT_CALL(mmu, read_byte(expected.pc));
     EXPECT_CALL(mmu, read_byte(kStackOffset + expected.sp))
             .WillOnce(Return(0x00));
 
@@ -376,6 +380,8 @@ TEST_F(CpuTest, pla_sets_n_clears_z) {
     expected.a = 0x92;
     expected.p = N_FLAG;
 
+    // Dummy read
+    EXPECT_CALL(mmu, read_byte(expected.pc));
     EXPECT_CALL(mmu, read_byte(kStackOffset + expected.sp))
             .WillOnce(Return(0x92));
 
