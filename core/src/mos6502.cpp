@@ -170,7 +170,7 @@ Pipeline Mos6502::parse_next_instruction() {
         break;
     case Instruction::JsrAbsolute:
         result.push([this] { tmp_ = mmu_->read_byte(registers_->pc++); });
-        result.push([] { /* Do nothing. */ });
+        result.push([] { /* Internal operation (predecrement S?). */ });
         result.push([this] {
             const auto pch = static_cast<uint8_t>(registers_->pc >> 8u);
             stack_.push_byte(pch);
@@ -294,7 +294,7 @@ Pipeline Mos6502::parse_next_instruction() {
             // Dummy read
             mmu_->read_byte(registers_->pc);
         });
-        result.push([] { /* Do nothing. */ });
+        result.push([] { /* Increment S, done in pop_byte. */ });
         result.push([this] {
             registers_->p = stack_.pop_byte();
             set_flag(FLAG_5);
