@@ -147,7 +147,9 @@ Pipeline Mos6502::parse_next_instruction() {
         });
         break;
     case Instruction::PlpImplied:
-        result.push([] { /* Do nothing. */ });
+        result.push([this] { /* dummy read */
+            mmu_->read_byte(registers_->pc);
+        });
         result.push([] { /* Do nothing. */ });
         result.push([this] {
             registers_->p = stack_.pop_byte();
@@ -268,8 +270,10 @@ Pipeline Mos6502::parse_next_instruction() {
         result.append(create_isb_instruction(*state_.current_opcode));
         break;
     case Instruction::PlaImplied:
-        result.push([] { /* Do nothing. */ });
-        result.push([] { /* Do nothing. */ });
+        result.push([this] { /* dummy read */
+            mmu_->read_byte(registers_->pc);
+        });
+        result.push([] { /* Increment S, done in pop_byte(). */ });
         result.push([this] {
             registers_->a = stack_.pop_byte();
             set_zero(registers_->a);
@@ -281,7 +285,7 @@ Pipeline Mos6502::parse_next_instruction() {
             // Dummy read
             mmu_->read_byte(registers_->pc);
         });
-        result.push([] { /* Do nothing. */ });
+        result.push([] { /* Increment S, done in pop_byte(). */ });
         result.push([this] { tmp_ = stack_.pop_byte(); });
         result.push([this] {
             const uint16_t pch = stack_.pop_byte() << 8u;
