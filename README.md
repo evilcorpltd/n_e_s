@@ -1,7 +1,5 @@
 # n e s
 
-[![Travis build status](https://travis-ci.org/evilcorpltd/n_e_s.svg?branch=master)](https://travis-ci.org/evilcorpltd/n_e_s)
-
 ## Description
 
 Modular cycle-accurate NES emulator implemented from scratch in modern C++ and
