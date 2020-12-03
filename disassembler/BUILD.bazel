@@ -6,7 +6,6 @@ cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]),
-    copts = ["-Idisassembler/src"],
     strip_include_prefix = "include/",
     visibility = ["//visibility:public"],
     deps = [
