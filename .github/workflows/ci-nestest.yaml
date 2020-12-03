@@ -34,8 +34,8 @@ jobs:
           sudo apt update
 
           sudo apt-get install -y clang-${{ matrix.version }} g++-multilib
-          echo "::set-env name=CC::clang-${{ matrix.version }}"
-          echo "::set-env name=CXX::clang++-${{ matrix.version }}"
+          echo "CC=clang-${{ matrix.version }}" >> $GITHUB_ENV
+          echo "CXX=clang++-${{ matrix.version }}" >> $GITHUB_ENV
 
       - name: CMake
         run: |
