@@ -14,5 +14,5 @@ new_git_repository(
     remote = "https://github.com/fmtlib/fmt",
     commit = "4fe0b11195b7cd71f39253c44db2c9dddf6b82d4",
     build_file = "@nes//third_party:BUILD.fmtlib",
-    shallow_since = "1593963827 -0700",
+    shallow_since = "1603647862 -0700",
 )
