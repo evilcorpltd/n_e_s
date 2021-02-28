@@ -26,6 +26,7 @@ add_executable(${PROJECT_NAME}
     src/test_ines_header.cpp
     src/test_invalid_address.cpp
     src/test_mmu.cpp
+    src/test_nes_controller.cpp
     src/test_opcode.cpp
     src/test_ppu.cpp
     src/test_ppu_membank.cpp

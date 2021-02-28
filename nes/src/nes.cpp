@@ -5,6 +5,9 @@
 #include "nes/core/imos6502.h"
 #include "nes/core/ippu.h"
 #include "nes/core/irom.h"
+
+#include "nes/core/nes_controller_factory.h"
+
 #include "nes/core/membank_factory.h"
 #include "nes/core/mmu_factory.h"
 #include "nes/core/ppu_factory.h"
@@ -46,7 +49,9 @@ Nes::Nes()
           cpu_registers_(std::make_unique<n_e_s::core::CpuRegisters>()),
           cpu_(CpuFactory::create_mos6502(cpu_registers_.get(),
                   mmu_.get(),
-                  ppu_.get())) {
+                  ppu_.get())),
+          controller1_(NesControllerFactory::create_nes_controller()),
+          controller2_(NesControllerFactory::create_nes_controller()) {
     // P should be set to 0x34 according to the information here:
     // https://wiki.nesdev.com/w/index.php/CPU_power_up_state
     // However, nestest sets p to 0x24 instead. We do that for now as well.
@@ -81,8 +86,8 @@ void Nes::load_rom(std::istream &bytestream) {
             MemBankFactory::create_nes_ppu_mem_banks(rom_.get())};
     ppu_mmu_->set_mem_banks(std::move(ppu_membanks));
 
-    MemBankList cpu_membanks{
-            MemBankFactory::create_nes_mem_banks(ppu_.get(), rom_.get())};
+    MemBankList cpu_membanks{MemBankFactory::create_nes_mem_banks(
+            ppu_.get(), rom_.get(), controller1_.get(), controller2_.get())};
     mmu_->set_mem_banks(std::move(cpu_membanks));
 
     reset();
@@ -128,6 +133,22 @@ n_e_s::core::PpuRegisters &Nes::ppu_registers() {
 }
 const n_e_s::core::PpuRegisters &Nes::ppu_registers() const {
     return *ppu_registers_;
+}
+
+n_e_s::core::INesController &Nes::controller1() {
+    return *controller1_;
+}
+
+const n_e_s::core::INesController &Nes::controller1() const {
+    return *controller1_;
+}
+
+n_e_s::core::INesController &Nes::controller2() {
+    return *controller2_;
+}
+
+const n_e_s::core::INesController &Nes::controller2() const {
+    return *controller2_;
 }
 
 uint64_t Nes::current_cycle() const {

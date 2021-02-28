@@ -4,6 +4,7 @@
 
 #include "mapped_membank.h"
 #include "membank.h"
+#include "membank_controller_io.h"
 #include "nes/core/ippu.h"
 #include "nes/core/irom.h"
 
@@ -54,7 +55,10 @@ auto create_ppu_writer(IPpu *ppu) {
 
 } // namespace
 
-MemBankList MemBankFactory::create_nes_mem_banks(IPpu *ppu, IRom *rom) {
+MemBankList MemBankFactory::create_nes_mem_banks(IPpu *ppu,
+        IRom *rom,
+        INesController *controller1,
+        INesController *controller2) {
     MemBankList mem_banks;
 
     // Rom, make sure this is first so the mapper can decide if it wants to
@@ -69,7 +73,9 @@ MemBankList MemBankFactory::create_nes_mem_banks(IPpu *ppu, IRom *rom) {
             create_ppu_reader(ppu), create_ppu_writer(ppu)));
 
     // Io
-    mem_banks.push_back(std::make_unique<MemBank<0x4000, 0x4017, 0x18>>());
+    mem_banks.push_back(std::make_unique<MemBank<0x4000, 0x4015, 0x16>>());
+    mem_banks.push_back(
+            std::make_unique<MemBankControllerIO>(controller1, controller2));
 
     // Io dev
     mem_banks.push_back(std::make_unique<MemBank<0x4018, 0x401F, 0x8>>());
