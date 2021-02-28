@@ -4,6 +4,7 @@
 #include "nes/core/mmu_factory.h"
 
 #include "mock_irom.h"
+#include "mock_nes_controller.h"
 #include "nes/core/test/mock_membank.h"
 #include "nes/core/test/mock_ppu.h"
 
@@ -23,8 +24,14 @@ class NesMmuTest : public ::testing::Test {
 public:
     MockPpu ppu{};
     testing::NiceMock<MockIRom> rom{};
-    std::unique_ptr<IMmu> mmu{MmuFactory::create(
-            MemBankFactory::create_nes_mem_banks(&ppu, &rom))};
+    ::testing::StrictMock<MockNesController> controller1{};
+    ::testing::StrictMock<MockNesController> controller2{};
+
+    std::unique_ptr<IMmu> mmu{
+            MmuFactory::create(MemBankFactory::create_nes_mem_banks(&ppu,
+                    &rom,
+                    &controller1,
+                    &controller2))};
 };
 
 class MmuTest : public ::testing::Test {
@@ -93,6 +100,149 @@ TEST_F(MmuTest, set_membanks) {
     mmu->set_mem_banks(std::move(mem_banks));
 
     mmu->write_byte(1234u, 42u);
+}
+
+TEST_F(NesMmuTest, controller_1) {
+    // No button pressed, extra reads at end to make sure controller is not read
+    EXPECT_CALL(controller1, get(INesController::Button::A))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4016));
+    EXPECT_CALL(controller1, get(INesController::Button::B))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4016));
+    EXPECT_CALL(controller1, get(INesController::Button::Select))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4016));
+    EXPECT_CALL(controller1, get(INesController::Button::Start))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4016));
+    EXPECT_CALL(controller1, get(INesController::Button::Up))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4016));
+    EXPECT_CALL(controller1, get(INesController::Button::Down))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4016));
+    EXPECT_CALL(controller1, get(INesController::Button::Left))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4016));
+    EXPECT_CALL(controller1, get(INesController::Button::Right))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4016));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4016));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4016));
+
+    // Latch controller button states by toggling strobe (0x4016, bit 0), now
+    // new controller read is possible (while stope is high, button A's state
+    // should be returned on read)
+    // is possible
+    mmu->write_byte(0x4016, 0x01);
+    EXPECT_CALL(controller1, get(INesController::Button::A))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4016));
+    EXPECT_CALL(controller1, get(INesController::Button::A))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4016));
+    mmu->write_byte(0x4016, 0x00);
+
+    // All buttons pressed, extra reads at end to make sure controller is not
+    // read
+    EXPECT_CALL(controller1, get(INesController::Button::A))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4016));
+    EXPECT_CALL(controller1, get(INesController::Button::B))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4016));
+    EXPECT_CALL(controller1, get(INesController::Button::Select))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4016));
+    EXPECT_CALL(controller1, get(INesController::Button::Start))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4016));
+    EXPECT_CALL(controller1, get(INesController::Button::Up))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4016));
+    EXPECT_CALL(controller1, get(INesController::Button::Down))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4016));
+    EXPECT_CALL(controller1, get(INesController::Button::Left))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4016));
+    EXPECT_CALL(controller1, get(INesController::Button::Right))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4016));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4016));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4016));
+}
+
+TEST_F(NesMmuTest, controller_2) {
+    // No button pressed, extra reads at end to make sure controller is not read
+    EXPECT_CALL(controller2, get(INesController::Button::A))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4017));
+    EXPECT_CALL(controller2, get(INesController::Button::B))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4017));
+    EXPECT_CALL(controller2, get(INesController::Button::Select))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4017));
+    EXPECT_CALL(controller2, get(INesController::Button::Start))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4017));
+    EXPECT_CALL(controller2, get(INesController::Button::Up))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4017));
+    EXPECT_CALL(controller2, get(INesController::Button::Down))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4017));
+    EXPECT_CALL(controller2, get(INesController::Button::Left))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4017));
+    EXPECT_CALL(controller2, get(INesController::Button::Right))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4017));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4017));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4017));
+
+    // Latch controller button states by toggling strobe (0x4016, bit 0), now
+    // new controller read is possible (while stope is high, button A's state
+    // should be returned on read)
+    mmu->write_byte(0x4016, 0x01);
+    EXPECT_CALL(controller2, get(INesController::Button::A))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4017));
+    EXPECT_CALL(controller2, get(INesController::Button::A))
+            .WillOnce(testing::Return(false));
+    EXPECT_EQ(0x40, mmu->read_byte(0x4017));
+    mmu->write_byte(0x4016, 0x00);
+
+    // All buttons pressed, extra reads at end to make sure controller is not
+    // read
+    EXPECT_CALL(controller2, get(INesController::Button::A))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4017));
+    EXPECT_CALL(controller2, get(INesController::Button::B))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4017));
+    EXPECT_CALL(controller2, get(INesController::Button::Select))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4017));
+    EXPECT_CALL(controller2, get(INesController::Button::Start))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4017));
+    EXPECT_CALL(controller2, get(INesController::Button::Up))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4017));
+    EXPECT_CALL(controller2, get(INesController::Button::Down))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4017));
+    EXPECT_CALL(controller2, get(INesController::Button::Left))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4017));
+    EXPECT_CALL(controller2, get(INesController::Button::Right))
+            .WillOnce(testing::Return(true));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4017));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4017));
+    EXPECT_EQ(0x41, mmu->read_byte(0x4017));
 }
 
 } // namespace

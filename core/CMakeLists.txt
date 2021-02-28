@@ -5,6 +5,7 @@ add_library(${PROJECT_NAME}
     include/nes/core/icpu.h
     include/nes/core/imembank.h
     include/nes/core/immu.h
+    include/nes/core/ines_controller.h
     include/nes/core/imos6502.h
     include/nes/core/ines_header.h
     include/nes/core/invalid_address.h
@@ -12,6 +13,7 @@ add_library(${PROJECT_NAME}
     include/nes/core/irom.h
     include/nes/core/membank_factory.h
     include/nes/core/mmu_factory.h
+    include/nes/core/nes_controller_factory.h
     include/nes/core/opcode.h
     include/nes/core/ppu_factory.h
     include/nes/core/rom_factory.h
@@ -20,10 +22,13 @@ add_library(${PROJECT_NAME}
     src/mapped_membank.h
     src/membank.h
     src/membank_base.h
+    src/membank_controller_io.h
     src/membank_factory.cpp
     src/mmu.cpp
     src/mmu.h
     src/mmu_factory.cpp
+    src/nes_controller.h
+    src/nes_controller_factory.cpp
     src/mos6502.cpp
     src/mos6502.h
     src/opcode.cpp

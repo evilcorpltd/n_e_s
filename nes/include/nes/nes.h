@@ -13,6 +13,9 @@ struct PpuRegisters;
 class IMmu;
 
 class IRom;
+
+class INesController;
+
 } // namespace n_e_s::core
 
 namespace n_e_s::nes {
@@ -45,6 +48,11 @@ public:
     n_e_s::core::PpuRegisters &ppu_registers();
     const n_e_s::core::PpuRegisters &ppu_registers() const;
 
+    n_e_s::core::INesController &controller1();
+    const n_e_s::core::INesController &controller1() const;
+    n_e_s::core::INesController &controller2();
+    const n_e_s::core::INesController &controller2() const;
+
     uint64_t current_cycle() const;
 
 private:
@@ -58,6 +66,9 @@ private:
     std::unique_ptr<n_e_s::core::IMos6502> cpu_;
 
     std::unique_ptr<n_e_s::core::IRom> rom_;
+
+    std::unique_ptr<n_e_s::core::INesController> controller1_;
+    std::unique_ptr<n_e_s::core::INesController> controller2_;
 
     uint64_t cycle_{};
 };
