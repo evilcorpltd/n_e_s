@@ -1,0 +1,16 @@
+name: Bazel CI
+
+on: [push, pull_request]
+
+jobs:
+  bazel:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install
+      run: |
+          echo "CC=gcc-9" >> $GITHUB_ENV
+          echo "CXX=g++-9" >> $GITHUB_ENV
+          wget https://github.com/bazelbuild/bazelisk/releases/download/v1.9.0/bazelisk-linux-amd64 --output-document=bazel
+    - name: Test
+      run: bazel test ... --config=gnulike
