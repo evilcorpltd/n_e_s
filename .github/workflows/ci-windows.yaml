@@ -51,8 +51,8 @@ jobs:
       - name: Install clang
         if: matrix.compiler == 'clang'
         run: |
-          curl -fsSLO https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/LLVM-10.0.0-win64.exe
-          7z x LLVM-10.0.0-win64.exe -y -o"c:\llvm"
+          curl -fsSLO https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.1/LLVM-12.0.1-win64.exe
+          7z x LLVM-12.0.1-win64.exe -y -o"c:\llvm"
           echo "c:\llvm\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: CMake

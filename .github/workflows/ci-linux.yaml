@@ -47,10 +47,10 @@ jobs:
             version: "10"
             configuration: Debug
 
-          - name: ubuntu-20.04-clang-8
+          - name: ubuntu-20.04-clang-9
             os: ubuntu-20.04
             compiler: clang
-            version: "8"
+            version: "9"
             configuration: Debug
 
           - name: ubuntu-20.04-clang-9-sanitizers
