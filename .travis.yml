@@ -15,19 +15,9 @@ matrix:
             - sourceline: 'ppa:ubuntu-toolchain-r/test'
           packages:
             - g++-9
-      before_install:
-        - OS=linux
-        - ARCH=x86_64
-        - V=2.1.1
-        - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then OS=darwin; fi
-        - GH_BASE="https://github.com/bazelbuild/bazel/releases/download/$V"
-        - GH_ARTIFACT="bazel-$V-installer-$OS-$ARCH.sh"
-        - URL="$GH_BASE/$GH_ARTIFACT"
-        - wget -O install.sh $URL
-        - chmod +x install.sh
-        - ./install.sh --user
-        - rm -f install.sh
-      install: []
+      before_install: []
+      install:
+      - wget https://github.com/bazelbuild/bazelisk/releases/download/v1.9.0/bazelisk-linux-amd64 --output-document=bazel
       before_script: []
       script:
       - |
