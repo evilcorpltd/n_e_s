@@ -2,13 +2,11 @@ workspace(name = "nes")
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository", "new_git_repository")
 
-# v1.10.0 + fix for build failing due to std::result_of being removed in C++20.
-# See: https://github.com/google/googletest/commit/61f010d703b32de9bfb20ab90ece38ab2f25977f
 git_repository(
     name = "gtest",
-    commit = "61f010d703b32de9bfb20ab90ece38ab2f25977f",
+    commit = "e2239ee6043f73722e7aa812a459f54a28552929",
     remote = "https://github.com/google/googletest",
-    shallow_since = "1585697018 -0400",
+    shallow_since = "1623433346 -0700",
 )
 
 new_git_repository(
