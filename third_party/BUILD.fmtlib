@@ -1,8 +1,10 @@
 cc_library(
     name = "fmtlib",
-    srcs = glob([
-        "src/**",
-    ]),
+    srcs = [
+        # "src/fmt.cc", # No C++ module support
+        "src/format.cc",
+        "src/os.cc",
+    ],
     hdrs = glob([
         "include/**",
     ]),
