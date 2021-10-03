@@ -13,8 +13,8 @@ git_repository(
 
 new_git_repository(
     name = "fmtlib",
-    remote = "https://github.com/fmtlib/fmt",
-    commit = "d141cdbeb0fb422a3fb7173b285fd38e0d1772dc",
     build_file = "@nes//third_party:BUILD.fmtlib",
+    commit = "d141cdbeb0fb422a3fb7173b285fd38e0d1772dc",
+    remote = "https://github.com/fmtlib/fmt",
     shallow_since = "1625267673 -0700",
 )
