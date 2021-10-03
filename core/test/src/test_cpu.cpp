@@ -81,7 +81,10 @@ TEST_F(CpuTest, unsupported_instruction) {
     // http://atarihq.com/danb/files/64doc.txt
     stage_instruction(0x02);
 
-    EXPECT_THROW(step_execution(1), std::logic_error);
+    EXPECT_THAT([this]() { step_execution(1); },
+            testing::Throws<std::logic_error>(
+                    testing::Property(&std::logic_error::what,
+                            testing::HasSubstr("Bad instruction: 0x2 @ 0"))));
 }
 
 TEST_F(CpuTest, nmi) {
