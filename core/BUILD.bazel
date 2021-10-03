@@ -11,6 +11,9 @@ cc_library(
     copts = private_include_copts(["src/"]),
     strip_include_prefix = "include/",
     visibility = ["//visibility:public"],
+    deps = [
+        "@fmtlib",
+    ],
 )
 
 cc_library(

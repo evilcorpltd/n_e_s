@@ -84,7 +84,7 @@ TEST_F(CpuTest, unsupported_instruction) {
     EXPECT_THAT([this]() { step_execution(1); },
             testing::Throws<std::logic_error>(
                     testing::Property(&std::logic_error::what,
-                            testing::HasSubstr("Bad instruction: 0x2 @ 0"))));
+                            testing::HasSubstr("Bad instruction: 0x02 @ 0"))));
 }
 
 TEST_F(CpuTest, nmi) {
