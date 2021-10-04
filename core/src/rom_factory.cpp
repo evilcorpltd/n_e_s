@@ -2,10 +2,11 @@
 
 #include "rom/nrom.h"
 
+#include <fmt/format.h>
 #include <cassert>
 #include <cstring>
+#include <istream>
 #include <limits>
-#include <sstream>
 #include <stdexcept>
 #include <type_traits>
 #include <vector>
@@ -78,9 +79,7 @@ std::unique_ptr<IRom> RomFactory::from_bytes(std::istream &bytestream) {
         return std::make_unique<Nrom>(h, prg_rom, chr_rom);
     }
 
-    std::stringstream err;
-    err << "Unsupported mapper: " << +mapper;
-    throw std::logic_error(err.str());
+    throw std::logic_error(fmt::format("Unsupported mapper: {}", mapper));
 }
 
 } // namespace n_e_s::core
