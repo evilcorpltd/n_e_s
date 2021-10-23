@@ -1,8 +1,7 @@
 #include <fstream>
-#include <iostream>
 #include <stdexcept>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 #include "nes/core/immu.h"
 #include "nes/core/imos6502.h"
@@ -113,7 +112,7 @@ std::string get_execution_string(const n_e_s::nes::Nes &nes) {
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        std::cerr << "Expected one argument; nestest.nes" << std::endl;
+        fmt::print(stderr, "Expected one argument; nestest.nes\n");
         return 1;
     }
 
@@ -135,12 +134,12 @@ int main(int argc, char **argv) {
 
             if (i == 0 || prev_state.start_cycle != state.start_cycle) {
                 const std::string execution_string = get_execution_string(nes);
-                std::cout << execution_string << std::endl;
+                fmt::print("{}\n", execution_string);
 
                 prev_state = state;
             }
         }
     } catch (const std::exception &e) {
-        std::cout << "Expcetion: " << e.what() << std::endl;
+        fmt::print(stderr, "Expcetion: {}\n", e.what());
     }
 }
