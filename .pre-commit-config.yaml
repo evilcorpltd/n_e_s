@@ -1,7 +1,7 @@
 ---
 repos:
   - repo: https://github.com/keith/pre-commit-buildifier
-    rev: 4.2.0
+    rev: 4.2.0.1
     hooks:
       - id: buildifier
       - id: buildifier-lint
