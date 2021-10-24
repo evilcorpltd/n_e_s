@@ -2,7 +2,7 @@
 
 #include "nes/core/opcode.h"
 
-#include <sstream>
+#include <fmt/format.h>
 #include <stdexcept>
 
 namespace {
@@ -82,10 +82,10 @@ Pipeline Mos6502::parse_next_instruction() {
             get_memory_access(state_.current_opcode->family);
 
     if (state_.current_opcode->family == Family::Invalid) {
-        std::stringstream err;
-        err << "Bad instruction: " << std::showbase << std::hex << +raw_opcode;
-        err << " @ " << registers_->pc - 1;
-        throw std::logic_error(err.str());
+        auto err = fmt::format("Bad instruction: {:#04x} @ {}",
+                raw_opcode,
+                registers_->pc - 1);
+        throw std::logic_error(err);
     }
 
     if (state_.current_opcode->address_mode == AddressMode::Immediate) {

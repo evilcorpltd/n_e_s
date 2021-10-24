@@ -1,6 +1,7 @@
 #include "nes/core/irom.h"
 #include "nes/core/rom_factory.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <cstring>
@@ -55,7 +56,10 @@ TEST(RomFactory, doesnt_parse_bytes_without_a_nes_header) {
 TEST(RomFactory, fails_if_mapper_not_supported) {
     std::string bytes{ines_header_bytes(0xCD, 0, 0, 0)};
     std::stringstream ss(bytes);
-    EXPECT_THROW(auto tmp = RomFactory::from_bytes(ss), std::logic_error);
+    EXPECT_THAT([&ss]() { auto tmp = RomFactory::from_bytes(ss); },
+            testing::Throws<std::logic_error>(
+                    testing::Property(&std::logic_error::what,
+                            testing::HasSubstr("Unsupported mapper: 205"))));
 }
 
 TEST(Nrom, creation_works_with_correct_rom_sizes) {
