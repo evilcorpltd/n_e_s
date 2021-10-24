@@ -75,6 +75,13 @@ jobs:
             clang-tidy: true
             cmake-args: -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
+          - name: ubuntu-20.04-clang-13-sanitizers
+            os: ubuntu-20.04
+            compiler: clang
+            version: "13"
+            configuration: Debug
+            cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON
+
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -85,16 +92,13 @@ jobs:
         run: |
           pip install cmake==3.18.2.post1 ninja==1.10.0.post1 --upgrade
 
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-10 main' -y
-          sudo apt update
-
           if [ "${{ matrix.compiler }}" = "gcc" ]; then
             sudo apt-get install -y g++-${{ matrix.version }} g++-${{ matrix.version }}-multilib
             echo "CC=gcc-${{ matrix.version }}" >> $GITHUB_ENV
             echo "CXX=g++-${{ matrix.version }}" >> $GITHUB_ENV
           else
-            sudo apt-get install -y clang-${{ matrix.version }} clang-tidy-${{ matrix.version }} g++-multilib
+            curl -fsSL https://apt.llvm.org/llvm.sh | sudo bash -s ${{ matrix.version }}
+            sudo apt-get install -y clang-tidy-${{ matrix.version }} g++-multilib
             echo "CC=clang-${{ matrix.version }}" >> $GITHUB_ENV
             echo "CXX=clang++-${{ matrix.version }}" >> $GITHUB_ENV
           fi
