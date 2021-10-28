@@ -47,18 +47,11 @@ jobs:
             version: "10"
             configuration: Debug
 
-          - name: ubuntu-20.04-clang-9
+          - name: ubuntu-20.04-clang-10
             os: ubuntu-20.04
             compiler: clang
-            version: "9"
+            version: "10"
             configuration: Debug
-
-          - name: ubuntu-20.04-clang-9-sanitizers
-            os: ubuntu-20.04
-            compiler: clang
-            version: "9"
-            configuration: Debug
-            cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON
 
           - name: ubuntu-20.04-clang-10-sanitizers
             os: ubuntu-20.04
