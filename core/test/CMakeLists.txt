@@ -7,6 +7,8 @@ add_executable(${PROJECT_NAME}
     src/cpu_test.h
     src/icpu_helpers.cpp
     src/icpu_helpers.h
+    src/ippu_helpers.cpp
+    src/ippu_helpers.h
     src/main.cpp
     src/opcode.h
     src/test_cpu.cpp
@@ -16,9 +18,9 @@ add_executable(${PROJECT_NAME}
     src/test_cpu_immediate_instructions.cpp
     src/test_cpu_indexed_indirect_instructions.cpp
     src/test_cpu_indirect_indexed_instructions.cpp
-    src/test_cpu_nop_implied_instructions.cpp
     src/test_cpu_move_instructions.cpp
     src/test_cpu_nop_absolute_x_instructions.cpp
+    src/test_cpu_nop_implied_instructions.cpp
     src/test_cpu_nop_zeropage_x_instructions.cpp
     src/test_cpu_zeropage_indexed_instructions.cpp
     src/test_cpu_zeropage_instructions.cpp
