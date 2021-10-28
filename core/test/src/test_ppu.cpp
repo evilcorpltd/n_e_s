@@ -86,6 +86,13 @@ TEST_F(PpuTest, nmi_is_triggered_when_it_should) {
     ASSERT_TRUE(triggered);
     EXPECT_EQ(241, ppu->scanline());
     EXPECT_EQ(2, ppu->cycle());
+
+    // Nmi should only be triggered on scanline 241.
+    triggered = false;
+    step_execution(341);
+    ASSERT_FALSE(triggered);
+    EXPECT_EQ(242, ppu->scanline());
+    EXPECT_EQ(2, ppu->cycle());
 }
 
 TEST_F(PpuTest, nmi_is_not_triggered_if_disabled) {
