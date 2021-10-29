@@ -12,17 +12,6 @@ using namespace n_e_s::core::test;
 using testing::NiceMock;
 using testing::Return;
 
-namespace n_e_s::core {
-
-static bool operator==(const PpuRegisters &a, const PpuRegisters &b) {
-    return a.ctrl == b.ctrl && a.mask == b.mask && a.status == b.status &&
-           a.oamaddr == b.oamaddr && a.fine_x_scroll == b.fine_x_scroll &&
-           a.vram_addr == b.vram_addr && a.temp_vram_addr == b.temp_vram_addr &&
-           a.write_toggle == b.write_toggle;
-}
-
-} // namespace n_e_s::core
-
 namespace {
 
 constexpr int kCyclesPerScanline = 341;
