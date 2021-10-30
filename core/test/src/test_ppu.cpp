@@ -1,3 +1,4 @@
+#include "ippu_helpers.h"
 #include "nes/core/invalid_address.h"
 #include "nes/core/ppu_factory.h"
 
@@ -11,18 +12,9 @@ using namespace n_e_s::core::test;
 using testing::NiceMock;
 using testing::Return;
 
-namespace n_e_s::core {
-
-static bool operator==(const PpuRegisters &a, const PpuRegisters &b) {
-    return a.ctrl == b.ctrl && a.mask == b.mask && a.status == b.status &&
-           a.oamaddr == b.oamaddr && a.fine_x_scroll == b.fine_x_scroll &&
-           a.vram_addr == b.vram_addr && a.temp_vram_addr == b.temp_vram_addr &&
-           a.write_toggle == b.write_toggle;
-}
-
-} // namespace n_e_s::core
-
 namespace {
+
+constexpr int kCyclesPerScanline = 341;
 
 class PpuTest : public ::testing::Test {
 public:
@@ -77,7 +69,7 @@ TEST_F(PpuTest, nmi_is_triggered_when_it_should) {
     ppu->set_nmi_handler([&] { triggered = true; });
 
     // Nmi shouldn't get triggered before the start of vblanking.
-    step_execution(341 * 241 + 1);
+    step_execution(kCyclesPerScanline * 241 + 1);
     ASSERT_FALSE(triggered);
     EXPECT_EQ(241, ppu->scanline());
     EXPECT_EQ(1, ppu->cycle());
@@ -85,6 +77,13 @@ TEST_F(PpuTest, nmi_is_triggered_when_it_should) {
     step_execution(1);
     ASSERT_TRUE(triggered);
     EXPECT_EQ(241, ppu->scanline());
+    EXPECT_EQ(2, ppu->cycle());
+
+    // Nmi should only be triggered on scanline 241.
+    triggered = false;
+    step_execution(kCyclesPerScanline);
+    ASSERT_FALSE(triggered);
+    EXPECT_EQ(242, ppu->scanline());
     EXPECT_EQ(2, ppu->cycle());
 }
 
@@ -94,7 +93,7 @@ TEST_F(PpuTest, nmi_is_not_triggered_if_disabled) {
     ppu->set_nmi_handler([&] { triggered = true; });
 
     // Nmi shouldn't get triggered since bit 7 in ctrl is 0.
-    step_execution(341 * 1000);
+    step_execution(kCyclesPerScanline * 1000);
     ASSERT_FALSE(triggered);
 }
 
@@ -103,7 +102,7 @@ TEST_F(PpuTest, nmi_triggered_when_enabled_during_vblank) {
     expected.ctrl = 0b1000'0000;
     ppu->set_nmi_handler([&] { triggered = true; });
 
-    step_execution(341 * 241 + 1);
+    step_execution(kCyclesPerScanline * 241 + 1);
     ASSERT_FALSE(triggered);
 
     step_execution(1);
@@ -125,7 +124,7 @@ TEST_F(PpuTest, set_vblank_flag_during_vertical_blanking) {
     expected.status = 0x80;
 
     // The VBlank flag is set at the second cycle of scanline 241
-    step_execution(341 * 241 + 2);
+    step_execution(kCyclesPerScanline * 241 + 2);
 
     EXPECT_EQ(expected, registers);
 }
@@ -135,7 +134,7 @@ TEST_F(PpuTest, clear_vblank_flag_during_pre_render_line) {
     expected.status = 0x00;
 
     // The VBlank flag is cleared at the second cycle of scanline 261
-    step_execution(341 * 261 + 2);
+    step_execution(kCyclesPerScanline * 261 + 2);
 
     EXPECT_EQ(expected, registers);
 }
@@ -194,7 +193,7 @@ TEST_F(PpuTest, ignore_oamdata_during_pre_render_scanline) {
     expected.mask = registers.mask;
     expected.oamaddr = registers.oamaddr;
 
-    step_execution(341 * 261);
+    step_execution(kCyclesPerScanline * 261);
 
     ppu->write_byte(0x2004, 0x73);
 
@@ -213,7 +212,7 @@ TEST_F(PpuTest, write_to_oamdata_register_during_vertical_blanking) {
     expected.status = 0x80;
     expected.oamaddr = 0x01;
 
-    step_execution(341 * 250);
+    step_execution(kCyclesPerScanline * 250);
 
     ppu->write_byte(0x2004, 0x21);
 
