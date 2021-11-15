@@ -22,13 +22,14 @@ public:
     uint16_t cycle() const override;
 
 private:
+    uint16_t &scanline();
+    uint16_t &cycle();
+
     PpuRegisters *const registers_;
     IMmu *const mmu_;
 
     std::function<void()> on_nmi_{[] {}};
 
-    uint16_t scanline_{0};
-    uint16_t cycle_{0};
     uint8_t read_buffer_{0};
 
     // Object Atribute Memory

@@ -122,6 +122,8 @@ TEST_F(PpuTest, nmi_triggered_when_enabled_during_vblank) {
 TEST_F(PpuTest, set_vblank_flag_during_vertical_blanking) {
     registers.status = 0x00;
     expected.status = 0x80;
+    expected.cycle = 2;
+    expected.scanline = 241;
 
     // The VBlank flag is set at the second cycle of scanline 241
     step_execution(kCyclesPerScanline * 241 + 2);
@@ -132,6 +134,8 @@ TEST_F(PpuTest, set_vblank_flag_during_vertical_blanking) {
 TEST_F(PpuTest, clear_vblank_flag_during_pre_render_line) {
     registers.status = 0x00;
     expected.status = 0x00;
+    expected.cycle = 2;
+    expected.scanline = 261;
 
     // The VBlank flag is cleared at the second cycle of scanline 261
     step_execution(kCyclesPerScanline * 261 + 2);
@@ -192,6 +196,7 @@ TEST_F(PpuTest, ignore_oamdata_during_pre_render_scanline) {
     expected.status = 0x80;
     expected.mask = registers.mask;
     expected.oamaddr = registers.oamaddr;
+    expected.scanline = 261;
 
     step_execution(kCyclesPerScanline * 261);
 
@@ -211,6 +216,7 @@ TEST_F(PpuTest, write_to_oamdata_register_rendering_disabled) {
 TEST_F(PpuTest, write_to_oamdata_register_during_vertical_blanking) {
     expected.status = 0x80;
     expected.oamaddr = 0x01;
+    expected.scanline = 250;
 
     step_execution(kCyclesPerScanline * 250);
 

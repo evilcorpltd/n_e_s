@@ -131,41 +131,49 @@ void Ppu::set_nmi_handler(const std::function<void()> &on_nmi) {
     on_nmi_ = on_nmi;
 }
 uint16_t Ppu::scanline() const {
-    return scanline_;
+    return registers_->scanline;
 }
 
 uint16_t Ppu::cycle() const {
-    return cycle_;
+    return registers_->cycle;
+}
+uint16_t &Ppu::scanline() {
+    return registers_->scanline;
+}
+
+uint16_t &Ppu::cycle() {
+    return registers_->cycle;
 }
 
 void Ppu::update_counters() {
-    if (cycle_ == kLastCycleInScanline) {
-        cycle_ = 0;
-        if (scanline_ == kLastScanlineInFrame) {
-            scanline_ = 0;
+    if (cycle() == kLastCycleInScanline) {
+        cycle() = 0;
+        if (scanline() == kLastScanlineInFrame) {
+            scanline() = 0;
         } else {
-            ++scanline_;
+            ++scanline();
         }
     } else {
-        ++cycle_;
+        ++cycle();
     }
 }
 
 bool Ppu::is_pre_render_scanline() const {
-    return scanline_ == kPreRenderScanline;
+    return scanline() == kPreRenderScanline;
 }
 
 bool Ppu::is_visible_scanline() const {
     // Visible scanlines starts at 0
-    return scanline_ <= kVisibleScanlineEnd;
+    return scanline() <= kVisibleScanlineEnd;
 }
 
 bool Ppu::is_post_render_scanline() const {
-    return scanline_ == kPostRenderScanline;
+    return scanline() == kPostRenderScanline;
 }
 
 bool Ppu::is_vblank_scanline() const {
-    return scanline_ >= kVBlankScanlineStart && scanline_ <= kVBlankScanlineEnd;
+    return scanline() >= kVBlankScanlineStart &&
+           scanline() <= kVBlankScanlineEnd;
 }
 
 bool Ppu::is_rendering_enabled() const {
@@ -192,7 +200,7 @@ void Ppu::increment_vram_address() {
 }
 
 void Ppu::execute_pre_render_scanline() {
-    if (cycle_ == 1) {
+    if (cycle() == 1) {
         clear_vblank_flag();
     }
 }
@@ -202,7 +210,7 @@ void Ppu::execute_visible_scanline() {}
 void Ppu::execute_post_render_scanline() {}
 
 void Ppu::execute_vblank_scanline() {
-    if (scanline_ == 241 && cycle_ == 1) {
+    if (scanline() == 241 && cycle() == 1) {
         set_vblank_flag();
         if (registers_->ctrl & (1u << 7u)) {
             on_nmi_();

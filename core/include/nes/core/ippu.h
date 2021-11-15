@@ -6,6 +6,8 @@
 namespace n_e_s::core {
 
 struct PpuRegisters {
+    uint16_t scanline;
+    uint16_t cycle;
     uint8_t ctrl;
     uint8_t mask;
     uint8_t status;
