@@ -5,8 +5,8 @@ add_library(${PROJECT_NAME}
     include/nes/core/icpu.h
     include/nes/core/imembank.h
     include/nes/core/immu.h
-    include/nes/core/ines_controller.h
     include/nes/core/imos6502.h
+    include/nes/core/ines_controller.h
     include/nes/core/ines_header.h
     include/nes/core/invalid_address.h
     include/nes/core/ippu.h
@@ -16,6 +16,7 @@ add_library(${PROJECT_NAME}
     include/nes/core/nes_controller_factory.h
     include/nes/core/opcode.h
     include/nes/core/ppu_factory.h
+    include/nes/core/ppu_registers.h
     include/nes/core/rom_factory.h
     src/cpu_factory.cpp
     src/invalid_address.cpp
@@ -27,10 +28,10 @@ add_library(${PROJECT_NAME}
     src/mmu.cpp
     src/mmu.h
     src/mmu_factory.cpp
-    src/nes_controller.h
-    src/nes_controller_factory.cpp
     src/mos6502.cpp
     src/mos6502.h
+    src/nes_controller.h
+    src/nes_controller_factory.cpp
     src/opcode.cpp
     src/pipeline.cpp
     src/pipeline.h
