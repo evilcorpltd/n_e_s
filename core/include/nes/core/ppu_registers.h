@@ -15,6 +15,10 @@ struct PpuRegisters {
     uint16_t vram_addr;
     uint16_t temp_vram_addr;
     bool write_toggle;
+
+    [[nodiscard]] constexpr bool is_rendering_enabled() const {
+        return (mask & (1u << 3u)) || (mask & (1u << 4u));
+    }
 };
 
 } // namespace n_e_s::core

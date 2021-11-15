@@ -176,12 +176,8 @@ bool Ppu::is_vblank_scanline() const {
            scanline() <= kVBlankScanlineEnd;
 }
 
-bool Ppu::is_rendering_enabled() const {
-    return (registers_->mask & (1u << 3u)) || (registers_->mask & (1u << 4u));
-}
-
 bool Ppu::is_rendering_active() const {
-    return is_rendering_enabled() &&
+    return registers_->is_rendering_enabled() &&
            (is_pre_render_scanline() || is_visible_scanline());
 }
 
