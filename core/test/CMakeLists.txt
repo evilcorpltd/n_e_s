@@ -32,6 +32,7 @@ add_executable(${PROJECT_NAME}
     src/test_opcode.cpp
     src/test_ppu.cpp
     src/test_ppu_membank.cpp
+    src/test_ppu_registers.cpp
     src/test_rom.cpp
 )
 

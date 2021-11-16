@@ -22,13 +22,14 @@ public:
     uint16_t cycle() const override;
 
 private:
+    uint16_t &scanline();
+    uint16_t &cycle();
+
     PpuRegisters *const registers_;
     IMmu *const mmu_;
 
     std::function<void()> on_nmi_{[] {}};
 
-    uint16_t scanline_{0};
-    uint16_t cycle_{0};
     uint8_t read_buffer_{0};
 
     // Object Atribute Memory
@@ -42,9 +43,6 @@ private:
     bool is_visible_scanline() const;
     bool is_post_render_scanline() const;
     bool is_vblank_scanline() const;
-
-    // Rendering is enabled if bit 3 or bit 4 is enabled in the mask register.
-    bool is_rendering_enabled() const;
 
     // Rendering is active if rendering is enabled and the PPU is currently
     // in pre render scanline or a visible scanline.
