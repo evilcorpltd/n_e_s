@@ -68,9 +68,9 @@ TEST_F(PpuTest, clear_status_when_reading_status) {
 // Test from the example show at:
 // https://wiki.nesdev.org/w/index.php/PPU_scrolling#Summary
 TEST_F(PpuTest, scrolling_tests) {
-    registers.temp_vram_addr = 0b00001100'00000000u;
-    registers.vram_addr = 0b00000000'00000000u;
-    expected.temp_vram_addr = 0b00000000'00000000u;
+    registers.temp_vram_addr = PpuVram(0b00001100'00000000u);
+    registers.vram_addr = PpuVram(0b00000000'00000000u);
+    expected.temp_vram_addr = PpuVram(0b00000000'00000000u);
     registers.write_toggle = expected.write_toggle = true;
 
     ppu->write_byte(0x2000, 0x00);
@@ -80,23 +80,24 @@ TEST_F(PpuTest, scrolling_tests) {
     ppu->read_byte(0x2002);
     EXPECT_EQ(expected, registers);
 
-    expected.temp_vram_addr = 0b00000000'00001111u;
+    expected.temp_vram_addr = PpuVram(0b00000000'00001111u);
     expected.fine_x_scroll = 0b101u;
     expected.write_toggle = true;
     ppu->write_byte(0x2005, 0b01111101u);
     EXPECT_EQ(expected, registers);
 
-    expected.temp_vram_addr = 0b01100001'01101111u;
+    expected.temp_vram_addr = PpuVram(0b01100001'01101111u);
     expected.write_toggle = false;
     ppu->write_byte(0x2005, 0b01011110u);
     EXPECT_EQ(expected, registers);
 
-    expected.temp_vram_addr = 0b00111101'01101111u;
+    expected.temp_vram_addr = PpuVram(0b00111101'01101111u);
     expected.write_toggle = true;
     ppu->write_byte(0x2006, 0b00111101u);
     EXPECT_EQ(expected, registers);
 
-    expected.vram_addr = expected.temp_vram_addr = 0b00111101'11110000u;
+    expected.vram_addr = expected.temp_vram_addr =
+            PpuVram(0b00111101'11110000u);
     expected.write_toggle = false;
     ppu->write_byte(0x2006, 0b11110000u);
     EXPECT_EQ(expected, registers);
@@ -184,7 +185,7 @@ TEST_F(PpuTest, clear_vblank_flag_during_pre_render_line) {
 
 TEST_F(PpuTest, write_to_ctrl_register) {
     expected.ctrl = 0xBA;
-    expected.temp_vram_addr = 0x800;
+    expected.temp_vram_addr = PpuVram(0x800);
 
     ppu->write_byte(0x2000, 0xBA);
 
@@ -237,7 +238,7 @@ TEST_F(PpuTest, ignore_oamdata_during_pre_render_scanline) {
     expected.oamaddr = registers.oamaddr;
     expected.scanline = 0;
     // Two increases when fetching two tiles for next scanline
-    expected.vram_addr = 0x0002;
+    expected.vram_addr = PpuVram(0x0002);
 
     step_execution(kCyclesPerScanline);
 
@@ -279,7 +280,7 @@ TEST_F(PpuTest, write_and_read_oamdata_register) {
 
 TEST_F(PpuTest, write_ppu_scroll_one_time) {
     expected.fine_x_scroll = 0b110;
-    expected.temp_vram_addr = 0b0000'0000'0001'1101;
+    expected.temp_vram_addr = PpuVram(0b0000'0000'0001'1101);
     expected.write_toggle = true;
 
     ppu->write_byte(0x2005, 0b1110'1110);
@@ -289,7 +290,7 @@ TEST_F(PpuTest, write_ppu_scroll_one_time) {
 
 TEST_F(PpuTest, write_ppu_scroll_two_times) {
     expected.fine_x_scroll = 0b101;
-    expected.temp_vram_addr = 0b0111'0010'1000'0111;
+    expected.temp_vram_addr = PpuVram(0b0111'0010'1000'0111);
     expected.write_toggle = false;
 
     ppu->write_byte(0x2005, 0b0011'1101);
@@ -300,7 +301,7 @@ TEST_F(PpuTest, write_ppu_scroll_two_times) {
 
 TEST_F(PpuTest, write_ppu_scroll_nametable_bits_not_overwritten) {
     expected.ctrl = 0b0000'0011;
-    expected.temp_vram_addr = 0b00'1100'0001'1111;
+    expected.temp_vram_addr = PpuVram(0b00'1100'0001'1111);
     expected.write_toggle = true;
 
     ppu->write_byte(0x2000, 0b0000'0011);
@@ -310,8 +311,9 @@ TEST_F(PpuTest, write_ppu_scroll_nametable_bits_not_overwritten) {
 }
 
 TEST_F(PpuTest, write_ppu_addr_one_time) {
-    registers.temp_vram_addr = 0b0011'1111'0000'0000;
-    expected.temp_vram_addr = 0b0010'1101'0000'0000;
+    registers.temp_vram_addr = PpuVram(0b0011'1111'0000'0000);
+    expected.temp_vram_addr = PpuVram(0b0010'1101'0000'0000);
+    expected.temp_vram_addr = PpuVram(0b0010'1101'0000'0000);
     expected.write_toggle = true;
 
     ppu->write_byte(0x2006, 0b0010'1101);
@@ -320,8 +322,8 @@ TEST_F(PpuTest, write_ppu_addr_one_time) {
 }
 
 TEST_F(PpuTest, write_ppu_addr_two_times) {
-    registers.temp_vram_addr = 0b0010'1101'1111'1111;
-    expected.temp_vram_addr = 0b0010'1101'0110'0001;
+    registers.temp_vram_addr = PpuVram(0b0010'1101'1111'1111);
+    expected.temp_vram_addr = PpuVram(0b0010'1101'0110'0001);
     expected.vram_addr = expected.temp_vram_addr;
     expected.write_toggle = false;
 
@@ -332,7 +334,7 @@ TEST_F(PpuTest, write_ppu_addr_two_times) {
 }
 
 TEST_F(PpuTest, write_ppu_addr_ignores_highest_bits) {
-    expected.temp_vram_addr = 0b0010'1101'0000'0000;
+    expected.temp_vram_addr = PpuVram(0b0010'1101'0000'0000);
     expected.write_toggle = true;
 
     ppu->write_byte(0x2006, 0b1110'1101);
@@ -341,7 +343,7 @@ TEST_F(PpuTest, write_ppu_addr_ignores_highest_bits) {
 }
 
 TEST_F(PpuTest, increment_vram_addr_by_1_after_writing) {
-    expected.vram_addr = 0x01;
+    expected.vram_addr = PpuVram(0x01);
 
     ppu->write_byte(0x2007, 0x05);
 
@@ -350,7 +352,7 @@ TEST_F(PpuTest, increment_vram_addr_by_1_after_writing) {
 
 TEST_F(PpuTest, increment_vram_addr_by_32_after_writing) {
     registers.ctrl = expected.ctrl = 0x04;
-    expected.vram_addr = 0x20;
+    expected.vram_addr = PpuVram(0x20);
 
     ppu->write_byte(0x2007, 0x05);
 
@@ -358,13 +360,13 @@ TEST_F(PpuTest, increment_vram_addr_by_32_after_writing) {
 }
 
 TEST_F(PpuTest, forwards_ppudata_reads_to_mmu_) {
-    registers.vram_addr = 0x4001;
+    registers.vram_addr = PpuVram(0x4001);
     EXPECT_CALL(mmu, write_byte(0x4001, 0x05)).Times(1);
 
     ppu->write_byte(0x2007, 0x05);
 }
 TEST_F(PpuTest, read_vram_below_palette_memory_start) {
-    registers.vram_addr = 0x03;
+    registers.vram_addr = PpuVram(0x03);
 
     EXPECT_CALL(mmu, read_byte(0x03)).WillOnce(Return(0x45));
     const uint8_t first_read_byte = ppu->read_byte(0x2007);
@@ -377,7 +379,7 @@ TEST_F(PpuTest, read_vram_below_palette_memory_start) {
 }
 
 TEST_F(PpuTest, read_from_palette_memory) {
-    registers.vram_addr = 0x3F00;
+    registers.vram_addr = PpuVram(0x3F00);
 
     EXPECT_CALL(mmu, read_byte(0x3F00)).WillOnce(Return(0x68));
     EXPECT_CALL(mmu, read_byte(0x2F00)).WillOnce(Return(0x31));
@@ -386,7 +388,7 @@ TEST_F(PpuTest, read_from_palette_memory) {
 
     EXPECT_EQ(0x68, read_byte);
 
-    registers.vram_addr = 0x0100;
+    registers.vram_addr = PpuVram(0x0100);
 
     EXPECT_CALL(mmu, read_byte(0x0100)).WillOnce(Return(0x11));
 
@@ -396,7 +398,7 @@ TEST_F(PpuTest, read_from_palette_memory) {
 }
 
 TEST_F(PpuTest, increment_vram_addr_by_1_after_reading) {
-    expected.vram_addr = 0x0001;
+    expected.vram_addr = PpuVram(0x0001);
 
     ppu->read_byte(0x2007);
 
@@ -405,7 +407,7 @@ TEST_F(PpuTest, increment_vram_addr_by_1_after_reading) {
 
 TEST_F(PpuTest, increment_vram_addr_by_32_after_reading) {
     registers.ctrl = expected.ctrl = 0x04;
-    expected.vram_addr = 0x0020;
+    expected.vram_addr = PpuVram(0x0020);
 
     ppu->read_byte(0x2007);
 
@@ -418,7 +420,7 @@ TEST_F(PpuTest, visible_two_sub_cycles) {
 
     expected.cycle = 17;
     // Vram should be increased at cycle 8 and 16
-    expected.vram_addr = 0x0002;
+    expected.vram_addr = PpuVram(0x0002);
 
     // Clear scrolling
     ppu->write_byte(0x2005, 0);
@@ -469,7 +471,7 @@ TEST_F(PpuTest, visible_scanline) {
     // vram addr: yyy NN YYYYY XXXXX
     // Fine scroll should be increase once, and coarse x for each tile except
     // the last (31x).
-    expected.vram_addr = 0b001'00'00000'11111;
+    expected.vram_addr = PpuVram(0b001'00'00000'11111);
 
     // Clear scrolling
     ppu->write_byte(0x2005, 0);
@@ -500,7 +502,7 @@ TEST_F(PpuTest, visible_scanline) {
     EXPECT_EQ(expected, registers);
 
     // During cycle 257 the horizontal bits should be reloaded.
-    expected.vram_addr = 0b001'00'00000'00000;
+    expected.vram_addr = PpuVram(0b001'00'00000'00000);
     expected.cycle = 258;
 
     ppu->execute(); // Cycle 257
@@ -516,7 +518,7 @@ TEST_F(PpuTest, visible_scanline) {
 
     // Cycle 321-336.
     // Fetch first two tiles for next scanline (fine scroll y=1)
-    expected.vram_addr = 0b001'00'00000'00010;
+    expected.vram_addr = PpuVram(0b001'00'00000'00010);
     expected.cycle = 337;
     // Nametables
     EXPECT_CALL(mmu, read_byte(0x2000)).WillOnce(Return(0x02));
@@ -553,7 +555,7 @@ TEST_F(PpuTest, pre_render_two_sub_cycles) {
 
     expected.cycle = 17;
     // Vram should be increased at cycle 8 and 16
-    expected.vram_addr = 0x0002;
+    expected.vram_addr = PpuVram(0x0002);
 
     // Clear scrolling
     ppu->write_byte(0x2005, 0);
@@ -606,7 +608,7 @@ TEST_F(PpuTest, pre_render_scanline) {
     // vram addr: yyy NN YYYYY XXXXX
     // Fine scroll should be increase once, and coarse x for each tile except
     // the last (31x).
-    expected.vram_addr = 0b001'00'00000'11111;
+    expected.vram_addr = PpuVram(0b001'00'00000'11111);
 
     // Clear scrolling
     ppu->write_byte(0x2005, 0);
@@ -637,7 +639,7 @@ TEST_F(PpuTest, pre_render_scanline) {
     EXPECT_EQ(expected, registers);
 
     // During cycle 257 the horizontal bits should be reloaded.
-    expected.vram_addr = 0b001'00'00000'00000;
+    expected.vram_addr = PpuVram(0b001'00'00000'00000);
     expected.cycle = 258;
 
     ppu->execute(); // Cycle 257
@@ -645,7 +647,7 @@ TEST_F(PpuTest, pre_render_scanline) {
 
     // Cycle 258-320
     // During cycle 280-304 the vertical scroll bits should be reloaded.
-    expected.vram_addr = 0b000'00'00000'00000;
+    expected.vram_addr = PpuVram(0b000'00'00000'00000);
     expected.cycle = 321;
     for (int i = 258; i <= 320; ++i) {
         ppu->execute();
@@ -654,7 +656,7 @@ TEST_F(PpuTest, pre_render_scanline) {
 
     // Cycle 321-336.
     // Fetch first two tiles for next scanline.
-    expected.vram_addr = 0b000'00'00000'00010;
+    expected.vram_addr = PpuVram(0b000'00'00000'00010);
     expected.cycle = 337;
     // Nametables
     EXPECT_CALL(mmu, read_byte(0x2000)).WillOnce(Return(0x02));

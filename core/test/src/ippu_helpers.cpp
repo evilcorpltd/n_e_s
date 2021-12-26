@@ -28,8 +28,8 @@ void PrintTo(const PpuRegisters &r, std::ostream *os) {
             r.mask,
             r.oamaddr,
             r.status,
-            r.vram_addr,
-            r.temp_vram_addr,
+            r.vram_addr.value(),
+            r.temp_vram_addr.value(),
             r.write_toggle);
 }
 
