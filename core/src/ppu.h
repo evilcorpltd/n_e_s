@@ -64,6 +64,10 @@ private:
 
     void set_vblank_flag();
     void clear_vblank_flag();
+
+    void shift_registers();
+    void increase_scroll_counters();
+    void fetch();
 };
 
 } // namespace n_e_s::core
