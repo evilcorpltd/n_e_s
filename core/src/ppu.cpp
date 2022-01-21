@@ -277,7 +277,9 @@ void Ppu::execute_pre_render_scanline() {
 
 void Ppu::execute_visible_scanline() {}
 
-void Ppu::execute_post_render_scanline() {}
+void Ppu::execute_post_render_scanline() {
+    // The ppu is idle this scanline
+}
 
 void Ppu::execute_vblank_scanline() {
     if (scanline() == 241 && cycle() == 1) {
