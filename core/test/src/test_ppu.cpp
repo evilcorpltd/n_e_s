@@ -449,7 +449,7 @@ TEST_F(PpuTest, pre_render_scaneline) {
     ppu->execute(); // Cycle 257
     EXPECT_EQ(expected, registers);
 
-    // Cycle 258-321
+    // Cycle 258-320
     // During cycle 280-304 the vertical scroll bits should be reloaded.
     expected.vram_addr = 0b000'00'00000'00000;
     expected.cycle = 321;
@@ -458,7 +458,7 @@ TEST_F(PpuTest, pre_render_scaneline) {
     }
     EXPECT_EQ(expected, registers);
 
-    // Cycle 322-336.
+    // Cycle 321-336.
     // Fetch first two tiles for next scanline.
     expected.vram_addr = 0b000'00'00000'00010;
     expected.cycle = 337;
