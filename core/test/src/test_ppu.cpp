@@ -195,12 +195,14 @@ TEST_F(PpuTest, ignore_oamdata_write_sprite_enabled) {
 TEST_F(PpuTest, ignore_oamdata_during_pre_render_scanline) {
     registers.mask = 0b00011000;
     registers.oamaddr = 0x02;
-    expected.status = 0x80;
+    registers.scanline = 261;
     expected.mask = registers.mask;
     expected.oamaddr = registers.oamaddr;
-    expected.scanline = 261;
+    expected.scanline = 0;
+    // Two increases when fetching two tiles for next scanline
+    expected.vram_addr = 0x0002;
 
-    step_execution(kCyclesPerScanline * 261);
+    step_execution(kCyclesPerScanline);
 
     ppu->write_byte(0x2004, 0x73);
 
