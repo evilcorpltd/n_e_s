@@ -58,7 +58,7 @@ private:
     void increment_vram_address();
 
     void execute_pre_render_scanline();
-    static void execute_visible_scanline();
+    void execute_visible_scanline();
     void execute_post_render_scanline();
     void execute_vblank_scanline();
 
