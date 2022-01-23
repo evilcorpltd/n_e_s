@@ -104,6 +104,7 @@ uint8_t Ppu::read_byte(uint16_t addr) {
 
     if (addr == kPpuStatus) {
         byte = registers_->status;
+        registers_->write_toggle = false;
         clear_vblank_flag();
     } else if (addr == kOamData) {
         byte = oam_data_[registers_->oamaddr];
