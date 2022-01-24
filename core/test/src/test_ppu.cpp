@@ -195,12 +195,14 @@ TEST_F(PpuTest, ignore_oamdata_write_sprite_enabled) {
 TEST_F(PpuTest, ignore_oamdata_during_pre_render_scanline) {
     registers.mask = 0b00011000;
     registers.oamaddr = 0x02;
-    expected.status = 0x80;
+    registers.scanline = 261;
     expected.mask = registers.mask;
     expected.oamaddr = registers.oamaddr;
-    expected.scanline = 261;
+    expected.scanline = 0;
+    // Two increases when fetching two tiles for next scanline
+    expected.vram_addr = 0x0002;
 
-    step_execution(kCyclesPerScanline * 261);
+    step_execution(kCyclesPerScanline);
 
     ppu->write_byte(0x2004, 0x73);
 
@@ -362,6 +364,140 @@ TEST_F(PpuTest, increment_vram_addr_by_32_after_reading) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(PpuTest, visible_two_sub_cycles) {
+    registers.scanline = expected.scanline = 0;
+    registers.mask = expected.mask = 0b000'1000; // Enable background rendering
+
+    expected.cycle = 17;
+    // Vram should be increased at cycle 8 and 16
+    expected.vram_addr = 0x0002;
+
+    // Clear scrolling
+    ppu->write_byte(0x2005, 0);
+    ppu->write_byte(0x2005, 0);
+
+    {
+        testing::InSequence seq;
+        // Nametable on cycle 1 set to index 2
+        EXPECT_CALL(mmu, read_byte(0x2000)).WillOnce(Return(0x02));
+
+        // Attribute on cycle 3.
+        // Second tile has the same attribute byte as the first.
+        EXPECT_CALL(mmu, read_byte(0x23C0)).WillRepeatedly(Return(0xAB));
+
+        // Pattern table low byte on cycle 5.
+        // Each tile uses 16 bytes. So tile with index 2 starts at address 16*2.
+        EXPECT_CALL(mmu, read_byte(0x02 * 16u)).WillOnce(Return(0x80));
+        // High byte on cycle 7
+        // Second bit plane address is 8 bytes after the first bit plane.
+        EXPECT_CALL(mmu, read_byte(0x02 * 16u + 8u)).WillOnce(Return(0x99));
+
+        // Nametable on cycle 9 set to index 3
+        EXPECT_CALL(mmu, read_byte(0x2001)).WillOnce(Return(0x03));
+
+        // Attribute on cycle 11.
+        // Second tile has the same attribute byte as the first.
+        EXPECT_CALL(mmu, read_byte(0x23C0)).WillRepeatedly(Return(0xAB));
+
+        // Pattern table low byte on cycle 13.
+        EXPECT_CALL(mmu, read_byte(0x03 * 16u)).WillOnce(Return(0x80));
+        // Pattern table high byte on cycle 15
+        EXPECT_CALL(mmu, read_byte(0x03 * 16u + 8u)).WillOnce(Return(0x99));
+    }
+
+    for (int i = 0; i < 17; ++i) {
+        ppu->execute();
+    }
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, visible_scanline) {
+    registers.scanline = 0u; // Start at visible scanline
+    registers.mask = expected.mask = 0b000'1000; // Enable background rendering
+
+    expected.cycle = 257;
+    expected.scanline = 0u;
+    // vram addr: yyy NN YYYYY XXXXX
+    // Fine scroll should be increase once, and coarse x for each tile except
+    // the last (31x).
+    expected.vram_addr = 0b001'00'00000'11111;
+
+    // Clear scrolling
+    ppu->write_byte(0x2005, 0);
+    ppu->write_byte(0x2005, 0);
+
+    // Nametables
+    for (int i = 0; i < 32; ++i) {
+        EXPECT_CALL(mmu, read_byte(0x2000 + i)).WillOnce(Return(i));
+    }
+
+    // Attributes. Each address should be fetched four times since each byte
+    // controlls 4x4 tiles.
+    for (int i = 0; i < 8; ++i) {
+        EXPECT_CALL(mmu, read_byte(0x23C0 + i))
+                .Times(4)
+                .WillRepeatedly(Return(i));
+    }
+
+    // Background
+    for (int i = 0; i < 32; ++i) {
+        EXPECT_CALL(mmu, read_byte(i * 16u)).WillOnce(Return(i));
+        EXPECT_CALL(mmu, read_byte(i * 16u + 8u)).WillOnce(Return(i + 0xF0));
+    }
+
+    for (int i = 0; i <= 256; ++i) {
+        ppu->execute();
+    }
+    EXPECT_EQ(expected, registers);
+
+    // During cycle 257 the horizontal bits should be reloaded.
+    expected.vram_addr = 0b001'00'00000'00000;
+    expected.cycle = 258;
+
+    ppu->execute(); // Cycle 257
+    EXPECT_EQ(expected, registers);
+
+    // Cycle 258-320
+    // During cycle 280-304 the ppu is idle
+    expected.cycle = 321;
+    for (int i = 258; i <= 320; ++i) {
+        ppu->execute();
+    }
+    EXPECT_EQ(expected, registers);
+
+    // Cycle 321-336.
+    // Fetch first two tiles for next scanline (fine scroll y=1)
+    expected.vram_addr = 0b001'00'00000'00010;
+    expected.cycle = 337;
+    // Nametables
+    EXPECT_CALL(mmu, read_byte(0x2000)).WillOnce(Return(0x02));
+    EXPECT_CALL(mmu, read_byte(0x2001)).WillOnce(Return(0x03));
+
+    // Attributes
+    EXPECT_CALL(mmu, read_byte(0x23C0)).Times(2).WillRepeatedly(Return(0xAB));
+
+    // Background for next scanline (+1 for address)
+    EXPECT_CALL(mmu, read_byte(0x02 * 16u + 1u)).WillOnce(Return(0x80));
+    EXPECT_CALL(mmu, read_byte(0x02 * 16u + 8u + 1u)).WillOnce(Return(0x99));
+    EXPECT_CALL(mmu, read_byte(0x03 * 16u + 1u)).WillOnce(Return(0x80));
+    EXPECT_CALL(mmu, read_byte(0x03 * 16u + 8u + 1u)).WillOnce(Return(0x99));
+
+    for (int i = 321; i <= 336; ++i) {
+        ppu->execute();
+    }
+    EXPECT_EQ(expected, registers);
+
+    // Finally cycle 337-340.
+    // Two nametable fetches (TODO: not implemented).
+    expected.scanline = 1;
+    expected.cycle = 0;
+    for (int i = 337; i <= 340; ++i) {
+        ppu->execute();
+    }
+    EXPECT_EQ(expected, registers);
+}
+
 TEST_F(PpuTest, pre_render_two_sub_cycles) {
     registers.scanline = expected.scanline = 261; // Start at pre-render
     registers.mask = expected.mask = 0b000'1000; // Enable background rendering
@@ -374,25 +510,36 @@ TEST_F(PpuTest, pre_render_two_sub_cycles) {
     ppu->write_byte(0x2005, 0);
     ppu->write_byte(0x2005, 0);
 
-    // Nametable on cycle 1 set to index 2, and index 3 on cycle 9
-    EXPECT_CALL(mmu, read_byte(0x2000)).WillOnce(Return(0x02));
-    EXPECT_CALL(mmu, read_byte(0x2001)).WillOnce(Return(0x03));
+    {
+        testing::InSequence seq;
+        // First cycle.
+        // Nametable on cycle 1 set to index 2
+        EXPECT_CALL(mmu, read_byte(0x2000)).WillOnce(Return(0x02));
 
-    // Attribyte on cycle 3 and 12.
-    // Second tile has the same attribute byte as the first.
-    EXPECT_CALL(mmu, read_byte(0x23C0)).Times(2).WillRepeatedly(Return(0xAB));
+        // Attribute on cycle 3.
+        // Second tile has the same attribute byte as the first.
+        EXPECT_CALL(mmu, read_byte(0x23C0)).WillRepeatedly(Return(0xAB));
 
-    // Pattern table low byte on cycle 5.
-    // Each tile uses 8 bytes. So tile with index 2 starts at address 16*2.
-    EXPECT_CALL(mmu, read_byte(0x02 * 16u)).WillOnce(Return(0x80));
-    // Pattern table high byte on cycle 7
-    // Second bit plane address is 8 bytes after the first bit plane.
-    EXPECT_CALL(mmu, read_byte(0x02 * 16u + 8u)).WillOnce(Return(0x99));
+        // Pattern table low byte on cycle 5.
+        // Each tile uses 16 bytes. So tile with index 2 starts at address 16*2.
+        EXPECT_CALL(mmu, read_byte(0x02 * 16u)).WillOnce(Return(0x80));
+        // High byte on cycle 7
+        // Second bit plane address is 8 bytes after the first bit plane.
+        EXPECT_CALL(mmu, read_byte(0x02 * 16u + 8u)).WillOnce(Return(0x99));
 
-    // Pattern table low byte on cycle 13.
-    EXPECT_CALL(mmu, read_byte(0x03 * 16u)).WillOnce(Return(0x80));
-    // Pattern table high byte on cycle 15
-    EXPECT_CALL(mmu, read_byte(0x03 * 16u + 8u)).WillOnce(Return(0x99));
+        // Second cycle.
+        // Nametable on cycle 9 set to index 3
+        EXPECT_CALL(mmu, read_byte(0x2001)).WillOnce(Return(0x03));
+
+        // Attribute on cycle 11.
+        // Second tile has the same attribute byte as the first.
+        EXPECT_CALL(mmu, read_byte(0x23C0)).WillRepeatedly(Return(0xAB));
+
+        // Pattern table low byte on cycle 13.
+        EXPECT_CALL(mmu, read_byte(0x03 * 16u)).WillOnce(Return(0x80));
+        // Pattern table high byte on cycle 15
+        EXPECT_CALL(mmu, read_byte(0x03 * 16u + 8u)).WillOnce(Return(0x99));
+    }
 
     for (int i = 0; i < 17; ++i) {
         ppu->execute();
@@ -401,7 +548,7 @@ TEST_F(PpuTest, pre_render_two_sub_cycles) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(PpuTest, pre_render_scaneline) {
+TEST_F(PpuTest, pre_render_scanline) {
     registers.scanline = 261u; // Start at pre-render
     registers.mask = expected.mask = 0b000'1000; // Enable background rendering
 
@@ -447,7 +594,7 @@ TEST_F(PpuTest, pre_render_scaneline) {
     ppu->execute(); // Cycle 257
     EXPECT_EQ(expected, registers);
 
-    // Cycle 258-321
+    // Cycle 258-320
     // During cycle 280-304 the vertical scroll bits should be reloaded.
     expected.vram_addr = 0b000'00'00000'00000;
     expected.cycle = 321;
@@ -456,7 +603,7 @@ TEST_F(PpuTest, pre_render_scaneline) {
     }
     EXPECT_EQ(expected, registers);
 
-    // Cycle 322-336.
+    // Cycle 321-336.
     // Fetch first two tiles for next scanline.
     expected.vram_addr = 0b000'00'00000'00010;
     expected.cycle = 337;
