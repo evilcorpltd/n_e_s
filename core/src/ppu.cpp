@@ -168,12 +168,16 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
         }
     } else if (addr == kPpuAddr) {
         if (registers_->write_toggle) { // Second write, lower address byte
-            registers_->temp_vram_addr |= byte;
+            registers_->temp_vram_addr =
+                    (registers_->temp_vram_addr & 0xFF00u) | byte;
             registers_->vram_addr = registers_->temp_vram_addr;
             registers_->write_toggle = false;
         } else { // First write, upper address byte
-            uint16_t upper_addr_byte = byte;
-            registers_->temp_vram_addr = (upper_addr_byte << 8u);
+            // Valid addresses are $0000-$3FFF; higher addresses will be
+            // mirrored down.
+            const uint16_t upper_byte = (byte & 0x3Fu) << 8u;
+            const uint16_t lower_byte = registers_->temp_vram_addr & 0x00FFu;
+            registers_->temp_vram_addr = upper_byte | lower_byte;
             registers_->write_toggle = true;
         }
     } else if (addr == kPpuData) {
