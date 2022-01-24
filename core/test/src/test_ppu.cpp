@@ -376,25 +376,36 @@ TEST_F(PpuTest, pre_render_two_sub_cycles) {
     ppu->write_byte(0x2005, 0);
     ppu->write_byte(0x2005, 0);
 
-    // Nametable on cycle 1 set to index 2, and index 3 on cycle 9
-    EXPECT_CALL(mmu, read_byte(0x2000)).WillOnce(Return(0x02));
-    EXPECT_CALL(mmu, read_byte(0x2001)).WillOnce(Return(0x03));
+    {
+        testing::InSequence seq;
+        // First cycle.
+        // Nametable on cycle 1 set to index 2
+        EXPECT_CALL(mmu, read_byte(0x2000)).WillOnce(Return(0x02));
 
-    // Attribyte on cycle 3 and 12.
-    // Second tile has the same attribute byte as the first.
-    EXPECT_CALL(mmu, read_byte(0x23C0)).Times(2).WillRepeatedly(Return(0xAB));
+        // Attribute on cycle 3.
+        // Second tile has the same attribute byte as the first.
+        EXPECT_CALL(mmu, read_byte(0x23C0)).WillRepeatedly(Return(0xAB));
 
-    // Pattern table low byte on cycle 5.
-    // Each tile uses 8 bytes. So tile with index 2 starts at address 16*2.
-    EXPECT_CALL(mmu, read_byte(0x02 * 16u)).WillOnce(Return(0x80));
-    // Pattern table high byte on cycle 7
-    // Second bit plane address is 8 bytes after the first bit plane.
-    EXPECT_CALL(mmu, read_byte(0x02 * 16u + 8u)).WillOnce(Return(0x99));
+        // Pattern table low byte on cycle 5.
+        // Each tile uses 16 bytes. So tile with index 2 starts at address 16*2.
+        EXPECT_CALL(mmu, read_byte(0x02 * 16u)).WillOnce(Return(0x80));
+        // High byte on cycle 7
+        // Second bit plane address is 8 bytes after the first bit plane.
+        EXPECT_CALL(mmu, read_byte(0x02 * 16u + 8u)).WillOnce(Return(0x99));
 
-    // Pattern table low byte on cycle 13.
-    EXPECT_CALL(mmu, read_byte(0x03 * 16u)).WillOnce(Return(0x80));
-    // Pattern table high byte on cycle 15
-    EXPECT_CALL(mmu, read_byte(0x03 * 16u + 8u)).WillOnce(Return(0x99));
+        // Second cycle.
+        // Nametable on cycle 9 set to index 3
+        EXPECT_CALL(mmu, read_byte(0x2001)).WillOnce(Return(0x03));
+
+        // Attribute on cycle 11.
+        // Second tile has the same attribute byte as the first.
+        EXPECT_CALL(mmu, read_byte(0x23C0)).WillRepeatedly(Return(0xAB));
+
+        // Pattern table low byte on cycle 13.
+        EXPECT_CALL(mmu, read_byte(0x03 * 16u)).WillOnce(Return(0x80));
+        // Pattern table high byte on cycle 15
+        EXPECT_CALL(mmu, read_byte(0x03 * 16u + 8u)).WillOnce(Return(0x99));
+    }
 
     for (int i = 0; i < 17; ++i) {
         ppu->execute();
@@ -403,7 +414,7 @@ TEST_F(PpuTest, pre_render_two_sub_cycles) {
     EXPECT_EQ(expected, registers);
 }
 
-TEST_F(PpuTest, pre_render_scaneline) {
+TEST_F(PpuTest, pre_render_scanline) {
     registers.scanline = 261u; // Start at pre-render
     registers.mask = expected.mask = 0b000'1000; // Enable background rendering
 
