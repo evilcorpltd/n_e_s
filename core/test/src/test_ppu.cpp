@@ -46,8 +46,10 @@ TEST_F(PpuTest, writes_to_mmu_for_unhandled_address) {
     ppu->write_byte(0x1000, 0x45);
 }
 
-TEST_F(PpuTest, read_status_register) {
+TEST_F(PpuTest, read_status_register_clears_write_toggle) {
     registers.status = 0x25;
+    registers.write_toggle = true;
+    expected.write_toggle = false;
 
     const uint8_t status = ppu->read_byte(0x2002);
 
