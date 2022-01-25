@@ -65,6 +65,43 @@ TEST_F(PpuTest, clear_status_when_reading_status) {
     EXPECT_EQ(expected, registers);
 }
 
+// Test from the example show at:
+// https://wiki.nesdev.org/w/index.php/PPU_scrolling#Summary
+TEST_F(PpuTest, scrolling_tests) {
+    registers.temp_vram_addr = 0b00001100'00000000u;
+    registers.vram_addr = 0b00000000'00000000u;
+    expected.temp_vram_addr = 0b00000000'00000000u;
+    registers.write_toggle = expected.write_toggle = true;
+
+    ppu->write_byte(0x2000, 0x00);
+    EXPECT_EQ(expected, registers);
+
+    expected.write_toggle = false;
+    ppu->read_byte(0x2002);
+    EXPECT_EQ(expected, registers);
+
+    expected.temp_vram_addr = 0b00000000'00001111u;
+    expected.fine_x_scroll = 0b101u;
+    expected.write_toggle = true;
+    ppu->write_byte(0x2005, 0b01111101u);
+    EXPECT_EQ(expected, registers);
+
+    expected.temp_vram_addr = 0b01100001'01101111u;
+    expected.write_toggle = false;
+    ppu->write_byte(0x2005, 0b01011110u);
+    EXPECT_EQ(expected, registers);
+
+    expected.temp_vram_addr = 0b00111101'01101111u;
+    expected.write_toggle = true;
+    ppu->write_byte(0x2006, 0b00111101u);
+    EXPECT_EQ(expected, registers);
+
+    expected.vram_addr = expected.temp_vram_addr = 0b00111101'11110000u;
+    expected.write_toggle = false;
+    ppu->write_byte(0x2006, 0b11110000u);
+    EXPECT_EQ(expected, registers);
+}
+
 TEST_F(PpuTest, nmi_is_triggered_when_it_should) {
     bool triggered = false;
     registers.ctrl = expected.ctrl = 0b1000'0000;
@@ -273,6 +310,7 @@ TEST_F(PpuTest, write_ppu_scroll_nametable_bits_not_overwritten) {
 }
 
 TEST_F(PpuTest, write_ppu_addr_one_time) {
+    registers.temp_vram_addr = 0b0011'1111'0000'0000;
     expected.temp_vram_addr = 0b0010'1101'0000'0000;
     expected.write_toggle = true;
 
@@ -282,12 +320,22 @@ TEST_F(PpuTest, write_ppu_addr_one_time) {
 }
 
 TEST_F(PpuTest, write_ppu_addr_two_times) {
+    registers.temp_vram_addr = 0b0010'1101'1111'1111;
     expected.temp_vram_addr = 0b0010'1101'0110'0001;
     expected.vram_addr = expected.temp_vram_addr;
     expected.write_toggle = false;
 
     ppu->write_byte(0x2006, 0b0010'1101);
     ppu->write_byte(0x2006, 0b0110'0001);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, write_ppu_addr_ignores_highest_bits) {
+    expected.temp_vram_addr = 0b0010'1101'0000'0000;
+    expected.write_toggle = true;
+
+    ppu->write_byte(0x2006, 0b1110'1101);
 
     EXPECT_EQ(expected, registers);
 }
