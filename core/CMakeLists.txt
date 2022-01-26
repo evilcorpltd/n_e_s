@@ -15,6 +15,7 @@ add_library(${PROJECT_NAME}
     include/nes/core/mmu_factory.h
     include/nes/core/nes_controller_factory.h
     include/nes/core/opcode.h
+    include/nes/core/pixel.h
     include/nes/core/ppu_factory.h
     include/nes/core/ppu_registers.h
     include/nes/core/rom_factory.h

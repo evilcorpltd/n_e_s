@@ -14,7 +14,7 @@ public:
     uint8_t read_byte(uint16_t addr) override;
     void write_byte(uint16_t addr, uint8_t byte) override;
 
-    void execute() override;
+    std::optional<Pixel> execute() override;
 
     void set_nmi_handler(const std::function<void()> &on_nmi) override;
 

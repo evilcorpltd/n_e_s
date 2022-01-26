@@ -9,7 +9,9 @@ class FakePpu : public IPpu {
         return 0;
     }
     void write_byte(uint16_t, uint8_t) override {}
-    void execute() override {}
+    std::optional<Pixel> execute() override {
+        return {};
+    }
     void set_nmi_handler(const std::function<void()> &) override {}
 
     uint16_t scanline() const override {

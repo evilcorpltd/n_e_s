@@ -11,7 +11,7 @@ public:
     MOCK_METHOD(uint8_t, read_byte, (uint16_t addr), (override));
     MOCK_METHOD(void, write_byte, (uint16_t addr, uint8_t byte), (override));
 
-    MOCK_METHOD(void, execute, (), (override));
+    MOCK_METHOD(std::optional<Pixel>, execute, (), (override));
 
     MOCK_METHOD(void,
             set_nmi_handler,

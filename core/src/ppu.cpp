@@ -188,7 +188,7 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
     }
 } // namespace n_e_s::core
 
-void Ppu::execute() {
+std::optional<Pixel> Ppu::execute() {
     if (is_pre_render_scanline()) {
         execute_pre_render_scanline();
     } else if (is_visible_scanline()) {
@@ -200,6 +200,7 @@ void Ppu::execute() {
     }
 
     update_counters();
+    return {};
 }
 
 void Ppu::set_nmi_handler(const std::function<void()> &on_nmi) {

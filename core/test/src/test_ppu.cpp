@@ -25,7 +25,7 @@ public:
 
     void step_execution(uint32_t cycles) {
         for (uint32_t i = 0; i < cycles; ++i) {
-            ppu->execute();
+            EXPECT_FALSE(ppu->execute().has_value());
         }
     }
 
@@ -454,7 +454,8 @@ TEST_F(PpuTest, visible_two_sub_cycles) {
     }
 
     for (int i = 0; i < 17; ++i) {
-        ppu->execute();
+        const auto pixel = ppu->execute();
+        EXPECT_FALSE(pixel.has_value());
     }
 
     EXPECT_EQ(expected, registers);
@@ -495,7 +496,8 @@ TEST_F(PpuTest, visible_scanline) {
     }
 
     for (int i = 0; i <= 256; ++i) {
-        ppu->execute();
+        const auto pixel = ppu->execute();
+        EXPECT_FALSE(pixel.has_value());
     }
     EXPECT_EQ(expected, registers);
 
@@ -503,14 +505,15 @@ TEST_F(PpuTest, visible_scanline) {
     expected.vram_addr = 0b001'00'00000'00000;
     expected.cycle = 258;
 
-    ppu->execute(); // Cycle 257
+    EXPECT_FALSE(ppu->execute().has_value()); // Cycle 257
     EXPECT_EQ(expected, registers);
 
     // Cycle 258-320
     // During cycle 280-304 the ppu is idle
     expected.cycle = 321;
     for (int i = 258; i <= 320; ++i) {
-        ppu->execute();
+        const auto pixel = ppu->execute();
+        EXPECT_FALSE(pixel.has_value());
     }
     EXPECT_EQ(expected, registers);
 
@@ -532,7 +535,8 @@ TEST_F(PpuTest, visible_scanline) {
     EXPECT_CALL(mmu, read_byte(0x03 * 16u + 8u + 1u)).WillOnce(Return(0x99));
 
     for (int i = 321; i <= 336; ++i) {
-        ppu->execute();
+        const auto pixel = ppu->execute();
+        EXPECT_FALSE(pixel.has_value());
     }
     EXPECT_EQ(expected, registers);
 
@@ -542,7 +546,8 @@ TEST_F(PpuTest, visible_scanline) {
     expected.cycle = 0;
     EXPECT_CALL(mmu, read_byte(0x2000 + 2)).Times(2).WillRepeatedly(Return(2));
     for (int i = 337; i <= 340; ++i) {
-        ppu->execute();
+        const auto pixel = ppu->execute();
+        EXPECT_FALSE(pixel.has_value());
     }
     EXPECT_EQ(expected, registers);
 }
@@ -591,7 +596,8 @@ TEST_F(PpuTest, pre_render_two_sub_cycles) {
     }
 
     for (int i = 0; i < 17; ++i) {
-        ppu->execute();
+        const auto pixel = ppu->execute();
+        EXPECT_FALSE(pixel.has_value());
     }
 
     EXPECT_EQ(expected, registers);
@@ -632,7 +638,8 @@ TEST_F(PpuTest, pre_render_scanline) {
     }
 
     for (int i = 0; i <= 256; ++i) {
-        ppu->execute();
+        const auto pixel = ppu->execute();
+        EXPECT_FALSE(pixel.has_value());
     }
     EXPECT_EQ(expected, registers);
 
@@ -640,7 +647,7 @@ TEST_F(PpuTest, pre_render_scanline) {
     expected.vram_addr = 0b001'00'00000'00000;
     expected.cycle = 258;
 
-    ppu->execute(); // Cycle 257
+    EXPECT_FALSE(ppu->execute().has_value()); // Cycle 257
     EXPECT_EQ(expected, registers);
 
     // Cycle 258-320
@@ -648,7 +655,8 @@ TEST_F(PpuTest, pre_render_scanline) {
     expected.vram_addr = 0b000'00'00000'00000;
     expected.cycle = 321;
     for (int i = 258; i <= 320; ++i) {
-        ppu->execute();
+        const auto pixel = ppu->execute();
+        EXPECT_FALSE(pixel.has_value());
     }
     EXPECT_EQ(expected, registers);
 
@@ -670,7 +678,8 @@ TEST_F(PpuTest, pre_render_scanline) {
     EXPECT_CALL(mmu, read_byte(0x03 * 16u + 8u)).WillOnce(Return(0x99));
 
     for (int i = 321; i <= 336; ++i) {
-        ppu->execute();
+        const auto pixel = ppu->execute();
+        EXPECT_FALSE(pixel.has_value());
     }
     EXPECT_EQ(expected, registers);
 
@@ -680,7 +689,8 @@ TEST_F(PpuTest, pre_render_scanline) {
     expected.cycle = 0;
     EXPECT_CALL(mmu, read_byte(0x2000 + 2)).Times(2).WillRepeatedly(Return(2));
     for (int i = 337; i <= 340; ++i) {
-        ppu->execute();
+        const auto pixel = ppu->execute();
+        EXPECT_FALSE(pixel.has_value());
     }
     EXPECT_EQ(expected, registers);
 }
