@@ -418,6 +418,13 @@ void Ppu::fetch() {
             break;
         }
         };
+    } else if (cycle() == 337 || cycle() == 339) {
+        // Unused fetches. Uses the same nametable address as will be fetched
+        // at the beginning of the next scanline (tile 3 since tile 1 and 2
+        // were fetched already in the end of this scanline).
+        const uint16_t nametable_address =
+                get_nametable_address(registers_->vram_addr);
+        registers_->name_table_latch = mmu_->read_byte(nametable_address);
     }
 }
 

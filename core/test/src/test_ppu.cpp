@@ -537,9 +537,10 @@ TEST_F(PpuTest, visible_scanline) {
     EXPECT_EQ(expected, registers);
 
     // Finally cycle 337-340.
-    // Two nametable fetches (TODO: not implemented).
+    // Two unused nametable fetches.
     expected.scanline = 1;
     expected.cycle = 0;
+    EXPECT_CALL(mmu, read_byte(0x2000 + 2)).Times(2).WillRepeatedly(Return(2));
     for (int i = 337; i <= 340; ++i) {
         ppu->execute();
     }
@@ -674,9 +675,10 @@ TEST_F(PpuTest, pre_render_scanline) {
     EXPECT_EQ(expected, registers);
 
     // Finally cycle 337-340.
-    // Two unused nametable fetches (not implemented).
+    // Two unused nametable fetches.
     expected.scanline = 0;
     expected.cycle = 0;
+    EXPECT_CALL(mmu, read_byte(0x2000 + 2)).Times(2).WillRepeatedly(Return(2));
     for (int i = 337; i <= 340; ++i) {
         ppu->execute();
     }
