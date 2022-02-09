@@ -61,32 +61,30 @@ public:
     }
 
     constexpr void increase_coarse_x() {
-        if ((value_ & 0x001Fu) == 31u) {
-            value_ &= ~0x001Fu; // coarse X = 0
+        const auto coarse_x = coarse_scroll_x();
+        if (coarse_x == 31u) {
+            set_coarse_scroll_x(0u);
             value_ ^= 0x0400u; // switch horizontal nametable
         } else {
-            value_ += 1u;
+            set_coarse_scroll_x(coarse_x + 1u);
         }
     }
 
     constexpr void increase_y() {
-        if ((value_ & 0x7000u) != 0x7000u) {
-            // if fine Y < 7
-            value_ += 0x1000u;
+        if (fine_scroll_y() < 7u) {
+            set_fine_scroll_y(fine_scroll_y() + 1u);
         } else {
-            value_ &= ~0x7000u; // fine Y = 0
-            uint16_t y = (value_ & 0x03E0u) >> 5u; // let y = coarse Y
-            if (y == 29u) {
-                y = 0u; // coarse Y = 0
+            set_fine_scroll_y(0u);
+
+            const uint16_t coarse_y = coarse_scroll_y();
+            if (coarse_y == 29u) {
+                set_coarse_scroll_y(0u);
                 value_ ^= 0x0800u; // switch vertical nametable
-            } else if (y == 31u) {
-                y = 0u; // coarse Y = 0, nametable not switched
+            } else if (coarse_y == 31u) {
+                set_coarse_scroll_y(0u); // nametable not switched
             } else {
-                y += 1u; // increment coarse Y
+                set_coarse_scroll_y(coarse_y + 1u);
             }
-            value_ = static_cast<uint16_t>(
-                             value_ & static_cast<uint16_t>(~0x03E0u)) |
-                     static_cast<uint16_t>(y << 5u); // put coarse Y back into v
         }
     }
 
