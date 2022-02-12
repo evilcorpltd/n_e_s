@@ -22,62 +22,6 @@ const uint16_t kPostRenderScanline = 240;
 const uint16_t kVBlankScanlineStart = 241;
 const uint16_t kVBlankScanlineEnd = 260;
 
-constexpr uint16_t increase_vram_coarse_x(uint16_t vram_addr) {
-    // From http://wiki.nesdev.com/w/index.php/PPU_scrolling
-    if ((vram_addr & 0x001Fu) == 31u) {
-        vram_addr &= ~0x001Fu; // coarse X = 0
-        vram_addr ^= 0x0400u; // switch horizontal nametable
-    } else {
-        vram_addr += 1u;
-    }
-    return vram_addr;
-}
-
-constexpr uint16_t increase_vram_y(uint16_t vram_addr) {
-    // From http://wiki.nesdev.com/w/index.php/PPU_scrolling
-    if ((vram_addr & 0x7000u) != 0x7000u) {
-        // if fine Y < 7
-        vram_addr += 0x1000u;
-    } else {
-        vram_addr &= ~0x7000u; // fine Y = 0
-        uint16_t y = (vram_addr & 0x03E0u) >> 5u; // let y = coarse Y
-        if (y == 29u) {
-            y = 0u; // coarse Y = 0
-            vram_addr ^= 0x0800u; // switch vertical nametable
-        } else if (y == 31u) {
-            y = 0u; // coarse Y = 0, nametable not switched
-        } else {
-            y += 1u; // increment coarse Y
-        }
-        vram_addr = static_cast<uint16_t>(
-                            vram_addr & static_cast<uint16_t>(~0x03E0u)) |
-                    static_cast<uint16_t>(y << 5u); // put coarse Y back into v
-    }
-    return vram_addr;
-}
-
-// From http://wiki.nesdev.com/w/index.php/PPU_scrolling
-// The 15 bit registers t and v are composed this way during rendering:
-// yyy NN YYYYY XXXXX
-// ||| || ||||| +++++-- coarse X scroll
-// ||| || +++++-------- coarse Y scroll
-// ||| ++-------------- nametable select
-// +++----------------- fine Y scroll
-constexpr uint8_t get_fine_scroll_y(uint16_t vram_addr) {
-    uint8_t fine_scroll = static_cast<uint8_t>(vram_addr >> 12u) & 0b0000'0111u;
-    return fine_scroll;
-}
-
-constexpr uint8_t get_coarse_scroll_y(uint16_t vram_addr) {
-    uint8_t y = static_cast<uint8_t>(vram_addr >> 5u) & 0b0001'1111u;
-    return y;
-}
-
-constexpr uint8_t get_coarse_scroll_x(uint16_t vram_addr) {
-    uint8_t x = vram_addr & 0b0001'1111u;
-    return x;
-}
-
 // From
 // https://wiki.nesdev.org/w/index.php/PPU_scrolling#Tile_and_attribute_fetching
 uint16_t get_nametable_address(uint16_t vram_addr) {
@@ -109,14 +53,14 @@ uint8_t Ppu::read_byte(uint16_t addr) {
     } else if (addr == kOamData) {
         byte = oam_data_[registers_->oamaddr];
     } else if (addr == kPpuData) {
-        byte = mmu_->read_byte(registers_->vram_addr);
-        if (registers_->vram_addr < kFirstPaletteData) {
+        byte = mmu_->read_byte(registers_->vram_addr.value());
+        if (registers_->vram_addr.value() < kFirstPaletteData) {
             const uint8_t tmp_buffer = read_buffer_;
             read_buffer_ = byte;
             byte = tmp_buffer;
         } else {
-            read_buffer_ = mmu_->read_byte(
-                    registers_->vram_addr - static_cast<uint16_t>(0x1000));
+            read_buffer_ = mmu_->read_byte(registers_->vram_addr.value() -
+                                           static_cast<uint16_t>(0x1000));
         }
         increment_vram_address();
     } else {
@@ -135,11 +79,7 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
         }
 
         registers_->ctrl = byte;
-        auto name_table_bits = static_cast<uint16_t>(byte & 3u);
-        registers_->temp_vram_addr &=
-                static_cast<uint16_t>(0b1111'0011'1111'1111);
-        registers_->temp_vram_addr |=
-                static_cast<uint16_t>(name_table_bits << 10u);
+        registers_->temp_vram_addr.set_nametable(byte);
     } else if (addr == kPpuMask) {
         registers_->mask = byte;
     } else if (addr == kOamAddr) {
@@ -150,38 +90,35 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
         }
     } else if (addr == kPpuScroll) {
         if (registers_->write_toggle) { // Second write, Y scroll
-            uint16_t y_scroll = (byte >> 3u);
-            auto fine_y_scroll = static_cast<uint16_t>(byte & 7u);
-            registers_->temp_vram_addr &=
-                    static_cast<uint16_t>(0b1000'1100'0001'1111);
-            registers_->temp_vram_addr |= static_cast<uint16_t>(y_scroll << 5u);
-            registers_->temp_vram_addr |=
-                    static_cast<uint16_t>(fine_y_scroll << 12u);
+            const uint16_t y_scroll = (byte >> 3u);
+            const auto fine_y_scroll = static_cast<uint16_t>(byte & 7u);
+            registers_->temp_vram_addr.set_fine_scroll_y(fine_y_scroll);
+            registers_->temp_vram_addr.set_coarse_scroll_y(y_scroll);
             registers_->write_toggle = false;
         } else { // First write, X Scroll
-            uint16_t x_scroll = (byte >> 3u);
-            registers_->temp_vram_addr &=
-                    static_cast<uint16_t>(0b1111'1111'1110'0000);
-            registers_->temp_vram_addr |= x_scroll;
+            const uint16_t x_scroll = (byte >> 3u);
+            registers_->temp_vram_addr.set_coarse_scroll_x(x_scroll);
             registers_->fine_x_scroll = static_cast<uint8_t>(byte & 7u);
             registers_->write_toggle = true;
         }
     } else if (addr == kPpuAddr) {
         if (registers_->write_toggle) { // Second write, lower address byte
-            registers_->temp_vram_addr =
-                    (registers_->temp_vram_addr & 0xFF00u) | byte;
+            registers_->temp_vram_addr = PpuVram(
+                    (registers_->temp_vram_addr.value() & 0xFF00u) | byte);
             registers_->vram_addr = registers_->temp_vram_addr;
             registers_->write_toggle = false;
         } else { // First write, upper address byte
             // Valid addresses are $0000-$3FFF; higher addresses will be
             // mirrored down.
             const uint16_t upper_byte = (byte & 0x3Fu) << 8u;
-            const uint16_t lower_byte = registers_->temp_vram_addr & 0x00FFu;
-            registers_->temp_vram_addr = upper_byte | lower_byte;
+            const uint16_t lower_byte =
+                    registers_->temp_vram_addr.value() & 0x00FFu;
+            registers_->temp_vram_addr = PpuVram(upper_byte | lower_byte);
+            registers_->write_toggle = true;
             registers_->write_toggle = true;
         }
     } else if (addr == kPpuData) {
-        mmu_->write_byte(registers_->vram_addr, byte);
+        mmu_->write_byte(registers_->vram_addr.value(), byte);
         increment_vram_address();
     } else {
         mmu_->write_byte(addr, byte);
@@ -267,7 +204,8 @@ uint8_t Ppu::get_vram_address_increment() const {
 }
 
 void Ppu::increment_vram_address() {
-    registers_->vram_addr += get_vram_address_increment();
+    registers_->vram_addr = PpuVram(
+            registers_->vram_addr.value() + get_vram_address_increment());
 }
 
 void Ppu::execute_pre_render_scanline() {
@@ -323,27 +261,31 @@ void Ppu::increase_scroll_counters() {
     // are reloaded if rendering is enabled. vert(v) == vert(t)
     if (scanline() == kPreRenderScanline) {
         if (cycle() >= 280 && cycle() <= 304) {
-            registers_->vram_addr &= static_cast<uint16_t>(~0x7BE0u);
-            registers_->vram_addr |= (registers_->temp_vram_addr & 0x7BE0u);
+            auto addr = registers_->vram_addr.value();
+            addr &= static_cast<uint16_t>(~0x7BE0u);
+            addr |= (registers_->temp_vram_addr.value() & 0x7BE0u);
+            registers_->vram_addr = PpuVram(addr);
         }
     }
 
     const bool should_increase_coarse_x =
             !(cycle() == 0 || (cycle() >= 256 && cycle() <= 320));
     if (should_increase_coarse_x && (cycle() % 8) == 0) {
-        registers_->vram_addr = increase_vram_coarse_x(registers_->vram_addr);
+        registers_->vram_addr.increase_coarse_x();
     }
 
     if (cycle() == 256) {
-        registers_->vram_addr = increase_vram_y(registers_->vram_addr);
+        registers_->vram_addr.increase_y();
     } else if (cycle() == 257) {
         // Copies all bits related to horizontal position from
         // temporal to current vram_address
         // From http://wiki.nesdev.com/w/index.php/PPU_scrolling
         // If rendering is enabled, the PPU copies all bits related to
         // horizontal position from t to v:
-        registers_->vram_addr &= ~0x41Fu;
-        registers_->vram_addr |= registers_->temp_vram_addr & 0x41Fu;
+        auto addr = registers_->vram_addr.value();
+        addr &= ~0x41Fu;
+        addr |= registers_->temp_vram_addr.value() & 0x41Fu;
+        registers_->vram_addr = PpuVram(addr);
     }
 }
 void Ppu::fetch() {
@@ -351,7 +293,7 @@ void Ppu::fetch() {
             (cycle() >= 321 && cycle() <= 336)) {
         const uint16_t background_pattern_table_base_address =
                 (registers_->ctrl & 0b0001'0000u) ? 0x1000u : 0x0000u;
-        const uint8_t fine_scroll_y = get_fine_scroll_y(registers_->vram_addr);
+        const uint8_t fine_scroll_y = registers_->vram_addr.fine_scroll_y();
 
         switch ((cycle() - 1) % 8) {
         case 0: {
@@ -373,13 +315,13 @@ void Ppu::fetch() {
 
             registers_->name_table = registers_->name_table_latch;
             const uint16_t nametable_address =
-                    get_nametable_address(registers_->vram_addr);
+                    get_nametable_address(registers_->vram_addr.value());
             registers_->name_table_latch = mmu_->read_byte(nametable_address);
             break;
         }
         case 2: {
             const uint16_t attribute_address =
-                    get_attribute_address(registers_->vram_addr);
+                    get_attribute_address(registers_->vram_addr.value());
             uint8_t byte = mmu_->read_byte(attribute_address);
             // Figure out which quadrant we are in and get the two corresponding
             // bits.
@@ -388,8 +330,8 @@ void Ppu::fetch() {
             // |||| ++--- Color bits 3-2 for top right quadrant of this byte
             // ||++------ Color bits 3-2 for bottom left quadrant of this byte
             // ++-------- Color bits 3-2 for bottom right quadrant of this byte
-            const uint8_t coarse_y = get_coarse_scroll_y(registers_->vram_addr);
-            const uint8_t coarse_x = get_coarse_scroll_x(registers_->vram_addr);
+            const uint8_t coarse_y = registers_->vram_addr.coarse_scroll_y();
+            const uint8_t coarse_x = registers_->vram_addr.coarse_scroll_x();
             if (coarse_y % 4u >= 2u) {
                 // We are in the bottom quadrant
                 byte >>= 4u;
@@ -423,7 +365,7 @@ void Ppu::fetch() {
         // at the beginning of the next scanline (tile 3 since tile 1 and 2
         // were fetched already in the end of this scanline).
         const uint16_t nametable_address =
-                get_nametable_address(registers_->vram_addr);
+                get_nametable_address(registers_->vram_addr.value());
         registers_->name_table_latch = mmu_->read_byte(nametable_address);
     }
 }
