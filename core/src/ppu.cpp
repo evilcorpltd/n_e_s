@@ -115,7 +115,6 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
                     registers_->temp_vram_addr.value() & 0x00FFu;
             registers_->temp_vram_addr = PpuVram(upper_byte | lower_byte);
             registers_->write_toggle = true;
-            registers_->write_toggle = true;
         }
     } else if (addr == kPpuData) {
         mmu_->write_byte(registers_->vram_addr.value(), byte);
