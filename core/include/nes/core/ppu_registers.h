@@ -17,10 +17,10 @@ public:
     constexpr PpuVram() noexcept = default;
     constexpr explicit PpuVram(const uint16_t value) : value_(value) {}
 
-    constexpr bool operator==(const PpuVram &) const = default;
-    constexpr bool operator!=(const PpuVram &) const = default;
+    [[nodiscard]] constexpr bool operator==(const PpuVram &) const = default;
+    [[nodiscard]] constexpr bool operator!=(const PpuVram &) const = default;
 
-    constexpr uint16_t value() const {
+    [[nodiscard]] constexpr uint16_t value() const {
         return value_;
     }
 
@@ -30,7 +30,7 @@ public:
         value_ |= static_cast<uint16_t>(fine_scroll_y << 12u);
     }
 
-    constexpr uint8_t fine_scroll_y() const {
+    [[nodiscard]] constexpr uint8_t fine_scroll_y() const {
         return static_cast<uint8_t>(value_ >> 12u) & 0b0000'0111u;
     }
 
@@ -40,7 +40,7 @@ public:
         value_ |= static_cast<uint16_t>(coarse_scroll_y << 5u);
     }
 
-    constexpr uint8_t coarse_scroll_y() const {
+    [[nodiscard]] constexpr uint8_t coarse_scroll_y() const {
         return static_cast<uint8_t>(value_ >> 5u) & 0b0001'1111u;
     }
 
@@ -56,7 +56,7 @@ public:
         value_ |= static_cast<uint16_t>(nametable << 10u);
     }
 
-    constexpr uint8_t coarse_scroll_x() const {
+    [[nodiscard]] constexpr uint8_t coarse_scroll_x() const {
         return value_ & 0b0001'1111u;
     }
 
