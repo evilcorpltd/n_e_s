@@ -58,7 +58,7 @@ private:
     void increment_vram_address();
 
     void execute_pre_render_scanline();
-    void execute_visible_scanline();
+    std::optional<Pixel> execute_visible_scanline();
     void execute_post_render_scanline();
     void execute_vblank_scanline();
 
@@ -68,6 +68,7 @@ private:
     void shift_registers();
     void increase_scroll_counters();
     void fetch();
+    std::optional<Pixel> pixel();
 
     Color get_color_from_palette_index(uint8_t index) const;
 };

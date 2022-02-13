@@ -1,3 +1,4 @@
+#include "ippu_helpers.h"
 #include "nes/core/irom.h"
 #include "nes/core/rom_factory.h"
 
