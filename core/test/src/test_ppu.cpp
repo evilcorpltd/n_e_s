@@ -103,6 +103,33 @@ TEST_F(PpuTest, scrolling_tests) {
     EXPECT_EQ(expected, registers);
 }
 
+// Test from the example shown at:
+// https://wiki.nesdev.org/w/index.php/PPU_scrolling#Details
+TEST_F(PpuTest, split_xy_scrolling_tests) {
+    registers.temp_vram_addr = PpuVram(0b11111111'00000000u);
+    expected.temp_vram_addr = PpuVram(0b00000100'00000000u);
+    expected.write_toggle = true;
+    ppu->write_byte(0x2006, 0x04);
+    EXPECT_EQ(expected, registers);
+
+    expected.temp_vram_addr = PpuVram(0b01100100'11100000u);
+    expected.write_toggle = false;
+    ppu->write_byte(0x2005, 0x3E);
+    EXPECT_EQ(expected, registers);
+
+    expected.temp_vram_addr = PpuVram(0b01100100'11101111u);
+    expected.write_toggle = true;
+    expected.fine_x_scroll = 0b0101u;
+    ppu->write_byte(0x2005, 0x7D);
+    EXPECT_EQ(expected, registers);
+
+    expected.temp_vram_addr = PpuVram(0b01100100'11101111u);
+    expected.vram_addr = expected.temp_vram_addr;
+    expected.write_toggle = false;
+    ppu->write_byte(0x2006, 0xEF);
+    EXPECT_EQ(expected, registers);
+}
+
 TEST_F(PpuTest, nmi_is_triggered_when_it_should) {
     bool triggered = false;
     registers.ctrl = expected.ctrl = 0b1000'0000;
