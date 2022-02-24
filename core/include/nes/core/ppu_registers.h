@@ -139,7 +139,22 @@ public:
 // 5: Emphasize red (green on PAL/Dendy)
 // 6: Emphasize green (red on PAL/Dendy)
 // 7: Emphasize blue
-using PpuMask = Register<uint8_t>;
+class PpuMask : public Register<uint8_t> {
+public:
+    using Register<uint8_t>::Register;
+
+    [[nodiscard]] constexpr bool render_background() const {
+        return is_set(3u);
+    }
+
+    [[nodiscard]] constexpr bool render_background_left() const {
+        return is_set(1u);
+    }
+
+    [[nodiscard]] constexpr bool is_rendering_enabled() const {
+        return is_set(3u) || is_set(4u);
+    }
+};
 
 struct PpuRegisters {
     uint16_t scanline;
@@ -165,10 +180,6 @@ struct PpuRegisters {
     uint8_t attribute_table_latch;
     uint16_t attribute_table_shifter_low;
     uint16_t attribute_table_shifter_hi;
-
-    [[nodiscard]] constexpr bool is_rendering_enabled() const {
-        return mask.is_set(3u) || mask.is_set(4u);
-    }
 };
 
 } // namespace n_e_s::core

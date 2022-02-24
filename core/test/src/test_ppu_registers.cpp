@@ -36,15 +36,31 @@ TEST(RegisterUint8, shift_right) {
     EXPECT_EQ(0b0010'0000, reg.value());
 }
 
-TEST(PpuRegisters, is_rendering_enabled_returns_true_for_bit_three_and_four) {
-    PpuRegisters r{};
-    EXPECT_FALSE(r.is_rendering_enabled());
+TEST(PpuMask, render_background_returns_true_for_bit_three) {
+    PpuMask mask{};
+    EXPECT_FALSE(mask.render_background());
 
-    r.mask = PpuMask(0b0000'1000);
-    EXPECT_TRUE(r.is_rendering_enabled());
+    mask = PpuMask(0b0000'1000);
+    EXPECT_TRUE(mask.render_background());
+}
 
-    r.mask = PpuMask(0b0001'0000);
-    EXPECT_TRUE(r.is_rendering_enabled());
+TEST(PpuMask, render_background_left_returns_true_for_bit_one) {
+    PpuMask mask{};
+    EXPECT_FALSE(mask.render_background_left());
+
+    mask = PpuMask(0b0000'0010);
+    EXPECT_TRUE(mask.render_background_left());
+}
+
+TEST(PpuMask, is_rendering_enabled_returns_true_for_bit_three_and_four) {
+    PpuMask mask{};
+    EXPECT_FALSE(mask.is_rendering_enabled());
+
+    mask = PpuMask(0b0000'1000);
+    EXPECT_TRUE(mask.is_rendering_enabled());
+
+    mask = PpuMask(0b0001'0000);
+    EXPECT_TRUE(mask.is_rendering_enabled());
 }
 
 TEST(PpuVram, construction) {
