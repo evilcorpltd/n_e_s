@@ -1,8 +1,57 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 namespace n_e_s::core {
+
+template <class TypeT>
+class Register {
+public:
+    constexpr Register() = default;
+    constexpr explicit Register(const TypeT value) : value_{value} {};
+
+    [[nodiscard]] constexpr bool operator==(const Register &) const = default;
+
+    [[nodiscard]] constexpr TypeT value() const {
+        return value_;
+    }
+
+    constexpr void set_bit(uint16_t bit) {
+        value_ |= (1u << bit);
+    }
+
+    [[nodiscard]] constexpr bool is_set(uint16_t bit) const {
+        return (static_cast<TypeT>(value_ >> bit) & 1u) != 0u;
+    }
+
+    Register &operator>>=(const std::size_t count) {
+        value_ >>= count;
+        return *this;
+    }
+
+    Register &operator<<=(const std::size_t count) {
+        value_ <<= count;
+        return *this;
+    }
+
+protected:
+    TypeT value_{0};
+};
+
+template <class TypeT>
+inline Register<TypeT> operator>>(Register<TypeT> reg,
+        const std::size_t count) {
+    reg >>= count;
+    return reg;
+}
+
+template <class TypeT>
+inline Register<TypeT> operator<<(Register<TypeT> reg,
+        const std::size_t count) {
+    reg <<= count;
+    return reg;
+}
 
 // Vram register in PPU.
 // From http://wiki.nesdev.com/w/index.php/PPU_scrolling
@@ -12,17 +61,9 @@ namespace n_e_s::core {
 // ||| || +++++-------- coarse Y scroll
 // ||| ++-------------- nametable select
 // +++----------------- fine Y scroll
-class PpuVram {
+class PpuVram : public Register<uint16_t> {
 public:
-    constexpr PpuVram() noexcept = default;
-    constexpr explicit PpuVram(const uint16_t value) : value_(value) {}
-
-    [[nodiscard]] constexpr bool operator==(const PpuVram &) const = default;
-    [[nodiscard]] constexpr bool operator!=(const PpuVram &) const = default;
-
-    [[nodiscard]] constexpr uint16_t value() const {
-        return value_;
-    }
+    using Register<uint16_t>::Register;
 
     constexpr void set_fine_scroll_y(uint8_t fine_scroll_y) {
         fine_scroll_y = fine_scroll_y & 7u;
@@ -87,16 +128,25 @@ public:
             }
         }
     }
-
-private:
-    uint16_t value_{0u};
 };
+
+// Mask bits
+// 0: Greyscale (0: normal color, 1: produce a greyscale display)
+// 1: Show background in leftmost 8 pixels of screen if set.
+// 2: Show sprites in leftmost 8 pixels of screen if set.
+// 3: Show background if set.
+// 4: Show sprites if set.
+// 5: Emphasize red (green on PAL/Dendy)
+// 6: Emphasize green (red on PAL/Dendy)
+// 7: Emphasize blue
+using PpuMask = Register<uint8_t>;
 
 struct PpuRegisters {
     uint16_t scanline;
     uint16_t cycle;
     uint8_t ctrl;
-    uint8_t mask;
+
+    PpuMask mask;
     uint8_t status;
     uint8_t oamaddr;
     uint8_t fine_x_scroll;
@@ -117,7 +167,7 @@ struct PpuRegisters {
     uint16_t attribute_table_shifter_hi;
 
     [[nodiscard]] constexpr bool is_rendering_enabled() const {
-        return (mask & (1u << 3u)) || (mask & (1u << 4u));
+        return mask.is_set(3u) || mask.is_set(4u);
     }
 };
 

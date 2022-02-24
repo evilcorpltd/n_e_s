@@ -220,7 +220,7 @@ TEST_F(PpuTest, write_to_ctrl_register) {
 }
 
 TEST_F(PpuTest, write_to_mask_register) {
-    expected.mask = 0x33;
+    expected.mask = PpuMask(0x33);
 
     ppu->write_byte(0x2001, 0x33);
 
@@ -236,7 +236,7 @@ TEST_F(PpuTest, write_to_oamaddr_register) {
 }
 
 TEST_F(PpuTest, ignore_oamdata_write_background_enabled) {
-    registers.mask = 0b00001000;
+    registers.mask = PpuMask(0b00001000);
     registers.oamaddr = 0x02;
     expected.mask = registers.mask;
     expected.oamaddr = registers.oamaddr;
@@ -247,7 +247,7 @@ TEST_F(PpuTest, ignore_oamdata_write_background_enabled) {
 }
 
 TEST_F(PpuTest, ignore_oamdata_write_sprite_enabled) {
-    registers.mask = 0b00010000;
+    registers.mask = PpuMask(0b00001000);
     registers.oamaddr = 0x02;
     expected.mask = registers.mask;
     expected.oamaddr = registers.oamaddr;
@@ -258,7 +258,7 @@ TEST_F(PpuTest, ignore_oamdata_write_sprite_enabled) {
 }
 
 TEST_F(PpuTest, ignore_oamdata_during_pre_render_scanline) {
-    registers.mask = 0b00011000;
+    registers.mask = PpuMask(0b00011000);
     registers.oamaddr = 0x02;
     registers.scanline = 261;
     expected.mask = registers.mask;
@@ -443,7 +443,8 @@ TEST_F(PpuTest, increment_vram_addr_by_32_after_reading) {
 
 TEST_F(PpuTest, visible_two_sub_cycles) {
     registers.scanline = expected.scanline = 0;
-    registers.mask = expected.mask = 0b000'1000; // Enable background rendering
+    registers.mask = expected.mask =
+            PpuMask(0b000'1000); // Enable background rendering
 
     expected.cycle = 17;
     // Vram should be increased at cycle 8 and 16
@@ -492,7 +493,8 @@ TEST_F(PpuTest, visible_two_sub_cycles) {
 
 TEST_F(PpuTest, visible_scanline) {
     registers.scanline = 0u; // Start at visible scanline
-    registers.mask = expected.mask = 0b000'1000; // Enable background rendering
+    registers.mask = expected.mask =
+            PpuMask(0b000'1000); // Enable background rendering
 
     expected.cycle = 257;
     expected.scanline = 0u;
@@ -583,7 +585,8 @@ TEST_F(PpuTest, visible_scanline) {
 
 TEST_F(PpuTest, pre_render_two_sub_cycles) {
     registers.scanline = expected.scanline = 261; // Start at pre-render
-    registers.mask = expected.mask = 0b000'1000; // Enable background rendering
+    registers.mask = expected.mask =
+            PpuMask(0b000'1000); // Enable background rendering
 
     expected.cycle = 17;
     // Vram should be increased at cycle 8 and 16
@@ -634,7 +637,8 @@ TEST_F(PpuTest, pre_render_two_sub_cycles) {
 
 TEST_F(PpuTest, pre_render_scanline) {
     registers.scanline = 261u; // Start at pre-render
-    registers.mask = expected.mask = 0b000'1000; // Enable background rendering
+    registers.mask = expected.mask =
+            PpuMask(0b000'1000); // Enable background rendering
 
     expected.cycle = 257;
     expected.scanline = 261u;

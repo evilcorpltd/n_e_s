@@ -25,7 +25,7 @@ void PrintTo(const PpuRegisters &r, std::ostream *os) {
             r.scanline,
             r.ctrl,
             r.fine_x_scroll,
-            r.mask,
+            r.mask.value(),
             r.oamaddr,
             r.status,
             r.vram_addr.value(),

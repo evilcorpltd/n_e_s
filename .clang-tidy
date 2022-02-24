@@ -48,6 +48,10 @@ CheckOptions:
     value:  lower_case
   - key:    readability-identifier-naming.MemberCase
     value:  lower_case
+  - key:    readability-identifier-naming.ProtectedMemberCase
+    value:  lower_case
+  - key:    readability-identifier-naming.ProtectedMemberSuffix
+    value:  _
   - key:    readability-identifier-naming.PrivateMemberCase
     value:  lower_case
   - key:    readability-identifier-naming.PrivateMemberSuffix
