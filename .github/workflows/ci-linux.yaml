@@ -67,6 +67,8 @@ jobs:
         run: |
           pip install cmake==3.18.2.post1 ninja==1.10.0.post1 --upgrade
 
+          sudo apt-get update
+
           if [ "${{ matrix.compiler }}" = "gcc" ]; then
             sudo apt-get install -y g++-${{ matrix.version }} g++-${{ matrix.version }}-multilib
             echo "CC=gcc-${{ matrix.version }}" >> $GITHUB_ENV
