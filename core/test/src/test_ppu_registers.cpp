@@ -6,15 +6,61 @@ using namespace n_e_s::core;
 
 namespace {
 
-TEST(PpuRegisters, is_rendering_enabled_returns_true_for_bit_three_and_four) {
-    PpuRegisters r{};
-    EXPECT_FALSE(r.is_rendering_enabled());
+TEST(RegisterUint8, set_and_get_bit) {
+    Register<uint8_t> reg;
+    reg.set_bit(0);
+    EXPECT_TRUE(reg.is_set(0));
+    EXPECT_EQ(0b0000'0001, reg.value());
 
-    r.mask = 0b0000'1000;
-    EXPECT_TRUE(r.is_rendering_enabled());
+    reg.set_bit(5);
+    EXPECT_TRUE(reg.is_set(5));
+    EXPECT_EQ(0b0010'0001, reg.value());
+}
 
-    r.mask = 0b0001'0000;
-    EXPECT_TRUE(r.is_rendering_enabled());
+TEST(RegisterUint8, shift_left) {
+    Register<uint8_t> reg;
+    reg.set_bit(0);
+    reg <<= 1u;
+    EXPECT_EQ(0b0000'0010, reg.value());
+
+    reg = reg << 1u;
+    EXPECT_EQ(0b0000'0100, reg.value());
+}
+
+TEST(RegisterUint8, shift_right) {
+    Register<uint8_t> reg(0b1000'0000);
+    reg >>= 1u;
+    EXPECT_EQ(0b0100'0000, reg.value());
+
+    reg = reg >> 1u;
+    EXPECT_EQ(0b0010'0000, reg.value());
+}
+
+TEST(PpuMask, render_background_returns_true_for_bit_three) {
+    PpuMask mask{};
+    EXPECT_FALSE(mask.render_background());
+
+    mask = PpuMask(0b0000'1000);
+    EXPECT_TRUE(mask.render_background());
+}
+
+TEST(PpuMask, render_background_left_returns_true_for_bit_one) {
+    PpuMask mask{};
+    EXPECT_FALSE(mask.render_background_left());
+
+    mask = PpuMask(0b0000'0010);
+    EXPECT_TRUE(mask.render_background_left());
+}
+
+TEST(PpuMask, is_rendering_enabled_returns_true_for_bit_three_and_four) {
+    PpuMask mask{};
+    EXPECT_FALSE(mask.is_rendering_enabled());
+
+    mask = PpuMask(0b0000'1000);
+    EXPECT_TRUE(mask.is_rendering_enabled());
+
+    mask = PpuMask(0b0001'0000);
+    EXPECT_TRUE(mask.is_rendering_enabled());
 }
 
 TEST(PpuVram, construction) {

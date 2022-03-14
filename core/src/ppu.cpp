@@ -81,7 +81,7 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
         registers_->ctrl = byte;
         registers_->temp_vram_addr.set_nametable(byte);
     } else if (addr == kPpuMask) {
-        registers_->mask = byte;
+        registers_->mask = PpuMask(byte);
     } else if (addr == kOamAddr) {
         registers_->oamaddr = byte;
     } else if (addr == kOamData) {
@@ -189,7 +189,7 @@ bool Ppu::is_vblank_scanline() const {
 }
 
 bool Ppu::is_rendering_active() const {
-    return registers_->is_rendering_enabled() &&
+    return registers_->mask.is_rendering_enabled() &&
            (is_pre_render_scanline() || is_visible_scanline());
 }
 
@@ -253,7 +253,7 @@ void Ppu::shift_registers() {
 }
 
 void Ppu::increase_scroll_counters() {
-    if (!registers_->is_rendering_enabled()) {
+    if (!registers_->mask.is_rendering_enabled()) {
         return;
     }
 
