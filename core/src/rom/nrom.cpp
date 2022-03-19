@@ -43,10 +43,10 @@ void Nrom::cpu_write_byte(uint16_t addr, uint8_t byte) {
     if (addr <= kPrgRamEnd) {
         addr -= kPrgRamStart;
         prg_ram_[addr % prg_ram_.size()] = byte;
+    } else {
+        addr -= kPrgRomStart;
+        prg_rom_[addr % prg_rom_.size()] = byte;
     }
-
-    addr -= kPrgRomStart;
-    prg_rom_[addr % prg_rom_.size()] = byte;
 }
 
 bool Nrom::is_ppu_address_in_range(uint16_t addr) const {

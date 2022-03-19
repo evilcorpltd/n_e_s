@@ -130,7 +130,7 @@ TEST(Nrom, write_and_read_byte_ppu_bus) {
     EXPECT_EQ(0x89, nrom->ppu_read_byte(0x0100));
 }
 
-TEST(Nrom, write_and_read_byte_cpu_bus_16k_prg_rom) {
+TEST(Nrom, write_and_read_prg_ram) {
     std::string bytes{nrom_bytes(1, 1, Mapper::Nrom)};
     std::stringstream ss(bytes);
     std::unique_ptr<IRom> nrom = RomFactory::from_bytes(ss);
@@ -138,6 +138,16 @@ TEST(Nrom, write_and_read_byte_cpu_bus_16k_prg_rom) {
     // $6000-$7FFF: prg ram
     nrom->cpu_write_byte(0x6000, 0x0F);
     EXPECT_EQ(0x0F, nrom->cpu_read_byte(0x6000));
+    // Prg rom should not be affected.
+    for (uint16_t addr = 0x8000; addr < 0xFFFF; ++addr) {
+        EXPECT_EQ(0x00, nrom->cpu_read_byte(addr));
+    }
+}
+
+TEST(Nrom, write_and_read_byte_cpu_bus_16k_prg_rom) {
+    std::string bytes{nrom_bytes(1, 1, Mapper::Nrom)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> nrom = RomFactory::from_bytes(ss);
 
     // 16 K prg rom: $C000-$FFFF should mirror $8000-$BFFF
     nrom->cpu_write_byte(0x8000, 0xAB);
@@ -152,10 +162,6 @@ TEST(Nrom, write_and_read_byte_cpu_bus_32k_prg_rom) {
     std::string bytes{nrom_bytes(2, 1, Mapper::Nrom)};
     std::stringstream ss(bytes);
     std::unique_ptr<IRom> nrom = RomFactory::from_bytes(ss);
-
-    // $6000-$7FFF: prg ram
-    nrom->cpu_write_byte(0x6000, 0x0F);
-    EXPECT_EQ(0x0F, nrom->cpu_read_byte(0x6000));
 
     // 32 K prg rom:
     // CPU $8000-$BFFF: First 16 KB of ROM.
