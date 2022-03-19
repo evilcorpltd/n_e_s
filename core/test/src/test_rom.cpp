@@ -122,10 +122,6 @@ TEST(Nrom, creation_fails_with_bad_rom_sizes) {
     ss = std::stringstream(bytes);
     EXPECT_THROW(auto tmp = RomFactory::from_bytes(ss), std::invalid_argument);
 
-    bytes = nrom_bytes(1, 0, Mapper::Nrom);
-    ss = std::stringstream(bytes);
-    EXPECT_THROW(auto tmp = RomFactory::from_bytes(ss), std::invalid_argument);
-
     bytes = nrom_bytes(1, 2, Mapper::Nrom);
     ss = std::stringstream(bytes);
     EXPECT_THROW(auto tmp = RomFactory::from_bytes(ss), std::invalid_argument);

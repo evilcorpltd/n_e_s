@@ -4,6 +4,7 @@
 
 #include <fmt/format.h>
 #include <cassert>
+#include <cstddef>
 #include <cstring>
 #include <istream>
 #include <limits>
@@ -70,13 +71,21 @@ std::unique_ptr<IRom> RomFactory::from_bytes(std::istream &bytestream) {
     std::vector<uint8_t> prg_rom(bytes.begin() + sizeof(INesHeader),
             bytes.begin() + sizeof(INesHeader) + prg_rom_byte_count);
 
-    std::vector<uint8_t> chr_rom(
-            bytes.begin() + sizeof(INesHeader) + prg_rom_byte_count,
-            bytes.begin() + sizeof(INesHeader) + prg_rom_byte_count +
-                    chr_rom_byte_count);
+    std::vector<uint8_t> chr_memory;
+    if (h.chr_rom_size == 0) {
+        // No chr rom, game uses chr ram
+        // Allocate ram with enough size:
+        // https://www.nesdev.org/wiki/CHR_ROM_vs._CHR_RAM
+        chr_memory.resize(static_cast<std::size_t>(8u * 1024u));
+    } else {
+        chr_memory = std::vector<uint8_t>(
+                bytes.begin() + sizeof(INesHeader) + prg_rom_byte_count,
+                bytes.begin() + sizeof(INesHeader) + prg_rom_byte_count +
+                        chr_rom_byte_count);
+    }
 
     if (mapper == 0) {
-        return std::make_unique<Nrom>(h, prg_rom, chr_rom);
+        return std::make_unique<Nrom>(h, prg_rom, chr_memory);
     }
 
     throw std::logic_error(fmt::format("Unsupported mapper: {}", mapper));
