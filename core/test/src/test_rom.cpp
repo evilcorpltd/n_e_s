@@ -13,6 +13,7 @@ namespace {
 
 enum class Mapper {
     Nrom = 0,
+    Mapper2 = 2,
 };
 
 std::string ines_header_bytes(const uint8_t mapper_id,
@@ -51,10 +52,10 @@ std::string nrom_bytes(const uint8_t prg_rom_size,
 
 void set_prg_rom_byte(const int prg_rom_banks,
         std::string *bytes,
-        const uint16_t addr,
+        const uint32_t addr,
         const uint8_t data) {
     const uint32_t bytes_offset = addr + sizeof(INesHeader);
-    const uint16_t prg_rom_size = prg_rom_banks * 16 * 1024;
+    const uint32_t prg_rom_size = prg_rom_banks * 16 * 1024;
     EXPECT_LT(addr, prg_rom_size);
     std::memcpy(&bytes->operator[](bytes_offset), &data, sizeof(data));
 }
@@ -127,6 +128,8 @@ TEST(Nrom, creation_fails_with_bad_rom_sizes) {
     EXPECT_THROW(auto tmp = RomFactory::from_bytes(ss), std::invalid_argument);
 }
 
+////////////////////////////////////////////////////////////////
+// Nrom tests
 TEST(Nrom, write_and_read_byte_ppu_bus) {
     std::string bytes{nrom_bytes(1, 1, Mapper::Nrom)};
     std::stringstream ss(bytes);
@@ -197,6 +200,72 @@ TEST(Nrom, write_and_read_byte_cpu_bus_32k_prg_rom) {
     EXPECT_EQ(0x10, nrom->cpu_read_byte(0xBFFF));
     EXPECT_EQ(0x42, nrom->cpu_read_byte(0xC000));
     EXPECT_EQ(0x78, nrom->cpu_read_byte(0xFFFF));
+}
+
+////////////////////////////////////////////////////////////////
+// Mapper 2 tests
+TEST(Mapper2, write_and_read_byte_ppu_bus) {
+    std::string bytes{nrom_bytes(1, 1, Mapper::Mapper2)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> rom = RomFactory::from_bytes(ss);
+
+    rom->ppu_write_byte(0x0100, 0x89);
+    EXPECT_EQ(0x89, rom->ppu_read_byte(0x0100));
+}
+
+TEST(Mapper2, write_should_not_modify_anything) {
+    constexpr int kPrgRomBanks = 2;
+    std::string bytes{nrom_bytes(kPrgRomBanks, 1, Mapper::Mapper2)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> rom = RomFactory::from_bytes(ss);
+
+    rom->cpu_write_byte(0x9000, 0xF1);
+    for (uint16_t addr = 0x8000; addr < 0xFFFF; ++addr) {
+        EXPECT_EQ(0x00, rom->cpu_read_byte(addr));
+    }
+}
+
+TEST(Mapper2, prg_rom_should_not_be_writable) {
+    constexpr int kPrgRomBanks = 2;
+    std::string bytes{nrom_bytes(kPrgRomBanks, 1, Mapper::Mapper2)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> rom = RomFactory::from_bytes(ss);
+
+    rom->cpu_write_byte(0x8000, 0x11);
+    EXPECT_EQ(0x00, rom->cpu_read_byte(0x8000));
+    rom->cpu_write_byte(0xFFFF, 0x12);
+    EXPECT_EQ(0x00, rom->cpu_read_byte(0xFFFF));
+}
+
+TEST(Mapper2, write_and_read_byte_cpu_bus) {
+    constexpr int kPrgRomBanks = 8;
+    std::string bytes{nrom_bytes(kPrgRomBanks, 1, Mapper::Mapper2)};
+    // First byte in first bank
+    set_prg_rom_byte(kPrgRomBanks, &bytes, 0u * 0x4000u, 0x01);
+    // First byte in second bank
+    set_prg_rom_byte(kPrgRomBanks, &bytes, 1u * 0x4000u, 0x02);
+    // First byte in last bank
+    set_prg_rom_byte(kPrgRomBanks, &bytes, 7u * 0x4000u, 0x07);
+    // Second byte in last bank
+    set_prg_rom_byte(kPrgRomBanks, &bytes, 7u * 0x4000u + 1u, 0xAB);
+
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> rom = RomFactory::from_bytes(ss);
+
+    // $8000-$BFFF: 16 KB switchable PRG ROM bank
+    EXPECT_EQ(0x01, rom->cpu_read_byte(0x8000));
+
+    // $C000-$FFFF: 16 KB PRG ROM bank, fixed to the last bank
+    EXPECT_EQ(0x07, rom->cpu_read_byte(0xC000));
+    EXPECT_EQ(0xAB, rom->cpu_read_byte(0xC001));
+
+    // Write to rom to switch bank
+    rom->cpu_write_byte(0x8000, 0x01);
+    EXPECT_EQ(0x02, rom->cpu_read_byte(0x8000));
+
+    // Last bank should not be affected
+    EXPECT_EQ(0x07, rom->cpu_read_byte(0xC000));
+    EXPECT_EQ(0xAB, rom->cpu_read_byte(0xC001));
 }
 
 } // namespace
