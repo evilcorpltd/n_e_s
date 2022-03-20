@@ -49,6 +49,16 @@ std::string nrom_bytes(const uint8_t prg_rom_size,
     return bytes;
 }
 
+void set_prg_rom_byte(const int prg_rom_banks,
+        std::string *bytes,
+        const uint16_t addr,
+        const uint8_t data) {
+    const uint32_t bytes_offset = addr + sizeof(INesHeader);
+    const uint16_t prg_rom_size = prg_rom_banks * 16 * 1024;
+    EXPECT_LT(addr, prg_rom_size);
+    std::memcpy(&bytes->operator[](bytes_offset), &data, sizeof(data));
+}
+
 TEST(RomFactory, doesnt_parse_streams_with_too_few_bytes) {
     std::string bytes(15, 0);
     std::stringstream ss(bytes);
@@ -144,34 +154,53 @@ TEST(Nrom, write_and_read_prg_ram) {
     }
 }
 
+TEST(Nrom, prg_rom_should_not_be_writable) {
+    constexpr int kPrgRomBanks = 2;
+    std::string bytes{nrom_bytes(kPrgRomBanks, 1, Mapper::Nrom)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> nrom = RomFactory::from_bytes(ss);
+
+    nrom->cpu_write_byte(0x8000, 0x11);
+    EXPECT_EQ(0x00, nrom->cpu_read_byte(0x8000));
+    nrom->cpu_write_byte(0xFFFF, 0x12);
+    EXPECT_EQ(0x00, nrom->cpu_read_byte(0xFFFF));
+}
+
 TEST(Nrom, write_and_read_byte_cpu_bus_16k_prg_rom) {
-    std::string bytes{nrom_bytes(1, 1, Mapper::Nrom)};
+    constexpr int kPrgRomBanks = 1;
+    std::string bytes{nrom_bytes(kPrgRomBanks, 1, Mapper::Nrom)};
+    set_prg_rom_byte(1, &bytes, 0x0000, 0xAB); // Mapped to 0x8000
+    set_prg_rom_byte(1, &bytes, 0x3FFF, 0x10); // Mapped to 0xBFFF
+
     std::stringstream ss(bytes);
     std::unique_ptr<IRom> nrom = RomFactory::from_bytes(ss);
 
     // 16 K prg rom: $C000-$FFFF should mirror $8000-$BFFF
-    nrom->cpu_write_byte(0x8000, 0xAB);
     EXPECT_EQ(0xAB, nrom->cpu_read_byte(0x8000));
     EXPECT_EQ(0xAB, nrom->cpu_read_byte(0xC000));
-    nrom->cpu_write_byte(0xBFFF, 0x10);
+
     EXPECT_EQ(0x10, nrom->cpu_read_byte(0xBFFF));
     EXPECT_EQ(0x10, nrom->cpu_read_byte(0xFFFF));
 }
 
 TEST(Nrom, write_and_read_byte_cpu_bus_32k_prg_rom) {
-    std::string bytes{nrom_bytes(2, 1, Mapper::Nrom)};
+    constexpr int kPrgRomBanks = 2;
+    std::string bytes{nrom_bytes(kPrgRomBanks, 1, Mapper::Nrom)};
+    set_prg_rom_byte(2, &bytes, 0x0000, 0xAB); // Mapped to 0x8000
+    set_prg_rom_byte(2, &bytes, 0x3FFF, 0x10); // Mapped to 0xBFFF
+    set_prg_rom_byte(2, &bytes, 0x4000, 0x42); // Mapped to 0xC000
+    set_prg_rom_byte(2, &bytes, 0x7FFF, 0x78); // Mapped to 0xFFFF
+
     std::stringstream ss(bytes);
     std::unique_ptr<IRom> nrom = RomFactory::from_bytes(ss);
 
     // 32 K prg rom:
     // CPU $8000-$BFFF: First 16 KB of ROM.
     // CPU $C000-$FFFF: Last 16 KB of ROM.
-    nrom->cpu_write_byte(0x8000, 0xAB);
     EXPECT_EQ(0xAB, nrom->cpu_read_byte(0x8000));
-    EXPECT_NE(0xAB, nrom->cpu_read_byte(0xC000));
-    nrom->cpu_write_byte(0xBFFF, 0x10);
     EXPECT_EQ(0x10, nrom->cpu_read_byte(0xBFFF));
-    EXPECT_NE(0x10, nrom->cpu_read_byte(0xFFFF));
+    EXPECT_EQ(0x42, nrom->cpu_read_byte(0xC000));
+    EXPECT_EQ(0x78, nrom->cpu_read_byte(0xFFFF));
 }
 
 } // namespace

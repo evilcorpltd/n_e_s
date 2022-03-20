@@ -40,12 +40,10 @@ uint8_t Nrom::cpu_read_byte(uint16_t addr) const {
 }
 
 void Nrom::cpu_write_byte(uint16_t addr, uint8_t byte) {
+    // Only ram is writable
     if (addr <= kPrgRamEnd) {
         addr -= kPrgRamStart;
         prg_ram_[addr % prg_ram_.size()] = byte;
-    } else {
-        addr -= kPrgRomStart;
-        prg_rom_[addr % prg_rom_.size()] = byte;
     }
 }
 
