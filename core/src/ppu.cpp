@@ -162,6 +162,11 @@ void Ppu::update_counters() {
         cycle() = 0;
         if (scanline() == kLastScanlineInFrame) {
             scanline() = 0;
+            registers_->odd_frame = !registers_->odd_frame;
+            if (registers_->odd_frame &&
+                    registers_->mask.is_rendering_enabled()) {
+                cycle() = 1;
+            }
         } else {
             ++scanline();
         }
