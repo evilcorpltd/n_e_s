@@ -1,0 +1,10 @@
+cc_binary(
+    name = "romtest",
+    srcs = ["src/main.cpp"],
+    deps = [
+        "//core",
+        "//disassembler",
+        "//nes",
+        "@fmtlib",
+    ],
+)
