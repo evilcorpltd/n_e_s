@@ -168,6 +168,7 @@ struct PpuRegisters {
     PpuVram vram_addr;
     PpuVram temp_vram_addr;
     bool write_toggle;
+    bool odd_frame;
 
     uint8_t name_table_latch;
     uint8_t name_table;

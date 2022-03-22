@@ -261,9 +261,11 @@ TEST_F(PpuTest, ignore_oamdata_during_pre_render_scanline) {
     registers.mask = PpuMask(0b00011000);
     registers.oamaddr = 0x02;
     registers.scanline = 261;
+    registers.odd_frame = true;
     expected.mask = registers.mask;
     expected.oamaddr = registers.oamaddr;
     expected.scanline = 0;
+    expected.odd_frame = false;
     // Two increases when fetching two tiles for next scanline
     expected.vram_addr = PpuVram(0x0002);
 
@@ -437,6 +439,21 @@ TEST_F(PpuTest, increment_vram_addr_by_32_after_reading) {
     expected.vram_addr = PpuVram(0x0020);
 
     ppu->read_byte(0x2007);
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, skips_first_cycle_on_odd_frames_when_rendering_is_enabled) {
+    registers.mask = expected.mask =
+            PpuMask(0b000'1000); // Enable background rendering
+    registers.odd_frame = false;
+    registers.cycle = kCyclesPerScanline - 1u;
+    registers.scanline = 261; // pre-render scanline
+    expected.odd_frame = true;
+    expected.cycle = 1;
+    expected.scanline = 0;
+
+    ppu->execute();
 
     EXPECT_EQ(expected, registers);
 }
@@ -637,6 +654,7 @@ TEST_F(PpuTest, pre_render_two_sub_cycles) {
 
 TEST_F(PpuTest, pre_render_scanline) {
     registers.scanline = 261u; // Start at pre-render
+    registers.odd_frame = expected.odd_frame = true;
     registers.mask = expected.mask =
             PpuMask(0b000'1000); // Enable background rendering
 
@@ -720,6 +738,7 @@ TEST_F(PpuTest, pre_render_scanline) {
     // Two unused nametable fetches.
     expected.scanline = 0;
     expected.cycle = 0;
+    expected.odd_frame = false;
     EXPECT_CALL(mmu, read_byte(0x2000 + 2)).Times(2).WillRepeatedly(Return(2));
     for (int i = 337; i <= 340; ++i) {
         const auto pixel = ppu->execute();

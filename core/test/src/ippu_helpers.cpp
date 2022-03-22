@@ -10,7 +10,7 @@ bool operator==(const PpuRegisters &a, const PpuRegisters &b) {
            a.mask == b.mask && a.status == b.status && a.oamaddr == b.oamaddr &&
            a.fine_x_scroll == b.fine_x_scroll && a.vram_addr == b.vram_addr &&
            a.temp_vram_addr == b.temp_vram_addr &&
-           a.write_toggle == b.write_toggle;
+           a.write_toggle == b.write_toggle && a.odd_frame == b.odd_frame;
 }
 
 // Required by gtest to use pascal case.
@@ -20,7 +20,7 @@ void PrintTo(const PpuRegisters &r, std::ostream *os) {
             "Cycle: {} Scanline: {} Ctrl: {:#04x} ScrollX: {:#04x} Mask: "
             "{:#04x} OamAddr: {:#04x} "
             "Status: {:#04x} VramAddr: {:#06x} TmpVramAddr: {:#06x} "
-            "WriteToggle: {}\n",
+            "WriteToggle: {} OddFrame: {}\n",
             r.cycle,
             r.scanline,
             r.ctrl,
@@ -30,7 +30,8 @@ void PrintTo(const PpuRegisters &r, std::ostream *os) {
             r.status,
             r.vram_addr.value(),
             r.temp_vram_addr.value(),
-            r.write_toggle);
+            r.write_toggle,
+            r.odd_frame);
 }
 
 } // namespace n_e_s::core
