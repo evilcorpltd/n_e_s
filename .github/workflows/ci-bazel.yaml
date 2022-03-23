@@ -7,10 +7,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
-    - name: Install
-      run: |
-          echo "CC=gcc-10" >> $GITHUB_ENV
-          echo "CXX=g++-10" >> $GITHUB_ENV
-          wget https://github.com/bazelbuild/bazelisk/releases/download/v1.9.0/bazelisk-linux-amd64 --output-document=bazel
     - name: Test
-      run: bazel test ... --config=gnulike
+      run: |
+        bazel --version
+        CC=gcc-10 CXX=g++-10 bazel test ... --config=gnulike
