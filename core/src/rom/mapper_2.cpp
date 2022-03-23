@@ -1,78 +1,87 @@
-#include "rom/nrom.h"
+#include "rom/mapper_2.h"
 
-#include <cassert>
+#include <cstddef>
 #include <stdexcept>
 #include <string>
 #include "nes/core/ines_header.h"
+#include "nes/core/invalid_address.h"
 
 namespace n_e_s::core {
 
-Nrom::Nrom(const INesHeader &h,
+Mapper2::Mapper2(const INesHeader &h,
         std::vector<uint8_t> prg_rom,
-        std::vector<uint8_t> chr_rom)
+        std::vector<uint8_t> chr_mem)
         : IRom(h),
+          select_bank_hi_(h.prg_rom_size - 1),
           prg_rom_(std::move(prg_rom)),
-          chr_rom_(std::move(chr_rom)),
-          prg_ram_(static_cast<size_t>(h.prg_ram_size * 8 * 1024)),
+          chr_mem_(std::move(chr_mem)),
           nametables_{} {
-    if (prg_rom_.size() != 16 * 1024 && prg_rom_.size() != 32 * 1024) {
+    if (prg_rom_.size() !=
+            static_cast<std::size_t>(16u * 1024u * h.prg_rom_size)) {
         throw std::invalid_argument("Invalid prg_rom size");
     }
 
-    if (chr_rom_.size() != 8 * 1024) {
-        throw std::invalid_argument("Invalid chr_rom size");
+    if (chr_mem_.size() != static_cast<std::size_t>(8u * 1024u)) {
+        throw std::invalid_argument("Invalid chr_ram size");
     }
 }
 
-bool Nrom::is_cpu_address_in_range(uint16_t addr) const {
-    const bool in_prg = addr >= kPrgRamStart;
+bool Mapper2::is_cpu_address_in_range(uint16_t addr) const {
+    const bool in_prg = addr >= 0x8000;
     return in_prg;
 }
 
-uint8_t Nrom::cpu_read_byte(uint16_t addr) const {
-    if (addr <= kPrgRamEnd) {
-        addr -= kPrgRamStart;
-        return prg_ram_[addr % prg_ram_.size()];
+uint8_t Mapper2::cpu_read_byte(uint16_t addr) const {
+    if (addr >= kSwitchablePrgRomStart && addr <= kSwitchablePrgRomEnd) {
+        const uint32_t mapped_addr =
+                select_bank_low_ * 0x4000u + (addr & 0x3FFFu);
+        return prg_rom_[mapped_addr];
     }
 
-    addr -= kPrgRomStart;
-    return prg_rom_[addr % prg_rom_.size()];
+    if (addr >= kLastBankPrgRomStart) {
+        const uint32_t mapped_addr =
+                select_bank_hi_ * 0x4000u + (addr & 0x3FFFu);
+        return prg_rom_[mapped_addr];
+    }
+
+    throw InvalidAddress(addr);
 }
 
-void Nrom::cpu_write_byte(uint16_t addr, uint8_t byte) {
-    // Only ram is writable
-    if (addr <= kPrgRamEnd) {
-        addr -= kPrgRamStart;
-        prg_ram_[addr % prg_ram_.size()] = byte;
+void Mapper2::cpu_write_byte(uint16_t addr, uint8_t byte) {
+    if (addr >= kSwitchablePrgRomStart) {
+        select_bank_low_ = byte & 0x0Fu;
     }
 }
 
-bool Nrom::is_ppu_address_in_range(uint16_t addr) const {
+bool Mapper2::is_ppu_address_in_range(uint16_t addr) const {
     const bool in_chr = addr <= kChrEnd;
     const bool in_nametable = addr >= kNametableStart && addr <= kNametableEnd;
     return in_chr || in_nametable;
 }
 
-uint8_t Nrom::ppu_read_byte(uint16_t addr) const {
+uint8_t Mapper2::ppu_read_byte(uint16_t addr) const {
     if (addr <= kChrEnd) {
-        return chr_rom_.at(addr);
+        return chr_mem_.at(addr);
     }
     const auto [index, addr_mod] =
             translate_nametable_addr(addr, header().mirroring());
     return nametables_[index][addr_mod];
 }
 
-void Nrom::ppu_write_byte(uint16_t addr, uint8_t byte) {
+void Mapper2::ppu_write_byte(uint16_t addr, uint8_t byte) {
     if (addr <= kChrEnd) {
-        chr_rom_.at(addr) = byte;
+        chr_mem_.at(addr) = byte;
     }
     const auto [index, addr_mod] =
             translate_nametable_addr(addr, header().mirroring());
     nametables_[index][addr_mod] = byte;
 }
 
-std::pair<int, uint16_t> Nrom::translate_nametable_addr(uint16_t addr,
+std::pair<int, uint16_t> Mapper2::translate_nametable_addr(uint16_t addr,
         Mirroring m) const {
+    // TODO(johnor): This logic is identical to mapper 0 (Nrom).
+    // Refactor and move outside the mapper.
+
     // Nametables
     // Range        Size    Desc
     // $2000-$23FF  $0400   Nametable 0

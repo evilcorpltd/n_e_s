@@ -41,6 +41,8 @@ add_library(${PROJECT_NAME}
     src/ppu_factory.cpp
     src/rom/nrom.cpp
     src/rom/nrom.h
+    src/rom/mapper_2.cpp
+    src/rom/mapper_2.h
     src/rom_factory.cpp
 )
 add_library(n_e_s::core ALIAS ${PROJECT_NAME})
