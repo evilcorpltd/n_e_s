@@ -146,4 +146,17 @@ TEST_F(DisassemblerFixture, disassemble_indirect) {
     EXPECT_EQ("JMP ($5678) = 4342", res);
 }
 
+TEST_F(DisassemblerFixture, does_not_read_ppu_memory) {
+    // 0x2007 is mapped to PpuData.
+    load_hex_dump(0x1234, {n_e_s::core::StaAbsolute, 0x07, 0x20});
+    // 0x2002 is mapped to PpuStatus.
+    load_hex_dump(0xABCD, {n_e_s::core::StaAbsolute, 0x02, 0x20});
+
+    std::string res = disassemble(0x1234, mmu, reg);
+    EXPECT_EQ("STA $2007 = 00", res);
+
+    res = disassemble(0xABCD, mmu, reg);
+    EXPECT_EQ("STA $2002 = 00", res);
+}
+
 } // namespace
