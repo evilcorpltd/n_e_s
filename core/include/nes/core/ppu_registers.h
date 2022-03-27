@@ -181,6 +181,9 @@ struct PpuRegisters {
     uint8_t attribute_table_latch;
     uint16_t attribute_table_shifter_low;
     uint16_t attribute_table_shifter_hi;
+
+    [[nodiscard]] constexpr bool operator==(
+            const PpuRegisters &) const = default;
 };
 
 } // namespace n_e_s::core

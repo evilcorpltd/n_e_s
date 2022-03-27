@@ -466,6 +466,15 @@ TEST_F(PpuTest, visible_two_sub_cycles) {
     expected.cycle = 17;
     // Vram should be increased at cycle 8 and 16
     expected.vram_addr = PpuVram(0x0002);
+    expected.name_table = 0x02;
+    expected.name_table_latch = 0x03;
+    expected.pattern_table_shifter_hi = 0x4C80;
+    expected.pattern_table_latch_hi = 0x99;
+    expected.pattern_table_shifter_low = 0x4000;
+    expected.pattern_table_latch_low = 0x80;
+    expected.attribute_table_shifter_low = 0x7F80;
+    expected.attribute_table_shifter_hi = 0x7F80;
+    expected.attribute_table_latch = 0x03;
 
     // Clear scrolling
     ppu->write_byte(0x2005, 0);
@@ -519,6 +528,15 @@ TEST_F(PpuTest, visible_scanline) {
     // Fine scroll should be increase once, and coarse x for each tile except
     // the last (31x).
     expected.vram_addr = PpuVram(0b001'00'00000'11111);
+    expected.name_table = 0x1E;
+    expected.name_table_latch = 0x1F;
+    expected.pattern_table_shifter_hi = 0x8700;
+    expected.pattern_table_latch_hi = 0x0F;
+    expected.pattern_table_shifter_low = 0x8F00;
+    expected.pattern_table_latch_low = 0x1F;
+    expected.attribute_table_shifter_low = 0xFF80;
+    expected.attribute_table_shifter_hi = 0x8000;
+    expected.attribute_table_latch = 0x01;
 
     // Clear scrolling
     ppu->write_byte(0x2005, 0);
@@ -559,6 +577,7 @@ TEST_F(PpuTest, visible_scanline) {
     // Cycle 258-320
     // During cycle 280-304 the ppu is idle
     expected.cycle = 321;
+
     for (int i = 258; i <= 320; ++i) {
         const auto pixel = ppu->execute();
         EXPECT_FALSE(pixel.has_value());
@@ -569,6 +588,16 @@ TEST_F(PpuTest, visible_scanline) {
     // Fetch first two tiles for next scanline (fine scroll y=1)
     expected.vram_addr = PpuVram(0b001'00'00000'00010);
     expected.cycle = 337;
+    expected.name_table = 0x02;
+    expected.name_table_latch = 0x03;
+    expected.pattern_table_shifter_hi = 0xCC80;
+    expected.pattern_table_latch_hi = 0x99;
+    expected.pattern_table_shifter_low = 0xC000;
+    expected.pattern_table_latch_low = 0x80;
+    expected.attribute_table_shifter_low = 0xFF80;
+    expected.attribute_table_shifter_hi = 0x7F80;
+    expected.attribute_table_latch = 0x03;
+
     // Nametables
     EXPECT_CALL(mmu, read_byte(0x2000)).WillOnce(Return(0x02));
     EXPECT_CALL(mmu, read_byte(0x2001)).WillOnce(Return(0x03));
@@ -592,6 +621,8 @@ TEST_F(PpuTest, visible_scanline) {
     // Two unused nametable fetches.
     expected.scanline = 1;
     expected.cycle = 0;
+    expected.name_table = 0x02;
+    expected.name_table_latch = 0x02;
     EXPECT_CALL(mmu, read_byte(0x2000 + 2)).Times(2).WillRepeatedly(Return(2));
     for (int i = 337; i <= 340; ++i) {
         const auto pixel = ppu->execute();
@@ -608,6 +639,15 @@ TEST_F(PpuTest, pre_render_two_sub_cycles) {
     expected.cycle = 17;
     // Vram should be increased at cycle 8 and 16
     expected.vram_addr = PpuVram(0x0002);
+    expected.name_table = 0x02;
+    expected.name_table_latch = 0x03;
+    expected.pattern_table_shifter_hi = 0x4C80;
+    expected.pattern_table_latch_hi = 0x99;
+    expected.pattern_table_shifter_low = 0x4000;
+    expected.pattern_table_latch_low = 0x80;
+    expected.attribute_table_shifter_low = 0x7F80;
+    expected.attribute_table_shifter_hi = 0x7F80;
+    expected.attribute_table_latch = 0x03;
 
     // Clear scrolling
     ppu->write_byte(0x2005, 0);
@@ -664,6 +704,15 @@ TEST_F(PpuTest, pre_render_scanline) {
     // Fine scroll should be increase once, and coarse x for each tile except
     // the last (31x).
     expected.vram_addr = PpuVram(0b001'00'00000'11111);
+    expected.name_table = 0x1E;
+    expected.name_table_latch = 0x1F;
+    expected.pattern_table_shifter_hi = 0x8700;
+    expected.pattern_table_latch_hi = 0x0F;
+    expected.pattern_table_shifter_low = 0x8F00;
+    expected.pattern_table_latch_low = 0x1F;
+    expected.attribute_table_shifter_low = 0xFF80;
+    expected.attribute_table_shifter_hi = 0x8000;
+    expected.attribute_table_latch = 0x01;
 
     // Clear scrolling
     ppu->write_byte(0x2005, 0);
@@ -705,6 +754,7 @@ TEST_F(PpuTest, pre_render_scanline) {
     // During cycle 280-304 the vertical scroll bits should be reloaded.
     expected.vram_addr = PpuVram(0b000'00'00000'00000);
     expected.cycle = 321;
+
     for (int i = 258; i <= 320; ++i) {
         const auto pixel = ppu->execute();
         EXPECT_FALSE(pixel.has_value());
@@ -715,6 +765,16 @@ TEST_F(PpuTest, pre_render_scanline) {
     // Fetch first two tiles for next scanline.
     expected.vram_addr = PpuVram(0b000'00'00000'00010);
     expected.cycle = 337;
+    expected.name_table = 0x02;
+    expected.name_table_latch = 0x03;
+    expected.pattern_table_shifter_hi = 0xCC80;
+    expected.pattern_table_latch_hi = 0x99;
+    expected.pattern_table_shifter_low = 0xC000;
+    expected.pattern_table_latch_low = 0x80;
+    expected.attribute_table_shifter_low = 0xFF80;
+    expected.attribute_table_shifter_hi = 0x7F80;
+    expected.attribute_table_latch = 0x03;
+
     // Nametables
     EXPECT_CALL(mmu, read_byte(0x2000)).WillOnce(Return(0x02));
     EXPECT_CALL(mmu, read_byte(0x2001)).WillOnce(Return(0x03));
@@ -739,6 +799,8 @@ TEST_F(PpuTest, pre_render_scanline) {
     expected.scanline = 0;
     expected.cycle = 0;
     expected.odd_frame = false;
+    expected.name_table = 0x02;
+    expected.name_table_latch = 0x02;
     EXPECT_CALL(mmu, read_byte(0x2000 + 2)).Times(2).WillRepeatedly(Return(2));
     for (int i = 337; i <= 340; ++i) {
         const auto pixel = ppu->execute();

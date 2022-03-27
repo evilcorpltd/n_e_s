@@ -5,14 +5,6 @@
 
 namespace n_e_s::core {
 
-bool operator==(const PpuRegisters &a, const PpuRegisters &b) {
-    return a.scanline == b.scanline && a.cycle == b.cycle && a.ctrl == b.ctrl &&
-           a.mask == b.mask && a.status == b.status && a.oamaddr == b.oamaddr &&
-           a.fine_x_scroll == b.fine_x_scroll && a.vram_addr == b.vram_addr &&
-           a.temp_vram_addr == b.temp_vram_addr &&
-           a.write_toggle == b.write_toggle && a.odd_frame == b.odd_frame;
-}
-
 // Required by gtest to use pascal case.
 // NOLINTNEXTLINE(readability-identifier-naming)
 void PrintTo(const PpuRegisters &r, std::ostream *os) {
@@ -20,7 +12,10 @@ void PrintTo(const PpuRegisters &r, std::ostream *os) {
             "Cycle: {} Scanline: {} Ctrl: {:#04x} ScrollX: {:#04x} Mask: "
             "{:#04x} OamAddr: {:#04x} "
             "Status: {:#04x} VramAddr: {:#06x} TmpVramAddr: {:#06x} "
-            "WriteToggle: {} OddFrame: {}\n",
+            "WriteToggle: {} OddFrame: {} NameTbl: {:#04x}[{:#04x}] "
+            "PatternTblHi: {:#06x}[{:#04x}] "
+            "PatternTblLow: {:#06x}[{:#04x}] "
+            "Attr: {:#06x}:{:#06x}[{:#04x}]\n",
             r.cycle,
             r.scanline,
             r.ctrl,
@@ -31,7 +26,16 @@ void PrintTo(const PpuRegisters &r, std::ostream *os) {
             r.vram_addr.value(),
             r.temp_vram_addr.value(),
             r.write_toggle,
-            r.odd_frame);
+            r.odd_frame,
+            r.name_table,
+            r.name_table_latch,
+            r.pattern_table_shifter_hi,
+            r.pattern_table_latch_hi,
+            r.pattern_table_shifter_low,
+            r.pattern_table_latch_low,
+            r.attribute_table_shifter_low,
+            r.attribute_table_shifter_hi,
+            r.attribute_table_latch);
 }
 
 } // namespace n_e_s::core
