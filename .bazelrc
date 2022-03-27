@@ -1,6 +1,7 @@
 build --color=yes
+build --enable_platform_specific_config
 test --test_output=errors
 test --test_verbose_timeout_warnings=true
 
-build:gnulike --cxxopt="-std=c++2a"
-build:msvc --cxxopt="/std:c++latest"
+build:linux --cxxopt="-std=c++2a"
+build:windows --cxxopt="/std:c++latest"

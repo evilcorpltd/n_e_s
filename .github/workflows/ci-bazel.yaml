@@ -10,4 +10,4 @@ jobs:
     - name: Test
       run: |
         bazel --version
-        CC=gcc-10 CXX=g++-10 bazel test ... --config=gnulike
+        CC=gcc-10 CXX=g++-10 bazel test ...
