@@ -19,7 +19,15 @@ jobs:
             os: ubuntu-20.04
             compiler: clang
             version: "10"
+            nestest: true
             cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON -DCMAKE_BUILD_TYPE=Debug
+
+          - name: romtest-clang-10
+            os: ubuntu-20.04
+            compiler: clang
+            version: "10"
+            romtest: true
+            cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON -DCMAKE_BUILD_TYPE=Release
 
     steps:
       - uses: actions/checkout@v2
@@ -47,9 +55,10 @@ jobs:
 
       - name: Build
         run: |
-          cmake --build build --target nestest
+          cmake --build build --target nestest romtest
 
       - name: Run Nestest
+        if: matrix.nestest
         env:
           ASAN_OPTIONS: "symbolize=1:strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1"
           UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
@@ -58,11 +67,23 @@ jobs:
           wget https://robinli.eu/f/nestest.log
           ./build/nestest/nestest nestest.nes > nestest-output.log
 
-      - name: Diff output
+      - name: Diff nestest output
+        if: matrix.nestest
         run: python3 nestest/test_nestest.py --nestest-log nestest.log --nestest-rom nestest.nes --nestest-bin build/nestest/nestest --min-matching-lines 8970
 
       - name: Upload artifacts
+        if: matrix.nestest
         uses: actions/upload-artifact@v1
         with:
           name: nestest-log
           path: nestest-output.log
+
+      - name: Run rom tests
+        if: matrix.romtest
+        env:
+          ASAN_OPTIONS: "symbolize=1:strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1"
+          UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
+        run: |
+          git clone https://github.com/christopherpow/nes-test-roms.git
+          git -C nes-test-roms checkout 95d8f621ae55cee0d09b91519a8989ae0e64753b
+          python3 romtest/test_rom.py --romtest-bin build/romtest/romtest --verbose
