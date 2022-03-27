@@ -1,5 +1,6 @@
 #include "ppu.h"
 
+#include <tuple>
 #include "nes/core/invalid_address.h"
 
 namespace {
@@ -370,7 +371,7 @@ void Ppu::fetch() {
         // were fetched already in the end of this scanline).
         const uint16_t nametable_address =
                 get_nametable_address(registers_->vram_addr.value());
-        registers_->name_table_latch = mmu_->read_byte(nametable_address);
+        std::ignore = mmu_->read_byte(nametable_address);
     }
 }
 
