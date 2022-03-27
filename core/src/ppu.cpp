@@ -215,7 +215,6 @@ void Ppu::increment_vram_address() {
 
 void Ppu::execute_pre_render_scanline() {
     fetch();
-    shift_registers();
     increase_scroll_counters();
     if (cycle() == 1) {
         clear_vblank_flag();
@@ -224,7 +223,6 @@ void Ppu::execute_pre_render_scanline() {
 
 void Ppu::execute_visible_scanline() {
     fetch();
-    shift_registers();
     increase_scroll_counters();
 }
 
@@ -296,6 +294,7 @@ void Ppu::increase_scroll_counters() {
 void Ppu::fetch() {
     if ((cycle() >= 1 && cycle() <= 256) ||
             (cycle() >= 321 && cycle() <= 336)) {
+        shift_registers();
         const uint16_t background_pattern_table_base_address =
                 (registers_->ctrl & 0b0001'0000u) ? 0x1000u : 0x0000u;
         const uint8_t fine_scroll_y = registers_->vram_addr.fine_scroll_y();
