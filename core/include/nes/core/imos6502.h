@@ -26,6 +26,9 @@ struct CpuRegisters {
     uint8_t x; // x index
     uint8_t y; // y index
     uint8_t p; // status
+
+    [[nodiscard]] constexpr bool operator==(
+            const CpuRegisters &) const = default;
 };
 
 struct CpuState {
