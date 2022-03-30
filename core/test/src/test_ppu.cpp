@@ -621,8 +621,6 @@ TEST_F(PpuTest, visible_scanline) {
     // Two unused nametable fetches.
     expected.scanline = 1;
     expected.cycle = 0;
-    expected.name_table = 0x02;
-    expected.name_table_latch = 0x02;
     EXPECT_CALL(mmu, read_byte(0x2000 + 2)).Times(2).WillRepeatedly(Return(2));
     for (int i = 337; i <= 340; ++i) {
         const auto pixel = ppu->execute();
@@ -799,8 +797,6 @@ TEST_F(PpuTest, pre_render_scanline) {
     expected.scanline = 0;
     expected.cycle = 0;
     expected.odd_frame = false;
-    expected.name_table = 0x02;
-    expected.name_table_latch = 0x02;
     EXPECT_CALL(mmu, read_byte(0x2000 + 2)).Times(2).WillRepeatedly(Return(2));
     for (int i = 337; i <= 340; ++i) {
         const auto pixel = ppu->execute();
