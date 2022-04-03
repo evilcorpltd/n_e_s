@@ -73,13 +73,14 @@ uint8_t Ppu::read_byte(uint16_t addr) {
 
 void Ppu::write_byte(uint16_t addr, uint8_t byte) {
     if (addr == kPpuCtrl) {
+        const auto new_ctrl = PpuCtrl(byte);
         // Trigger nmi if the nmi-enabled flag goes from 0 to 1 during vblank.
-        if (!(registers_->ctrl & (1u << 7u)) && byte & (1u << 7u) &&
+        if (!registers_->ctrl.is_set(7u) && new_ctrl.is_set(7u) &&
                 registers_->status & (1u << 7u)) {
             on_nmi_();
         }
 
-        registers_->ctrl = byte;
+        registers_->ctrl = new_ctrl;
         registers_->temp_vram_addr.set_nametable(byte);
     } else if (addr == kPpuMask) {
         registers_->mask = PpuMask(byte);
@@ -200,10 +201,10 @@ bool Ppu::is_rendering_active() const {
 }
 
 uint8_t Ppu::get_vram_address_increment() const {
-    uint8_t addr_increment = 1;
+    uint8_t addr_increment = 1u;
 
-    if (registers_->ctrl & (1u << 2u)) {
-        addr_increment = 32;
+    if (registers_->ctrl.is_set(2u)) {
+        addr_increment = 32u;
     }
 
     return addr_increment;
@@ -234,7 +235,7 @@ void Ppu::execute_post_render_scanline() {
 void Ppu::execute_vblank_scanline() {
     if (scanline() == 241 && cycle() == 1) {
         set_vblank_flag();
-        if (registers_->ctrl & (1u << 7u)) {
+        if (registers_->ctrl.is_set(7u)) {
             on_nmi_();
         }
     }
@@ -297,7 +298,7 @@ void Ppu::fetch() {
             (cycle() >= 321 && cycle() <= 336)) {
         shift_registers();
         const uint16_t background_pattern_table_base_address =
-                (registers_->ctrl & 0b0001'0000u) ? 0x1000u : 0x0000u;
+                registers_->ctrl.is_set(4u) ? 0x1000u : 0x0000u;
         const uint8_t fine_scroll_y = registers_->vram_addr.fine_scroll_y();
 
         switch ((cycle() - 1) % 8) {

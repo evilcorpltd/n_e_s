@@ -18,7 +18,7 @@ void PrintTo(const PpuRegisters &r, std::ostream *os) {
             "Attr: {:#06x}:{:#06x}[{:#04x}]\n",
             r.cycle,
             r.scanline,
-            r.ctrl,
+            r.ctrl.value(),
             r.fine_x_scroll,
             r.mask.value(),
             r.oamaddr,

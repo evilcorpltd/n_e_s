@@ -132,7 +132,7 @@ TEST_F(PpuTest, split_xy_scrolling_tests) {
 
 TEST_F(PpuTest, nmi_is_triggered_when_it_should) {
     bool triggered = false;
-    registers.ctrl = expected.ctrl = 0b1000'0000;
+    registers.ctrl = expected.ctrl = PpuCtrl(0b1000'0000u);
     ppu->set_nmi_handler([&] { triggered = true; });
 
     // Nmi shouldn't get triggered before the start of vblanking.
@@ -156,7 +156,7 @@ TEST_F(PpuTest, nmi_is_triggered_when_it_should) {
 
 TEST_F(PpuTest, nmi_is_not_triggered_if_disabled) {
     bool triggered = false;
-    registers.ctrl = expected.ctrl = 0x00;
+    registers.ctrl = expected.ctrl = PpuCtrl(0x00);
     ppu->set_nmi_handler([&] { triggered = true; });
 
     // Nmi shouldn't get triggered since bit 7 in ctrl is 0.
@@ -166,7 +166,7 @@ TEST_F(PpuTest, nmi_is_not_triggered_if_disabled) {
 
 TEST_F(PpuTest, nmi_triggered_when_enabled_during_vblank) {
     bool triggered = false;
-    expected.ctrl = 0b1000'0000;
+    expected.ctrl = PpuCtrl(0b1000'0000);
     ppu->set_nmi_handler([&] { triggered = true; });
 
     step_execution(kCyclesPerScanline * 241 + 1);
@@ -211,7 +211,7 @@ TEST_F(PpuTest, clear_vblank_flag_during_pre_render_line) {
 }
 
 TEST_F(PpuTest, write_to_ctrl_register) {
-    expected.ctrl = 0xBA;
+    expected.ctrl = PpuCtrl(0xBA);
     expected.temp_vram_addr = PpuVram(0x800);
 
     ppu->write_byte(0x2000, 0xBA);
@@ -329,7 +329,7 @@ TEST_F(PpuTest, write_ppu_scroll_two_times) {
 }
 
 TEST_F(PpuTest, write_ppu_scroll_nametable_bits_not_overwritten) {
-    expected.ctrl = 0b0000'0011;
+    expected.ctrl = PpuCtrl(0b0000'0011);
     expected.temp_vram_addr = PpuVram(0b00'1100'0001'1111);
     expected.write_toggle = true;
 
@@ -380,7 +380,7 @@ TEST_F(PpuTest, increment_vram_addr_by_1_after_writing) {
 }
 
 TEST_F(PpuTest, increment_vram_addr_by_32_after_writing) {
-    registers.ctrl = expected.ctrl = 0x04;
+    registers.ctrl = expected.ctrl = PpuCtrl(0x04);
     expected.vram_addr = PpuVram(0x20);
 
     ppu->write_byte(0x2007, 0x05);
@@ -435,7 +435,7 @@ TEST_F(PpuTest, increment_vram_addr_by_1_after_reading) {
 }
 
 TEST_F(PpuTest, increment_vram_addr_by_32_after_reading) {
-    registers.ctrl = expected.ctrl = 0x04;
+    registers.ctrl = expected.ctrl = PpuCtrl(0x04);
     expected.vram_addr = PpuVram(0x0020);
 
     ppu->read_byte(0x2007);
