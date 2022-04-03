@@ -171,7 +171,6 @@ TESTS = [
         rom="instr_test-v5/rom_singles/15-brk.nes",
         pass_pattern="Passed",
         cycles=10000000,
-        failing=True,
     ),
     Test(
         rom="instr_test-v5/rom_singles/16-special.nes",

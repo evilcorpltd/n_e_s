@@ -108,7 +108,10 @@ Pipeline Mos6502::parse_next_instruction() {
             stack_.push_byte(static_cast<uint8_t>(registers_->pc & 0xFFu));
         });
         result.push([this] { stack_.push_byte(registers_->p | B_FLAG); });
-        result.push([this] { tmp_ = mmu_->read_byte(kBrkAddress); });
+        result.push([this] {
+            tmp_ = mmu_->read_byte(kBrkAddress);
+            set_flag(I_FLAG);
+        });
         result.push([this] {
             const uint16_t pch = mmu_->read_byte(kBrkAddress + 1) << 8u;
             registers_->pc = pch | tmp_;

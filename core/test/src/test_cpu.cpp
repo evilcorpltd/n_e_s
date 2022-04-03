@@ -117,6 +117,7 @@ TEST_F(CpuTest, brk) {
     expected.pc = 0xDEAD;
 
     expected.sp -= 2 + 1; // 1 word and 1 byte
+    expected.p |= I_FLAG;
 
     // Dummy read
     EXPECT_CALL(mmu, read_byte(0x1235));
