@@ -17,6 +17,17 @@ TEST(RegisterUint8, set_and_get_bit) {
     EXPECT_EQ(0b0010'0001, reg.value());
 }
 
+TEST(RegisterUint8, clear_bit) {
+    Register<uint8_t> reg(0b1111'0000);
+    reg.clear_bit(0);
+    EXPECT_FALSE(reg.is_set(0));
+    EXPECT_EQ(0b1111'0000, reg.value());
+
+    reg.clear_bit(7);
+    EXPECT_FALSE(reg.is_set(7));
+    EXPECT_EQ(0b0111'0000, reg.value());
+}
+
 TEST(RegisterUint8, shift_left) {
     Register<uint8_t> reg;
     reg.set_bit(0);

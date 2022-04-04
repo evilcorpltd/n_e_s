@@ -21,6 +21,10 @@ public:
         value_ |= (1u << bit);
     }
 
+    constexpr void clear_bit(uint16_t bit) {
+        value_ &= ~(1u << bit);
+    }
+
     [[nodiscard]] constexpr bool is_set(uint16_t bit) const {
         return (static_cast<TypeT>(value_ >> bit) & 1u) != 0u;
     }
@@ -167,13 +171,20 @@ public:
     }
 };
 
+// Status bits
+// 0-4: Least significant bits previously written into a PPU register
+// 5: Sprite overflow
+// 6: Sprite 0 hit
+// 7: Vertical blank has started (0: not in vblank; 1: in vblank)
+using PpuStatus = Register<uint8_t>;
+
 struct PpuRegisters {
     uint16_t scanline;
     uint16_t cycle;
 
     PpuCtrl ctrl;
     PpuMask mask;
-    uint8_t status;
+    PpuStatus status;
     uint8_t oamaddr;
     uint8_t fine_x_scroll;
     PpuVram vram_addr;
