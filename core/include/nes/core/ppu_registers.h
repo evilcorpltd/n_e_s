@@ -130,6 +130,17 @@ public:
     }
 };
 
+// Controll bits
+// 0-1: nametable address (0 = $2000; 1 = $2400; 2 = $2800; 3 = $2C00)
+// 2: VRAM address increment per CPU read/write of PPUDATA (0: add 1; 1: add 32)
+// 3: Sprite pattern table address for 8x8 sprites
+//    (0: $0000; 1: $1000; ignored in 8x16 mode)
+// 4: Background pattern table address (0: $0000; 1: $1000)
+// 5: Sprite size (0: 8x8 pixels; 1: 8x16 pixels)
+// 6: PPU master/slave select
+// 7: Generate NMI at the start of the vertical blanking (0: off; 1: on)
+using PpuCtrl = Register<uint8_t>;
+
 // Mask bits
 // 0: Greyscale (0: normal color, 1: produce a greyscale display)
 // 1: Show background in leftmost 8 pixels of screen if set.
@@ -159,8 +170,8 @@ public:
 struct PpuRegisters {
     uint16_t scanline;
     uint16_t cycle;
-    uint8_t ctrl;
 
+    PpuCtrl ctrl;
     PpuMask mask;
     uint8_t status;
     uint8_t oamaddr;
