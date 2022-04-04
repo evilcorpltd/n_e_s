@@ -123,6 +123,7 @@ enum Opcode : uint8_t {
     RRA_ABSX = 0x7F,
     NOP_IMM80 = 0x80,
     STA_INXIND = 0x81,
+    NOP_IMM82 = 0x82,
     SAX_INXIND = 0x83,
     STY_ZERO = 0x84,
     STA_ZERO = 0x85,

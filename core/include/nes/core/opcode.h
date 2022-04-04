@@ -125,6 +125,7 @@ enum Instruction : uint8_t {
     RraAbsoluteX = 0x7F, // Undocumented
     NopImmediate80 = 0x80, // Undocumented
     StaIndexedIndirect = 0x81,
+    NopImmediate82 = 0x82, // Undocumented
     SaxIndirectX = 0x83, // Undocumented
     StyZeropage = 0x84,
     StaZeropage = 0x85,
@@ -448,6 +449,8 @@ struct Opcode {
         return {Family::ROR, RorAbsoluteX, AddressMode::AbsoluteX};
     case NopImmediate80:
         return {Family::NOP, NopImmediate80, AddressMode::Immediate};
+    case NopImmediate82:
+        return {Family::NOP, NopImmediate82, AddressMode::Immediate};
     case StaIndexedIndirect:
         return {Family::STA, StaIndexedIndirect, AddressMode::IndexedIndirect};
     case StyZeropage:
