@@ -442,6 +442,7 @@ Pipeline Mos6502::parse_next_instruction() {
     case Instruction::NopImpliedFA:
     case Instruction::NopImmediate80:
     case Instruction::NopImmediate82:
+    case Instruction::NopImmediate89:
     case Instruction::NopZeropage04:
     case Instruction::NopZeropageX14:
     case Instruction::NopZeropageX34:

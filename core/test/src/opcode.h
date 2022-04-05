@@ -130,6 +130,7 @@ enum Opcode : uint8_t {
     STX_ZERO = 0x86,
     SAX_ZERO = 0x87,
     DEY = 0x88,
+    NOP_IMM89 = 0x89,
     TXA = 0x8A,
     STY_ABS = 0x8C,
     STA_ABS = 0x8D,

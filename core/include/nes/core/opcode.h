@@ -132,6 +132,7 @@ enum Instruction : uint8_t {
     StxZeropage = 0x86,
     SaxZeropage = 0x87, // Undocumented
     DeyImplied = 0x88,
+    NopImmediate89 = 0x89, // Undocumented
     TxaImplied = 0x8A,
     StyAbsolute = 0x8C,
     StaAbsolute = 0x8D,
@@ -461,6 +462,8 @@ struct Opcode {
         return {Family::STX, StxZeropage, AddressMode::Zeropage};
     case DeyImplied:
         return {Family::DEY, DeyImplied, AddressMode::Implied};
+    case NopImmediate89:
+        return {Family::NOP, NopImmediate89, AddressMode::Immediate};
     case TxaImplied:
         return {Family::TXA, TxaImplied, AddressMode::Implied};
     case StyAbsolute:

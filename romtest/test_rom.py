@@ -110,7 +110,7 @@ TESTS = [
         pass_pattern="Passed",
         cycles=100000000,
         failing=True,
-    ),  # Missing opcode 0x89
+    ),  # Missing opcode 0xC2
     Test(
         rom="instr_test-v5/rom_singles/04-zero_page.nes",
         pass_pattern="Passed",
