@@ -8,7 +8,6 @@
 #include "nes/core/imos6502.h"
 #include "nes/core/ippu.h"
 #include "nes/core/opcode.h"
-#include "nes/disassembler.h"
 #include "nes/nes.h"
 
 namespace {

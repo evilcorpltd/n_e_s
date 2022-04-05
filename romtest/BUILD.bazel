@@ -3,7 +3,6 @@ cc_binary(
     srcs = ["src/main.cpp"],
     deps = [
         "//core",
-        "//disassembler",
         "//nes",
         "@fmtlib",
     ],
