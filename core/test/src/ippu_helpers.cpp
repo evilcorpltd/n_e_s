@@ -38,4 +38,15 @@ void PrintTo(const PpuRegisters &r, std::ostream *os) {
             r.attribute_table_latch);
 }
 
+// Required by gtest to use pascal case.
+// NOLINTNEXTLINE(readability-identifier-naming)
+void PrintTo(const Pixel &p, std::ostream *os) {
+    *os << fmt::format("x: {} y: {} color: {{r: {} g: {} b: {}}}\n",
+            p.x,
+            p.y,
+            p.color.r,
+            p.color.g,
+            p.color.b);
+}
+
 } // namespace n_e_s::core
