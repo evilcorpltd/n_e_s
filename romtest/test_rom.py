@@ -175,7 +175,9 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--rom-repo-path", type=pathlib.Path, default="nes-test-roms")
     parser.add_argument("--romtest-bin", type=pathlib.Path, required=True)
-    parser.add_argument("--test", help="If set, only run this test")
+    parser.add_argument(
+        "--filter", help="If set, only run tests matching this argument"
+    )
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Print more debug data if set"
     )
@@ -218,11 +220,11 @@ def main():
     args = parse_args()
     success = True
 
-    if args.test:
-        print(f"Running only tests matching: {args.test}")
+    if args.filter:
+        print(f"Running only tests matching: {args.filter}")
 
     for test in TESTS:
-        if args.test and args.test not in test.rom:
+        if args.filter and args.filter not in test.rom:
             continue
         grid = run_test(
             romtest_bin=args.romtest_bin, rom_repo_path=args.rom_repo_path, test=test
