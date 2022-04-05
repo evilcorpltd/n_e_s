@@ -8,3 +8,14 @@ cc_binary(
         "@fmtlib",
     ],
 )
+
+py_binary(
+    name = "test_rom",
+    srcs = ["test_rom.py"],
+    args = [
+        "--romtest-bin",
+        "$(rootpath :romtest)",
+    ],
+    data = [":romtest"],
+    main = "test_rom.py",
+)
