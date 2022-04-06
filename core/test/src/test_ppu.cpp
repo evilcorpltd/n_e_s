@@ -47,7 +47,7 @@ TEST_F(PpuTest, writes_to_mmu_for_unhandled_address) {
 }
 
 TEST_F(PpuTest, read_status_register_clears_write_toggle) {
-    registers.status = 0x25;
+    registers.status = PpuStatus(0x25);
     registers.write_toggle = true;
     expected.write_toggle = false;
 
@@ -57,8 +57,8 @@ TEST_F(PpuTest, read_status_register_clears_write_toggle) {
 }
 
 TEST_F(PpuTest, clear_status_when_reading_status) {
-    registers.status = 0xFF;
-    expected.status = 0x7F;
+    registers.status = PpuStatus(0xFF);
+    expected.status = PpuStatus(0x7F);
 
     ppu->read_byte(0x2002);
 
@@ -187,8 +187,8 @@ TEST_F(PpuTest, nmi_triggered_when_enabled_during_vblank) {
 }
 
 TEST_F(PpuTest, set_vblank_flag_during_vertical_blanking) {
-    registers.status = 0x00;
-    expected.status = 0x80;
+    registers.status = PpuStatus(0x00);
+    expected.status = PpuStatus(0x80);
     expected.cycle = 2;
     expected.scanline = 241;
 
@@ -199,8 +199,8 @@ TEST_F(PpuTest, set_vblank_flag_during_vertical_blanking) {
 }
 
 TEST_F(PpuTest, clear_vblank_flag_during_pre_render_line) {
-    registers.status = 0x00;
-    expected.status = 0x00;
+    registers.status = PpuStatus(0x00);
+    expected.status = PpuStatus(0x00);
     expected.cycle = 2;
     expected.scanline = 261;
 
@@ -285,7 +285,7 @@ TEST_F(PpuTest, write_to_oamdata_register_rendering_disabled) {
 }
 
 TEST_F(PpuTest, write_to_oamdata_register_during_vertical_blanking) {
-    expected.status = 0x80;
+    expected.status = PpuStatus(0x80);
     expected.oamaddr = 0x01;
     expected.scanline = 250;
 

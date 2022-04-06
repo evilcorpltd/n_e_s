@@ -48,7 +48,7 @@ uint8_t Ppu::read_byte(uint16_t addr) {
     uint8_t byte = 0;
 
     if (addr == kPpuStatus) {
-        byte = registers_->status;
+        byte = registers_->status.value();
         registers_->write_toggle = false;
         clear_vblank_flag();
     } else if (addr == kOamData) {
@@ -76,7 +76,7 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
         const auto new_ctrl = PpuCtrl(byte);
         // Trigger nmi if the nmi-enabled flag goes from 0 to 1 during vblank.
         if (!registers_->ctrl.is_set(7u) && new_ctrl.is_set(7u) &&
-                registers_->status & (1u << 7u)) {
+                registers_->status.is_set(7u)) {
             on_nmi_();
         }
 
@@ -242,11 +242,11 @@ void Ppu::execute_vblank_scanline() {
 }
 
 void Ppu::set_vblank_flag() {
-    registers_->status |= (1u << 7u);
+    registers_->status.set_bit(7u);
 }
 
 void Ppu::clear_vblank_flag() {
-    registers_->status &= ~(1u << 7u);
+    registers_->status.clear_bit(7u);
 }
 
 void Ppu::shift_registers() {
