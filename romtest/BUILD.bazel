@@ -3,8 +3,18 @@ cc_binary(
     srcs = ["src/main.cpp"],
     deps = [
         "//core",
-        "//disassembler",
         "//nes",
         "@fmtlib",
     ],
+)
+
+py_binary(
+    name = "test_rom",
+    srcs = ["test_rom.py"],
+    args = [
+        "--romtest-bin",
+        "$(rootpath :romtest)",
+    ],
+    data = [":romtest"],
+    main = "test_rom.py",
 )
