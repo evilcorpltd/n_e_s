@@ -68,6 +68,8 @@ private:
     void shift_registers();
     void increase_scroll_counters();
     void fetch();
+
+    Color get_color_from_palette_index(uint8_t index) const;
 };
 
 } // namespace n_e_s::core

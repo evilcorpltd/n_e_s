@@ -1,3 +1,4 @@
+#include "ippu_helpers.h"
 #include "nes/core/imembank.h"
 #include "nes/core/invalid_address.h"
 #include "nes/core/membank_factory.h"
