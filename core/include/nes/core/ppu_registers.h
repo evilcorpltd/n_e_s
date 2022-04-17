@@ -1,11 +1,12 @@
 #pragma once
 
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 
 namespace n_e_s::core {
 
-template <class TypeT>
+template <std::unsigned_integral TypeT>
 class Register {
 public:
     constexpr Register() = default;
