@@ -145,6 +145,22 @@ TEST(Nrom, is_cpu_address_in_range) {
     EXPECT_FALSE(rom->is_cpu_address_in_range(0x5FFFu));
 }
 
+TEST(Nrom, is_ppu_address_in_range) {
+    std::string bytes{nrom_bytes(1, 1, Mapper::Nrom)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> rom = RomFactory::from_bytes(ss);
+
+    EXPECT_TRUE(rom->is_ppu_address_in_range(0x0000u));
+    EXPECT_TRUE(rom->is_ppu_address_in_range(0x2000u));
+    EXPECT_TRUE(rom->is_ppu_address_in_range(0x2C00u));
+    EXPECT_TRUE(rom->is_ppu_address_in_range(0x3EFFu));
+
+    // Palette memory is created in membank factory.
+    EXPECT_FALSE(rom->is_ppu_address_in_range(0x3F00u));
+    EXPECT_FALSE(rom->is_ppu_address_in_range(0x3F20u));
+    EXPECT_FALSE(rom->is_ppu_address_in_range(0x5000u));
+}
+
 TEST(Nrom, write_and_read_byte_ppu_bus) {
     std::string bytes{nrom_bytes(1, 1, Mapper::Nrom)};
     std::stringstream ss(bytes);
@@ -231,6 +247,22 @@ TEST(Mapper2, is_cpu_address_in_range) {
 
     EXPECT_FALSE(rom->is_cpu_address_in_range(0x0000u));
     EXPECT_FALSE(rom->is_cpu_address_in_range(0x7FFFu));
+}
+
+TEST(Mapper2, is_ppu_address_in_range) {
+    std::string bytes{nrom_bytes(1, 1, Mapper::Mapper2)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> rom = RomFactory::from_bytes(ss);
+
+    EXPECT_TRUE(rom->is_ppu_address_in_range(0x0000u));
+    EXPECT_TRUE(rom->is_ppu_address_in_range(0x2000u));
+    EXPECT_TRUE(rom->is_ppu_address_in_range(0x2C00u));
+    EXPECT_TRUE(rom->is_ppu_address_in_range(0x3EFFu));
+
+    // Palette memory is created in membank factory.
+    EXPECT_FALSE(rom->is_ppu_address_in_range(0x3F00u));
+    EXPECT_FALSE(rom->is_ppu_address_in_range(0x3F20u));
+    EXPECT_FALSE(rom->is_ppu_address_in_range(0x5000u));
 }
 
 TEST(Mapper2, write_and_read_byte_ppu_bus) {
