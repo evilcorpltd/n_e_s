@@ -130,6 +130,21 @@ TEST(Nrom, creation_fails_with_bad_rom_sizes) {
 
 ////////////////////////////////////////////////////////////////
 // Nrom tests
+TEST(Nrom, is_cpu_address_in_range) {
+    std::string bytes{nrom_bytes(1, 1, Mapper::Nrom)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> rom = RomFactory::from_bytes(ss);
+
+    EXPECT_TRUE(rom->is_cpu_address_in_range(0x6000u));
+    EXPECT_TRUE(rom->is_cpu_address_in_range(0x7FFFu));
+    EXPECT_TRUE(rom->is_cpu_address_in_range(0x8000u));
+    EXPECT_TRUE(rom->is_cpu_address_in_range(0xC000u));
+    EXPECT_TRUE(rom->is_cpu_address_in_range(0xFFFFu));
+
+    EXPECT_FALSE(rom->is_cpu_address_in_range(0x0000u));
+    EXPECT_FALSE(rom->is_cpu_address_in_range(0x5FFFu));
+}
+
 TEST(Nrom, write_and_read_byte_ppu_bus) {
     std::string bytes{nrom_bytes(1, 1, Mapper::Nrom)};
     std::stringstream ss(bytes);
@@ -204,6 +219,20 @@ TEST(Nrom, write_and_read_byte_cpu_bus_32k_prg_rom) {
 
 ////////////////////////////////////////////////////////////////
 // Mapper 2 tests
+TEST(Mapper2, is_cpu_address_in_range) {
+    std::string bytes{nrom_bytes(1, 1, Mapper::Mapper2)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> rom = RomFactory::from_bytes(ss);
+
+    EXPECT_TRUE(rom->is_cpu_address_in_range(0x8000u));
+    EXPECT_TRUE(rom->is_cpu_address_in_range(0xBFFFu));
+    EXPECT_TRUE(rom->is_cpu_address_in_range(0xC000u));
+    EXPECT_TRUE(rom->is_cpu_address_in_range(0xFFFFu));
+
+    EXPECT_FALSE(rom->is_cpu_address_in_range(0x0000u));
+    EXPECT_FALSE(rom->is_cpu_address_in_range(0x7FFFu));
+}
+
 TEST(Mapper2, write_and_read_byte_ppu_bus) {
     std::string bytes{nrom_bytes(1, 1, Mapper::Mapper2)};
     std::stringstream ss(bytes);
