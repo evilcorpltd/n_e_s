@@ -1,7 +1,10 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
+
+#include "nes/core/pixel.h"
 
 namespace n_e_s::core {
 class IMos6502;
@@ -26,7 +29,7 @@ public:
     ~Nes();
 
     // Run at 263.25 / 11 Mhz for NTSC "realtime."
-    void execute();
+    std::optional<core::Pixel> execute();
     void reset();
     void load_rom(std::istream &bytestream);
 

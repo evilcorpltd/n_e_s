@@ -26,8 +26,9 @@ set_target_properties(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-    PRIVATE
+    PUBLIC
         n_e_s::core
+    PRIVATE
         n_e_s::warnings
 )
 

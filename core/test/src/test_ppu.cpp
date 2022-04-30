@@ -5,6 +5,7 @@
 #include "nes/core/test/mock_mmu.h"
 
 #include <gtest/gtest.h>
+#include <array>
 
 using namespace n_e_s::core;
 using namespace n_e_s::core::test;
@@ -25,7 +26,17 @@ public:
 
     void step_execution(uint32_t cycles) {
         for (uint32_t i = 0; i < cycles; ++i) {
-            EXPECT_FALSE(ppu->execute().has_value());
+            ppu->execute();
+        }
+    }
+
+    void step_execution(uint32_t cycles, bool expect_pixel) {
+        for (uint32_t i = 0; i < cycles; ++i) {
+            if (expect_pixel) {
+                EXPECT_TRUE(ppu->execute().has_value());
+            } else {
+                EXPECT_TRUE(ppu->execute().has_value());
+            }
         }
     }
 
@@ -458,10 +469,173 @@ TEST_F(PpuTest, skips_first_cycle_on_odd_frames_when_rendering_is_enabled) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(PpuTest, render_one_pixel) {
+    registers.cycle = 1;
+    registers.mask = expected.mask = PpuMask(0x1E); // Enable all rendering.
+    // Shift registers will be shifted left once before
+    // choosing bits to be rendered.
+    // Final pixel value (from second highest bits here): 1*2 + 1 = 3;
+    registers.pattern_table_shifter_hi = 0b0110'0000'0000'0000u;
+    registers.pattern_table_shifter_low = 0b0100'0000'0000'0000u;
+    registers.attribute_table_shifter_hi = 0x0000u;
+    registers.attribute_table_shifter_low = 0xFFFFu;
+
+    // Nametable fetch
+    EXPECT_CALL(mmu, read_byte(0x2000)).WillOnce(Return(0xFF));
+
+    const auto expected_pixel =
+            Pixel{.x = 0u, .y = 0u, .color = Color{8, 16, 144}}; // Second color
+
+    // Palette index
+    // Background palette 1, third color (from pixel value in tile).
+    // Return second color.
+    EXPECT_CALL(mmu, read_byte(0x3F00 + 1u * 4u + 3u))
+            .WillRepeatedly(Return(0x02));
+
+    const auto pixel = ppu->execute();
+    EXPECT_TRUE(pixel.has_value());
+    EXPECT_EQ(expected_pixel, *pixel);
+}
+
+TEST_F(PpuTest, render_one_pixel_with_fine_x_scrolling) {
+    registers.cycle = 1;
+    registers.mask = expected.mask = PpuMask(0x1E); // Enable all rendering.
+    registers.fine_x_scroll = 7u;
+    // Fine x scroll is set to 7, so the ninth bits will be used for rendering.
+    // Shift registers will be shifted left once before
+    // choosing bit to be rendered.
+    // Final pixel value (from eighth bit here): 0*2 + 1 = 1;
+    registers.pattern_table_shifter_hi = 0b0100'0000'0000'0000u;
+    registers.pattern_table_shifter_low = 0b0100'0000'1000'0000u;
+    registers.attribute_table_shifter_hi = 0x0000;
+    registers.attribute_table_shifter_low = 0xFFFF;
+
+    // Nametable fetch
+    EXPECT_CALL(mmu, read_byte(0x2000)).WillOnce(Return(0xFF));
+
+    const auto expected_pixel = Pixel{
+            .x = 0u, .y = 0u, .color = Color{8, 16, 144}}; // Second color.
+
+    // Palette index
+    // Background palette 1, first color (from pixel value in tile).
+    // Return second color.
+    EXPECT_CALL(mmu, read_byte(0x3F00 + 1u * 4u + 1u))
+            .WillRepeatedly(Return(0x02));
+
+    const auto pixel = ppu->execute();
+    EXPECT_TRUE(pixel.has_value());
+    EXPECT_EQ(expected_pixel, *pixel);
+}
+
+TEST_F(PpuTest, render_one_tile) {
+    registers.mask = expected.mask = PpuMask(0x1E); // Enable all rendering
+    registers.cycle = 1;
+    registers.vram_addr = PpuVram(0x0002);
+
+    registers.pattern_table_shifter_hi = 0b1111'1111'1111'1111;
+    registers.pattern_table_shifter_low = 0b0000'0000'0000'0000u;
+    registers.attribute_table_shifter_hi = 0x0000;
+    registers.attribute_table_shifter_low = 0xFFFF;
+
+    {
+        testing::InSequence seq;
+        // Next tile
+        // Nametable
+        EXPECT_CALL(mmu, read_byte(0x2002)).WillOnce(Return(0x03));
+        // Attribute
+        EXPECT_CALL(mmu, read_byte(0x23C0)).WillOnce(Return(0x00));
+
+        // Pattern table low
+        EXPECT_CALL(mmu, read_byte(0x03 * 16u)).WillOnce(Return(0x00));
+        // Pattern table high
+        EXPECT_CALL(mmu, read_byte(0x03 * 16u + 8u)).WillOnce(Return(0x00));
+    }
+
+    constexpr std::array kExpectedPixels = {
+            Pixel{.x = 0u, .y = 0u, .color = Color{152, 150, 152}},
+            Pixel{.x = 1u, .y = 0u, .color = Color{152, 150, 152}},
+            Pixel{.x = 2u, .y = 0u, .color = Color{152, 150, 152}},
+            Pixel{.x = 3u, .y = 0u, .color = Color{152, 150, 152}},
+            Pixel{.x = 4u, .y = 0u, .color = Color{152, 150, 152}},
+            Pixel{.x = 5u, .y = 0u, .color = Color{152, 150, 152}},
+            Pixel{.x = 6u, .y = 0u, .color = Color{152, 150, 152}},
+            Pixel{.x = 7u, .y = 0u, .color = Color{152, 150, 152}},
+            Pixel{.x = 8u, .y = 0u, .color = Color{152, 150, 152}},
+    };
+
+    // Palette index
+    EXPECT_CALL(mmu, read_byte(0x3F00 + 1u * 4u + 2u))
+            .WillRepeatedly(Return(0x10));
+
+    for (int i = 0; i < 8; ++i) {
+        const auto pixel = ppu->execute();
+        EXPECT_TRUE(pixel.has_value());
+        const Pixel expected_pixel = kExpectedPixels.at(i);
+        EXPECT_EQ(expected_pixel, *pixel);
+    }
+
+    expected.scanline = 0;
+    expected.cycle = 9;
+    expected.vram_addr = PpuVram(0x0003);
+    expected.name_table = 0x00;
+    expected.name_table_latch = 0x03;
+    expected.pattern_table_shifter_hi = 0x8000;
+    expected.pattern_table_latch_hi = 0x00;
+    expected.pattern_table_shifter_low = 0x0000;
+    expected.pattern_table_latch_low = 0x00;
+    expected.attribute_table_shifter_low = 0x8000;
+    expected.attribute_table_shifter_hi = 0x0000;
+    expected.attribute_table_latch = 0x00;
+
+    EXPECT_EQ(expected, registers);
+}
+
+TEST_F(PpuTest, visible_scanline_output_background_if_disabled) {
+    registers.mask = expected.mask = PpuMask(0x00); // Disable all rendering
+    registers.cycle = 1;
+
+    EXPECT_CALL(mmu, read_byte(testing::_)).WillRepeatedly(Return(0x00));
+    EXPECT_CALL(mmu, read_byte(0x3F00)).WillRepeatedly(Return(0x05));
+
+    for (int i = 0; i < 50; ++i) {
+        const auto pixel = ppu->execute();
+        EXPECT_TRUE(pixel.has_value());
+        const auto expected_color = Color{92, 0, 48}; // 5th color.
+        EXPECT_EQ(expected_color, pixel->color);
+    }
+}
+
+TEST_F(PpuTest, visible_scanline_output_background_left_disabled) {
+    // Render background, but not first 8 pixels.
+    registers.mask = expected.mask = PpuMask(0b0000'1000);
+    registers.cycle = 1;
+    registers.pattern_table_shifter_hi = 0b1111'1111'1111'1111;
+    registers.pattern_table_shifter_low = 0b0000'0000'0000'0000u;
+    registers.pattern_table_latch_hi = 0xFF;
+    registers.attribute_table_shifter_hi = 0xFFFF;
+    registers.attribute_table_shifter_low = 0xFFFF;
+    registers.attribute_table_latch = 0xFF;
+
+    EXPECT_CALL(mmu, read_byte(testing::_)).WillRepeatedly(Return(0xFF));
+    EXPECT_CALL(mmu, read_byte(0x3F00)).WillRepeatedly(Return(0x05));
+    // Third palette (from attribute)
+    EXPECT_CALL(mmu, read_byte(0x3F00 + 3u * 4u + 2u))
+            .WillRepeatedly(Return(0x06));
+
+    for (int i = 0; i < 10; ++i) {
+        const auto pixel = ppu->execute();
+        EXPECT_TRUE(pixel.has_value());
+        // Return 5th color first 8 pixels (background from 0x3F00)
+        // and 6th color the following pixels.
+        const auto expected_color = i < 8 ? Color{92, 0, 48} : Color{84, 4, 0};
+        EXPECT_EQ(expected_color, pixel->color);
+    }
+}
+
 TEST_F(PpuTest, visible_two_sub_cycles) {
     registers.scanline = expected.scanline = 0;
     registers.mask = expected.mask =
-            PpuMask(0b000'1000); // Enable background rendering
+            PpuMask(0x1E); // Enable background rendering
 
     expected.cycle = 17;
     // Vram should be increased at cycle 8 and 16
@@ -509,9 +683,19 @@ TEST_F(PpuTest, visible_two_sub_cycles) {
         EXPECT_CALL(mmu, read_byte(0x03 * 16u + 8u)).WillOnce(Return(0x99));
     }
 
+    // Palette index
+    EXPECT_CALL(mmu, read_byte(0x3F00)).WillRepeatedly(Return(0x00));
+    EXPECT_CALL(mmu, read_byte(0x3F01)).WillRepeatedly(Return(0x01));
+    EXPECT_CALL(mmu, read_byte(0x3F02)).WillRepeatedly(Return(0x02));
+    EXPECT_CALL(mmu, read_byte(0x3F03)).WillRepeatedly(Return(0x03));
+
     for (int i = 0; i < 17; ++i) {
         const auto pixel = ppu->execute();
-        EXPECT_FALSE(pixel.has_value());
+        if (i == 0) {
+            EXPECT_FALSE(pixel.has_value());
+        } else {
+            EXPECT_TRUE(pixel.has_value());
+        }
     }
 
     EXPECT_EQ(expected, registers);
@@ -520,7 +704,7 @@ TEST_F(PpuTest, visible_two_sub_cycles) {
 TEST_F(PpuTest, visible_scanline) {
     registers.scanline = 0u; // Start at visible scanline
     registers.mask = expected.mask =
-            PpuMask(0b000'1000); // Enable background rendering
+            PpuMask(0b0000'1000); // Enable background rendering
 
     expected.cycle = 257;
     expected.scanline = 0u;
@@ -541,6 +725,21 @@ TEST_F(PpuTest, visible_scanline) {
     // Clear scrolling
     ppu->write_byte(0x2005, 0);
     ppu->write_byte(0x2005, 0);
+
+    // Palette index
+    EXPECT_CALL(mmu, read_byte(0x3F00)).WillRepeatedly(Return(0x01));
+    EXPECT_CALL(mmu, read_byte(0x3F01)).WillRepeatedly(Return(0x01));
+    EXPECT_CALL(mmu, read_byte(0x3F02)).WillRepeatedly(Return(0x01));
+    EXPECT_CALL(mmu, read_byte(0x3F03)).WillRepeatedly(Return(0x01));
+    EXPECT_CALL(mmu, read_byte(0x3F05)).WillRepeatedly(Return(0x01));
+    EXPECT_CALL(mmu, read_byte(0x3F06)).WillRepeatedly(Return(0x01));
+    EXPECT_CALL(mmu, read_byte(0x3F07)).WillRepeatedly(Return(0x01));
+    EXPECT_CALL(mmu, read_byte(0x3F09)).WillRepeatedly(Return(0x01));
+    EXPECT_CALL(mmu, read_byte(0x3F0A)).WillRepeatedly(Return(0x01));
+    EXPECT_CALL(mmu, read_byte(0x3F0B)).WillRepeatedly(Return(0x01));
+    EXPECT_CALL(mmu, read_byte(0x3F0D)).WillRepeatedly(Return(0x01));
+    EXPECT_CALL(mmu, read_byte(0x3F0E)).WillRepeatedly(Return(0x01));
+    EXPECT_CALL(mmu, read_byte(0x3F0F)).WillRepeatedly(Return(0x01));
 
     // Nametables
     for (int i = 0; i < 32; ++i) {
@@ -563,7 +762,11 @@ TEST_F(PpuTest, visible_scanline) {
 
     for (int i = 0; i <= 256; ++i) {
         const auto pixel = ppu->execute();
-        EXPECT_FALSE(pixel.has_value());
+        if (i == 0) {
+            EXPECT_FALSE(pixel.has_value());
+        } else {
+            EXPECT_TRUE(pixel.has_value());
+        }
     }
     EXPECT_EQ(expected, registers);
 
@@ -632,7 +835,7 @@ TEST_F(PpuTest, visible_scanline) {
 TEST_F(PpuTest, pre_render_two_sub_cycles) {
     registers.scanline = expected.scanline = 261; // Start at pre-render
     registers.mask = expected.mask =
-            PpuMask(0b000'1000); // Enable background rendering
+            PpuMask(0b0000'1000); // Enable background rendering
 
     expected.cycle = 17;
     // Vram should be increased at cycle 8 and 16
@@ -694,7 +897,7 @@ TEST_F(PpuTest, pre_render_scanline) {
     registers.scanline = 261u; // Start at pre-render
     registers.odd_frame = expected.odd_frame = true;
     registers.mask = expected.mask =
-            PpuMask(0b000'1000); // Enable background rendering
+            PpuMask(0b0000'1000); // Enable background rendering
 
     expected.cycle = 257;
     expected.scanline = 261u;

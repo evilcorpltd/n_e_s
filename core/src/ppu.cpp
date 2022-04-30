@@ -206,10 +206,12 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
 } // namespace n_e_s::core
 
 std::optional<Pixel> Ppu::execute() {
+    std::optional<Pixel> pixel;
+
     if (is_pre_render_scanline()) {
         execute_pre_render_scanline();
     } else if (is_visible_scanline()) {
-        execute_visible_scanline();
+        pixel = execute_visible_scanline();
     } else if (is_post_render_scanline()) {
         execute_post_render_scanline();
     } else if (is_vblank_scanline()) {
@@ -217,7 +219,7 @@ std::optional<Pixel> Ppu::execute() {
     }
 
     update_counters();
-    return {};
+    return pixel;
 }
 
 void Ppu::set_nmi_handler(const std::function<void()> &on_nmi) {
@@ -302,9 +304,10 @@ void Ppu::execute_pre_render_scanline() {
     }
 }
 
-void Ppu::execute_visible_scanline() {
+std::optional<Pixel> Ppu::execute_visible_scanline() {
     fetch();
     increase_scroll_counters();
+    return pixel();
 }
 
 void Ppu::execute_post_render_scanline() {
@@ -453,6 +456,60 @@ void Ppu::fetch() {
                 get_nametable_address(registers_->vram_addr.value());
         std::ignore = mmu_->read_byte(nametable_address);
     }
+}
+
+std::optional<Pixel> Ppu::pixel() {
+    const bool visible_cycle = cycle() >= 1u && cycle() <= 256u;
+    if (!visible_cycle) {
+        return std::nullopt;
+    }
+
+    uint8_t background_pixel = 0u;
+    uint8_t background_palette = 0u;
+
+    // The first 8 pixels should be skipped if "render background left" is
+    // not set
+    const bool is_background_visible =
+            registers_->mask.render_background() &&
+            (registers_->mask.render_background_left() || cycle() > 8u);
+
+    if (is_background_visible) {
+        const auto fine_x = registers_->fine_x_scroll;
+        const uint16_t horizontal_pixel_index = 0x8000u >> fine_x;
+
+        const uint8_t low_pixel = (registers_->pattern_table_shifter_low &
+                                          horizontal_pixel_index) > 0u;
+        const uint8_t high_pixel = (registers_->pattern_table_shifter_hi &
+                                           horizontal_pixel_index) > 0u;
+        background_pixel = static_cast<uint8_t>(high_pixel << 1u) | low_pixel;
+
+        const uint8_t low_attribute = (registers_->attribute_table_shifter_low &
+                                              horizontal_pixel_index) > 0u;
+        const uint8_t high_attribute = (registers_->attribute_table_shifter_hi &
+                                               horizontal_pixel_index) > 0u;
+        background_palette =
+                static_cast<uint8_t>(high_attribute << 1u) | low_attribute;
+    }
+    // TODO(JN): render sprites and implement sprite priority.
+    uint8_t combined_pixel = background_pixel;
+    uint8_t combined_palette = background_palette;
+
+    if (background_pixel == 0u) {
+        // Both are transparent, output background ($3F00).
+        combined_pixel = 0u;
+        combined_palette = 0u;
+    }
+
+    // Each palette is 4 bytes and starts at 0x3F00.
+    const uint16_t color_address =
+            0x3F00u + combined_palette * 4u + combined_pixel;
+    // TODO(JN): Handle greyscale.
+    const uint8_t palette_index = mmu_->read_byte(color_address);
+    const auto color = get_color_from_palette_index(palette_index);
+
+    const auto x = static_cast<uint8_t>(cycle() - 1u);
+    const auto y = static_cast<uint8_t>(scanline());
+    return Pixel{.x = x, .y = y, .color = color};
 }
 
 Color Ppu::get_color_from_palette_index(uint8_t index) const {
