@@ -21,10 +21,12 @@ constexpr uint8_t low_bits(uint8_t byte) {
 
 constexpr int8_t to_signed(uint8_t byte) {
     if (is_negative(byte)) {
-        return low_bits(byte) - static_cast<uint8_t>(128);
+        return static_cast<int8_t>(low_bits(byte) - static_cast<uint8_t>(128));
     }
 
-    return low_bits(byte);
+    // this is fine since we have already checked that the number is not
+    // negative
+    return static_cast<int8_t>(low_bits(byte));
 }
 
 constexpr uint16_t high_byte(uint16_t word) {
@@ -896,10 +898,10 @@ Pipeline Mos6502::create_compare_instruction(Opcode opcode) {
         const uint8_t value = mmu_->read_byte(effective_address_);
         // Compare instructions are not affected be the
         // carry flag when executing the subtraction.
-        const int16_t temp_result = *reg - value;
+        const uint8_t temp_result = *reg - value;
         set_carry(*reg >= value);
-        set_zero(static_cast<uint8_t>(temp_result));
-        set_negative(static_cast<uint8_t>(temp_result));
+        set_zero(temp_result);
+        set_negative(temp_result);
     });
     return result;
 }
@@ -917,9 +919,9 @@ Pipeline Mos6502::create_dcp_instruction(Opcode opcode) {
         const uint8_t reg = registers_->a;
 
         set_carry(reg >= new_value);
-        const int16_t temp_result = reg - new_value;
-        set_zero(static_cast<uint8_t>(temp_result));
-        set_negative(static_cast<uint8_t>(temp_result));
+        const uint8_t temp_result = reg - new_value;
+        set_zero(temp_result);
+        set_negative(temp_result);
     });
     return result;
 }
