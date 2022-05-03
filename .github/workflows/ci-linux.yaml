@@ -42,10 +42,10 @@ jobs:
             configuration: Debug
             cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON
 
-          - name: ubuntu-20.04-clang-tidy-10
+          - name: ubuntu-20.04-clang-tidy-13
             os: ubuntu-20.04
             compiler: clang
-            version: "10"
+            version: "13"
             configuration: Debug
             clang-tidy: true
             cmake-args: -DCMAKE_EXPORT_COMPILE_COMMANDS=ON

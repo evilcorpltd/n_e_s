@@ -40,7 +40,8 @@ std::unique_ptr<IRom> RomFactory::from_bytes(std::istream &bytestream) {
                 "File isn't big enough to contain a header");
     }
 
-    if (!bytestream.read(reinterpret_cast<char *>(&bytes[0]), bytes.size())) {
+    const auto size = static_cast<std::streamsize>(bytes.size());
+    if (!bytestream.read(reinterpret_cast<char *>(&bytes[0]), size)) {
         throw std::invalid_argument("Unable to get bytes");
     }
 

@@ -23,9 +23,12 @@ constexpr uint8_t low_bits(uint8_t byte) {
 
 constexpr int8_t to_signed(uint8_t byte) {
     if (is_negative(byte)) {
-        return low_bits(byte) - static_cast<uint8_t>(128);
+        return static_cast<int8_t>(low_bits(byte) - static_cast<uint8_t>(128));
     }
-    return low_bits(byte);
+
+    // this is fine since we have already checked that the number is not
+    // negative
+    return static_cast<int8_t>(low_bits(byte));
 }
 
 std::uint8_t read_mmu(const n_e_s::core::IMmu &mmu, const uint16_t addr) {
