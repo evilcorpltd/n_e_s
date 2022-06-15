@@ -784,11 +784,10 @@ struct Opcode {
         return {Family::RRA, RraAbsoluteY, AddressMode::AbsoluteY};
     case RraAbsoluteX:
         return {Family::RRA, RraAbsoluteX, AddressMode::AbsoluteX};
-    default:
-        // Since this is an invalid opcode the instruction and address mode
-        // have no real meaning, so we just use 0, 0 for them.
-        return {Family::Invalid, BrkImplied, AddressMode::Implied};
     }
+    // Since this is an invalid opcode the instruction and address mode
+    // have no real meaning, so we just use 0, 0 for them.
+    return {Family::Invalid, BrkImplied, AddressMode::Implied};
 }
 
 [[nodiscard]] constexpr MemoryAccess get_memory_access(const Family family) {
