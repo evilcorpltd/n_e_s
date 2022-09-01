@@ -1,5 +1,8 @@
 build --color=yes
 build --enable_platform_specific_config
+
+build --features=layering_check
+
 test --test_output=errors
 test --test_verbose_timeout_warnings=true
 
