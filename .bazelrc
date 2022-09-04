@@ -1,6 +1,8 @@
 build --color=yes
 build --enable_platform_specific_config
 
+build --incompatible_disallow_empty_glob
+
 build --features=layering_check
 
 test --test_output=errors
