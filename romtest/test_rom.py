@@ -21,6 +21,11 @@ class Test:
 TESTS = [
     # PPU tests
     Test(
+        rom="oam_read/oam_read.nes",
+        pass_pattern="Passed",
+        cycles=10000000,
+    ),
+    Test(
         rom="vbl_nmi_timing/1.frame_basics.nes", pass_pattern="PASSED", cycles=100000000
     ),
     Test(
