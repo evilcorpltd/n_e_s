@@ -63,6 +63,12 @@ TESTS = [
         cycles=100000000,
         failing=True,
     ),  # FAILED #2
+    Test(
+        rom="ppu_open_bus/ppu_open_bus.nes",
+        pass_pattern="PASSED",
+        cycles=100000000,
+        failing=True,
+    ),  # FAILED #2
     # CPU tests
     Test(
         rom="cpu_dummy_reads/cpu_dummy_reads.nes", pass_pattern="PASSED", failing=True
