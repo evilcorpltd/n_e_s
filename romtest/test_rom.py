@@ -70,10 +70,9 @@ TESTS = [
     ),  # Failed #9
     Test(
         rom="cpu_dummy_writes/cpu_dummy_writes_oam.nes",
-        pass_pattern="PASSED",
-        failing=True,
-        cycles=100000000,
-    ),  # Failed #6
+        pass_pattern="0ASSED",  # Tile indexes are not mapped to ascii for all characters.
+        cycles=120000000,
+    ),
     Test(
         rom="cpu_exec_space/test_cpu_exec_space_ppuio.nes",
         pass_pattern="PASSED",
