@@ -19,7 +19,6 @@ cc_test(
     size = "small",
     srcs = glob([
         "test/src/*.cpp",
-        "test/src/*.h",
     ]),
     deps = [
         ":disassembler",
