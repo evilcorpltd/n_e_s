@@ -566,6 +566,13 @@ TEST_F(CpuTest, nop80_immediated) {
     step_execution(2);
     EXPECT_EQ(expected, registers);
 }
+TEST_F(CpuTest, nop82_immediated) {
+    stage_instruction(NOP_IMM82);
+    expected.pc += 1;
+
+    step_execution(2);
+    EXPECT_EQ(expected, registers);
+}
 TEST_F(CpuTest, nop04_zero) {
     stage_instruction(NOP_ZERO04);
     expected.pc += 1;
