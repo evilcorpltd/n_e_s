@@ -64,7 +64,8 @@ TEST_F(PpuTest, read_status_register_clears_write_toggle) {
 
     const uint8_t status = ppu->read_byte(0x2002);
 
-    EXPECT_EQ(0x25, status);
+    // First 5 bits is whetever is on the open bus (emtpy here)
+    EXPECT_EQ(0x20, status);
 }
 
 TEST_F(PpuTest, clear_status_when_reading_status) {
@@ -399,6 +400,51 @@ TEST_F(PpuTest, increment_vram_addr_by_32_after_writing) {
     EXPECT_EQ(expected, registers);
 }
 
+TEST_F(PpuTest, read_returns_open_bus) {
+    // Write something to the open bus
+    ppu->write_byte(0x2001, 0b1001'0110);
+    registers.status = PpuStatus(0b0111'1011);
+
+    EXPECT_EQ(0b1001'0110, ppu->read_byte(0x2000));
+    EXPECT_EQ(0b1001'0110, ppu->read_byte(0x2001));
+
+    EXPECT_EQ(0b1001'0110, ppu->read_byte(0x2003));
+
+    EXPECT_EQ(0b1001'0110, ppu->read_byte(0x2005));
+    EXPECT_EQ(0b1001'0110, ppu->read_byte(0x2006));
+
+    // PpuData with palette address
+    // Bit 6-7 from the bus, 0-5 from memory
+    EXPECT_CALL(mmu, read_byte(0x3F01)).WillOnce(Return(0b0011'1110));
+    EXPECT_CALL(mmu, read_byte(0x2F01)).WillOnce(Return(0x00));
+    registers.vram_addr = PpuVram(0x3F01);
+    EXPECT_EQ(0b1011'1110, ppu->read_byte(0x2007));
+}
+
+TEST_F(PpuTest, read_write_oam_data_updates_open_bus) {
+    // Write something to oam
+    registers.oamaddr = 0x12;
+    ppu->write_byte(0x2004, 0x54);
+    // Open bus should be updated
+    EXPECT_EQ(0x54, ppu->read_byte(0x2000));
+
+    // Reading from oam should also update open bus
+    registers.oamaddr = 0x12;
+    EXPECT_EQ(0x54, ppu->read_byte(0x2004));
+    EXPECT_EQ(0x54, ppu->read_byte(0x2000));
+}
+
+TEST_F(PpuTest, read_status_returns_open_bus) {
+    // Write something to the open bus
+    ppu->write_byte(0x2001, 0b1001'0110);
+    registers.status = PpuStatus(0b0111'1011);
+
+    // Status, bit 0-4 from the bus, 5-7 from the register
+    EXPECT_EQ(0b0111'0110, ppu->read_byte(0x2002));
+    // Reading will update bus
+    EXPECT_EQ(0b0111'0110, ppu->read_byte(0x2000));
+}
+
 TEST_F(PpuTest, forwards_ppudata_reads_to_mmu_) {
     registers.vram_addr = PpuVram(0x4001);
     EXPECT_CALL(mmu, write_byte(0x4001, 0x05)).Times(1);
@@ -426,7 +472,8 @@ TEST_F(PpuTest, read_from_palette_memory) {
 
     uint8_t read_byte = ppu->read_byte(0x2007);
 
-    EXPECT_EQ(0x68, read_byte);
+    // Last two bits is whetever is on the open bus (empty here)
+    EXPECT_EQ(0x28, read_byte);
 
     registers.vram_addr = PpuVram(0x0100);
 

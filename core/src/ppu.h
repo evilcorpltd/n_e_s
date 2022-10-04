@@ -31,6 +31,7 @@ private:
     std::function<void()> on_nmi_{[] {}};
 
     uint8_t read_buffer_{0};
+    uint8_t open_bus_{0};
 
     // Object Atribute Memory
     constexpr static uint16_t kOamSize{256};
