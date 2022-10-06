@@ -116,6 +116,7 @@ TEST_F(CpuIntegrationTest, simple_program) {
     expected.sp =
             registers.sp - static_cast<uint8_t>(3); // PC (2 bytes) + P (1 byte)
     expected.pc = 0xDEAD;
+    expected.p = I_FLAG;
 
     const int expected_cycles = 2 + 4 + 2 + 4 + 2 + 4 + 7;
 
@@ -162,7 +163,7 @@ TEST_F(CpuIntegrationTest, branch) {
     expected.sp =
             registers.sp - static_cast<uint8_t>(3); // PC (2 bytes) + P (1 byte)
     expected.pc = 0xDEAD;
-    expected.p = C_FLAG | Z_FLAG;
+    expected.p = static_cast<uint8_t>(C_FLAG | Z_FLAG) | I_FLAG;
 
     // BNE takes 3 cycles when branch is taken, two when it is not.
     const int expected_cycles =
@@ -236,7 +237,7 @@ TEST_F(CpuIntegrationTest, stack) {
     expected.sp =
             registers.sp - static_cast<uint8_t>(3); // PC (2 bytes) + P (1 byte)
     expected.pc = 0xDEAD;
-    expected.p = C_FLAG | Z_FLAG;
+    expected.p = static_cast<uint8_t>(C_FLAG | Z_FLAG) | I_FLAG;
 
     const int pre_loop = 2 + 2;
     const int first_loop = (2 + 5 + 3 + 2 + 2 + 2) * 16 + 15 * 3 + 2;
@@ -259,7 +260,8 @@ TEST_F(CpuIntegrationTest, stack) {
     // wrote.
     EXPECT_EQ(0x06, mmu.read_byte(kStackOffset + 0xFF));
     EXPECT_EQ(0x18 + 2, mmu.read_byte(kStackOffset + 0xFE));
-    EXPECT_EQ(expected.p | B_FLAG, mmu.read_byte(kStackOffset + 0xFD));
+    EXPECT_EQ(static_cast<uint8_t>(C_FLAG | Z_FLAG) | B_FLAG,
+            mmu.read_byte(kStackOffset + 0xFD));
 
     for (uint8_t i = 3; i < 0x10; ++i) {
         EXPECT_EQ(i, mmu.read_byte(kStackOffset + 0xFF - i));
