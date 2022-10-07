@@ -19,11 +19,13 @@ public:
             : reader_{std::move(reader)}, writer_{std::move(writer)} {}
 
     uint8_t read_byte(uint16_t addr) const override {
-        return reader_(addr);
+        addr %= Size;
+        return reader_(StartAddr + addr);
     }
 
     void write_byte(uint16_t addr, uint8_t byte) override {
-        writer_(addr, byte);
+        addr %= Size;
+        writer_(StartAddr + addr, byte);
     }
 
 private:
