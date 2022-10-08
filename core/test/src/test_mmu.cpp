@@ -50,17 +50,19 @@ TEST_F(NesMmuTest, read_write_byte) {
 }
 
 TEST_F(NesMmuTest, read_write_byte_to_ppu) {
-    const uint8_t byte = 0xAB;
-
     EXPECT_CALL(ppu, write_byte(0x2000, 0xAB));
     EXPECT_CALL(ppu, read_byte(0x2000)).WillOnce(testing::Return(0xAB));
-    EXPECT_CALL(ppu, write_byte(0x3000, 0xAB));
-    EXPECT_CALL(ppu, read_byte(0x3000)).WillOnce(testing::Return(0xAB));
 
-    mmu->write_byte(0x2000, byte);
-    EXPECT_EQ(byte, mmu->read_byte(0x2000));
-    mmu->write_byte(0x3000, byte);
-    EXPECT_EQ(byte, mmu->read_byte(0x3000));
+    mmu->write_byte(0x2000, 0xAB);
+    EXPECT_EQ(0xAB, mmu->read_byte(0x2000));
+}
+
+TEST_F(NesMmuTest, read_write_byte_to_ppu_mirrored) {
+    EXPECT_CALL(ppu, write_byte(0x2000, 0xCD));
+    EXPECT_CALL(ppu, read_byte(0x2000)).WillOnce(testing::Return(0xCD));
+
+    mmu->write_byte(0x3000, 0xCD);
+    EXPECT_EQ(0xCD, mmu->read_byte(0x3000));
 }
 
 TEST_F(NesMmuTest, read_write_byte_io_dev_bank) {
