@@ -13,6 +13,8 @@ struct CpuRegisters;
 class IPpu;
 struct PpuRegisters;
 
+class IApu;
+
 class IMmu;
 
 class IRom;
@@ -45,6 +47,8 @@ public:
     n_e_s::core::IMmu &ppu_mmu();
     const n_e_s::core::IMmu &ppu_mmu() const;
 
+    n_e_s::core::IApu &apu() const;
+
     n_e_s::core::CpuRegisters &cpu_registers();
     const n_e_s::core::CpuRegisters &cpu_registers() const;
 
@@ -64,6 +68,8 @@ private:
     std::unique_ptr<n_e_s::core::IPpu> ppu_;
 
     std::unique_ptr<n_e_s::core::IMmu> mmu_;
+
+    std::unique_ptr<n_e_s::core::IApu> apu_;
 
     std::unique_ptr<n_e_s::core::CpuRegisters> cpu_registers_;
     std::unique_ptr<n_e_s::core::IMos6502> cpu_;
