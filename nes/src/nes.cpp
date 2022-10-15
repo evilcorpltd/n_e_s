@@ -1,6 +1,8 @@
 #include "nes/nes.h"
 
+#include "nes/core/apu_factory.h"
 #include "nes/core/cpu_factory.h"
+#include "nes/core/iapu.h"
 #include "nes/core/immu.h"
 #include "nes/core/imos6502.h"
 #include "nes/core/ippu.h"
@@ -46,6 +48,7 @@ Nes::Nes()
           ppu_registers_(std::make_unique<n_e_s::core::PpuRegisters>()),
           ppu_(PpuFactory::create(ppu_registers_.get(), ppu_mmu_.get())),
           mmu_(MmuFactory::create_empty()),
+          apu_(ApuFactory::create()),
           cpu_registers_(std::make_unique<n_e_s::core::CpuRegisters>()),
           cpu_(CpuFactory::create_mos6502(cpu_registers_.get(),
                   mmu_.get(),
@@ -68,11 +71,15 @@ std::optional<core::Pixel> Nes::execute() {
         cpu_->execute();
     }
 
+    // The APU runs at master clock % 24. (every other CPU tick)
+    if (cycle_ % 24 == 0) {
+        apu_->execute();
+    }
+
     if (cycle_ % 4 == 0) {
         return ppu_->execute();
     }
 
-    // The APU runs at master clock % 24. (every other CPU tick)
     return {};
 }
 
@@ -120,6 +127,10 @@ n_e_s::core::IMmu &Nes::ppu_mmu() {
 }
 const n_e_s::core::IMmu &Nes::ppu_mmu() const {
     return *ppu_mmu_;
+}
+
+n_e_s::core::IApu &Nes::apu() const {
+    return *apu_;
 }
 
 n_e_s::core::CpuRegisters &Nes::cpu_registers() {

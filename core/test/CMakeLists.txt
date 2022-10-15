@@ -11,6 +11,7 @@ add_executable(${PROJECT_NAME}
     src/ippu_helpers.h
     src/main.cpp
     src/opcode.h
+    src/test_apu.cpp
     src/test_cpu.cpp
     src/test_cpu_absolute_indexed_instructions.cpp
     src/test_cpu_absolute_instructions.cpp

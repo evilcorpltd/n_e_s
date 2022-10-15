@@ -1,7 +1,9 @@
 project(n_e_s_core)
 
 add_library(${PROJECT_NAME}
+    include/nes/core/apu_factory.h
     include/nes/core/cpu_factory.h
+    include/nes/core/iapu.h
     include/nes/core/icpu.h
     include/nes/core/imembank.h
     include/nes/core/immu.h
@@ -19,6 +21,9 @@ add_library(${PROJECT_NAME}
     include/nes/core/ppu_factory.h
     include/nes/core/ppu_registers.h
     include/nes/core/rom_factory.h
+    src/apu.h
+    src/apu.cpp
+    src/apu_factory.cpp
     src/cpu_factory.cpp
     src/invalid_address.cpp
     src/mapped_membank.h
