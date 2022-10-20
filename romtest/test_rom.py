@@ -71,8 +71,10 @@ TESTS = [
     ),  # FAILED #2
     # CPU tests
     Test(
-        rom="cpu_dummy_reads/cpu_dummy_reads.nes", pass_pattern="PASSED", failing=True
-    ),  # Unsupported mapper 3
+        rom="cpu_dummy_reads/cpu_dummy_reads.nes",
+        pass_pattern="Passed",
+        cycles=20000000,
+    ),
     Test(
         rom="cpu_dummy_writes/cpu_dummy_writes_ppumem.nes",
         pass_pattern="PASSED",
