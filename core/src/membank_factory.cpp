@@ -80,6 +80,12 @@ MemBankList MemBankFactory::create_nes_mem_banks(IPpu *ppu,
     // Io dev
     mem_banks.push_back(std::make_unique<MemBank<0x4018, 0x401F, 0x8>>());
 
+    // Empty SRAM
+    mem_banks.push_back(std::make_unique<MemBank<0x6000, 0x7FFF, 0x8>>());
+
+    // Expansion ROM
+    mem_banks.push_back(std::make_unique<MemBank<0x4020, 0x5FFF, 0x8>>());
+
     return mem_banks;
 }
 
