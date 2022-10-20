@@ -58,8 +58,8 @@ jobs:
             cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
 

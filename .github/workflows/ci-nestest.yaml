@@ -30,8 +30,8 @@ jobs:
             cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON -DCMAKE_BUILD_TYPE=Release
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.8
 
@@ -73,7 +73,7 @@ jobs:
 
       - name: Upload artifacts
         if: matrix.nestest
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: nestest-log
           path: nestest-output.log
