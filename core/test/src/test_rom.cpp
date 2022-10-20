@@ -12,10 +12,7 @@ using namespace n_e_s::core;
 
 namespace {
 
-enum class Mapper {
-    Nrom = 0,
-    Mapper2 = 2,
-};
+enum class Mapper { Nrom = 0, Mapper2 = 2, Mapper3 = 3 };
 
 std::string ines_header_bytes(const uint8_t mapper_id,
         const uint8_t prg_rom_size,
@@ -328,6 +325,99 @@ TEST(Mapper2, write_and_read_byte_cpu_bus) {
     // Last bank should not be affected
     EXPECT_EQ(0x07, rom->cpu_read_byte(0xC000));
     EXPECT_EQ(0xAB, rom->cpu_read_byte(0xC001));
+}
+
+////////////////////////////////////////////////////////////////
+// Mapper 3 tests
+TEST(Mapper3, is_cpu_address_in_range) {
+    std::string bytes{nrom_bytes(1, 1, Mapper::Mapper3)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> rom = RomFactory::from_bytes(ss);
+
+    EXPECT_TRUE(rom->is_cpu_address_in_range(0x8000u));
+    EXPECT_TRUE(rom->is_cpu_address_in_range(0xBFFFu));
+    EXPECT_TRUE(rom->is_cpu_address_in_range(0xC000u));
+    EXPECT_TRUE(rom->is_cpu_address_in_range(0xFFFFu));
+
+    EXPECT_FALSE(rom->is_cpu_address_in_range(0x0000u));
+    EXPECT_FALSE(rom->is_cpu_address_in_range(0x7FFFu));
+}
+
+TEST(Mapper3, is_ppu_address_in_range) {
+    std::string bytes{nrom_bytes(1, 1, Mapper::Mapper3)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> rom = RomFactory::from_bytes(ss);
+
+    EXPECT_TRUE(rom->is_ppu_address_in_range(0x0000u));
+    EXPECT_TRUE(rom->is_ppu_address_in_range(0x2000u));
+    EXPECT_TRUE(rom->is_ppu_address_in_range(0x2C00u));
+    EXPECT_TRUE(rom->is_ppu_address_in_range(0x3EFFu));
+
+    // Palette memory is created in membank factory.
+    EXPECT_FALSE(rom->is_ppu_address_in_range(0x3F00u));
+    EXPECT_FALSE(rom->is_ppu_address_in_range(0x3F20u));
+    EXPECT_FALSE(rom->is_ppu_address_in_range(0x5000u));
+}
+
+TEST(Mapper3, write_and_read_byte_ppu_bus) {
+    std::string bytes{nrom_bytes(1, 1, Mapper::Mapper3)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> rom = RomFactory::from_bytes(ss);
+
+    rom->ppu_write_byte(0x0100, 0x89);
+    EXPECT_EQ(0x89, rom->ppu_read_byte(0x0100));
+}
+
+TEST(Mapper3, write_should_modify_ppu_bank_select) {
+    std::string bytes{nrom_bytes(1, 4, Mapper::Mapper3)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> rom = RomFactory::from_bytes(ss);
+
+    rom->cpu_write_byte(0x9000, 0x01);
+    rom->ppu_write_byte(0x0100, 0x11);
+    rom->cpu_write_byte(0x9000, 0x02);
+    rom->ppu_write_byte(0x0100, 0x22);
+    rom->cpu_write_byte(0x9000, 0x00);
+    rom->ppu_write_byte(0x0100, 0x01);
+    rom->cpu_write_byte(0x9000, 0x03);
+    rom->ppu_write_byte(0x0100, 0x33);
+
+    EXPECT_EQ(0x33, rom->ppu_read_byte(0x0100));
+    rom->cpu_write_byte(0x9000, 0x02);
+    EXPECT_EQ(0x22, rom->ppu_read_byte(0x0100));
+    rom->cpu_write_byte(0x9000, 0x01);
+    EXPECT_EQ(0x11, rom->ppu_read_byte(0x0100));
+    rom->cpu_write_byte(0x9000, 0x00);
+    EXPECT_EQ(0x01, rom->ppu_read_byte(0x0100));
+}
+
+TEST(Mapper3, prg_rom_should_not_be_writable) {
+    constexpr int kPrgRomBanks = 2;
+    std::string bytes{nrom_bytes(kPrgRomBanks, 1, Mapper::Mapper3)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> rom = RomFactory::from_bytes(ss);
+
+    rom->cpu_write_byte(0x8000, 0x11);
+    EXPECT_EQ(0x00, rom->cpu_read_byte(0x8000));
+    rom->cpu_write_byte(0xFFFF, 0x12);
+    EXPECT_EQ(0x00, rom->cpu_read_byte(0xFFFF));
+}
+
+TEST(Mapper3, write_and_read_ppu_nametables) {
+    constexpr int kChrRomBanks = 8;
+    std::string bytes{nrom_bytes(1, kChrRomBanks, Mapper::Mapper3)};
+    std::stringstream ss(bytes);
+    std::unique_ptr<IRom> rom = RomFactory::from_bytes(ss);
+
+    rom->ppu_write_byte(0x2000, 0x01);
+    rom->ppu_write_byte(0x2400, 0x02);
+    rom->ppu_write_byte(0x2800, 0x03);
+    rom->ppu_write_byte(0x2C00, 0x04);
+
+    EXPECT_EQ(0x02, rom->ppu_read_byte(0x2000));
+    EXPECT_EQ(0x02, rom->ppu_read_byte(0x2400));
+    EXPECT_EQ(0x04, rom->ppu_read_byte(0x2800));
+    EXPECT_EQ(0x04, rom->ppu_read_byte(0x2C00));
 }
 
 } // namespace

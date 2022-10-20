@@ -1,6 +1,7 @@
 #include "nes/core/rom_factory.h"
 
 #include "rom/mapper_2.h"
+#include "rom/mapper_3.h"
 #include "rom/nrom.h"
 
 #include <fmt/format.h>
@@ -91,6 +92,9 @@ std::unique_ptr<IRom> RomFactory::from_bytes(std::istream &bytestream) {
     }
     if (mapper == 2) {
         return std::make_unique<Mapper2>(h, prg_rom, chr_memory);
+    }
+    if (mapper == 3) {
+        return std::make_unique<Mapper3>(h, prg_rom, chr_memory);
     }
 
     throw std::logic_error(fmt::format("Unsupported mapper: {}", mapper));
