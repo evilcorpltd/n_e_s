@@ -8,5 +8,5 @@ build --features=layering_check
 test --test_output=errors
 test --test_verbose_timeout_warnings=true
 
-build:linux --cxxopt="-std=c++2a"
-build:windows --cxxopt="/std:c++latest"
+build:linux --cxxopt="-std=c++20"
+build:windows --cxxopt="/std:c++20"
