@@ -124,14 +124,21 @@ Ppu::Ppu(PpuRegisters *registers, IMmu *mmu)
         : registers_(registers), mmu_(mmu) {}
 
 uint8_t Ppu::read_byte(uint16_t addr) {
-    uint8_t byte = 0;
+    uint8_t byte = open_bus_;
 
-    if (addr == kPpuStatus) {
-        byte = registers_->status.value();
+    if (addr == kPpuCtrl || addr == kPpuMask || addr == kOamAddr ||
+            addr == kPpuScroll || addr == kPpuAddr) {
+        // Return open bus value
+    } else if (addr == kPpuStatus) {
+        // Bit 0-4 contains whatever is on the bus.
+        byte &= 0b0001'1111u;
+        byte |= registers_->status.value() & 0b1110'0000u;
         registers_->write_toggle = false;
+        open_bus_ = byte;
         clear_vblank_flag();
     } else if (addr == kOamData) {
         byte = oam_data_[registers_->oamaddr];
+        open_bus_ = byte;
     } else if (addr == kPpuData) {
         byte = mmu_->read_byte(registers_->vram_addr.value());
         if (registers_->vram_addr.value() < kFirstPaletteData) {
@@ -141,7 +148,11 @@ uint8_t Ppu::read_byte(uint16_t addr) {
         } else {
             read_buffer_ = mmu_->read_byte(registers_->vram_addr.value() -
                                            static_cast<uint16_t>(0x1000));
+            byte &= 0b0011'1111u;
+            byte |= open_bus_ & 0b1100'0000u;
+            // Bit 6-7 contains whatever is on the bus.
         }
+        open_bus_ = byte;
         increment_vram_address();
     } else {
         byte = mmu_->read_byte(addr);
@@ -152,6 +163,7 @@ uint8_t Ppu::read_byte(uint16_t addr) {
 
 void Ppu::write_byte(uint16_t addr, uint8_t byte) {
     if (addr == kPpuCtrl) {
+        open_bus_ = byte;
         const auto new_ctrl = PpuCtrl(byte);
         // Trigger nmi if the nmi-enabled flag goes from 0 to 1 during vblank.
         if (!registers_->ctrl.is_set(7u) && new_ctrl.is_set(7u) &&
@@ -162,14 +174,20 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
         registers_->ctrl = new_ctrl;
         registers_->temp_vram_addr.set_nametable(byte);
     } else if (addr == kPpuMask) {
+        open_bus_ = byte;
         registers_->mask = PpuMask(byte);
     } else if (addr == kOamAddr) {
+        open_bus_ = byte;
         registers_->oamaddr = byte;
+    } else if (addr == kPpuStatus) {
+        open_bus_ = byte;
     } else if (addr == kOamData) {
+        open_bus_ = byte;
         if (!is_rendering_active()) {
             oam_data_[registers_->oamaddr++] = byte;
         }
     } else if (addr == kPpuScroll) {
+        open_bus_ = byte;
         if (registers_->write_toggle) { // Second write, Y scroll
             const uint16_t y_scroll = (byte >> 3u);
             const auto fine_y_scroll = static_cast<uint16_t>(byte & 7u);
@@ -183,6 +201,7 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
             registers_->write_toggle = true;
         }
     } else if (addr == kPpuAddr) {
+        open_bus_ = byte;
         if (registers_->write_toggle) { // Second write, lower address byte
             registers_->temp_vram_addr = PpuVram(
                     (registers_->temp_vram_addr.value() & 0xFF00u) | byte);
@@ -198,6 +217,7 @@ void Ppu::write_byte(uint16_t addr, uint8_t byte) {
             registers_->write_toggle = true;
         }
     } else if (addr == kPpuData) {
+        open_bus_ = byte;
         mmu_->write_byte(registers_->vram_addr.value(), byte);
         increment_vram_address();
     } else {

@@ -68,7 +68,7 @@ TESTS = [
         pass_pattern="PASSED",
         cycles=100000000,
         failing=True,
-    ),  # FAILED #2
+    ),  # FAILED #3, decay not implemented
     # CPU tests
     Test(
         rom="cpu_dummy_reads/cpu_dummy_reads.nes",
@@ -88,10 +88,9 @@ TESTS = [
     ),
     Test(
         rom="cpu_exec_space/test_cpu_exec_space_ppuio.nes",
-        pass_pattern="PASSED",
-        cycles=10000000,
-        failing=True,
-    ),  # Failed #3, ppu open bus
+        pass_pattern="0ASSED",  # Tile indexes are not mapped to ascii for all characters.
+        cycles=14000000,
+    ),
     Test(
         rom="cpu_timing_test6/cpu_timing_test.nes",
         pass_pattern="PASSED",
