@@ -56,6 +56,7 @@ jobs:
             version: "14"
             configuration: Debug
             cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON
+            apt-extras: libclang-rt-14-dev
 
     steps:
       - uses: actions/checkout@v3
@@ -75,7 +76,7 @@ jobs:
             echo "CXX=g++-${{ matrix.version }}" >> $GITHUB_ENV
           else
             curl -fsSL https://apt.llvm.org/llvm.sh | sudo bash -s ${{ matrix.version }}
-            sudo apt-get install -y clang-tidy-${{ matrix.version }} g++-multilib
+            sudo apt-get install -y clang-tidy-${{ matrix.version }} g++-multilib ${{ matrix.apt-extras }}
             echo "CC=clang-${{ matrix.version }}" >> $GITHUB_ENV
             echo "CXX=clang++-${{ matrix.version }}" >> $GITHUB_ENV
           fi
@@ -104,7 +105,7 @@ jobs:
       - name: Coverage
         if: matrix.coverage
         run: |
-          pip install gcovr
+          pip install gcovr==5.1
           (cd build && gcovr --gcov-executable gcov-10 -p --root .. --fail-under-line=94 --exclude 'CMakeFiles/' --exclude '_deps/' --exclude '(.+/)?test/' --exclude '.+/(application|nestest)/')
 
       - name: Clang-tidy
