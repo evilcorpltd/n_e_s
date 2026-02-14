@@ -1,3 +1,5 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
 cc_library(
     name = "nes",
     srcs = glob([
@@ -19,6 +21,6 @@ cc_test(
     ]),
     deps = [
         ":nes",
-        "@gtest",
+        "@googletest//:gtest",
     ],
 )

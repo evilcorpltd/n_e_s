@@ -1,3 +1,4 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 load(":defs.bzl", "private_include_copts")
 
 cc_library(
@@ -12,7 +13,7 @@ cc_library(
     strip_include_prefix = "include/",
     visibility = ["//visibility:public"],
     deps = [
-        "@fmtlib",
+        "@fmt",
     ],
 )
 
@@ -25,8 +26,8 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":core",
-        "@fmtlib",
-        "@gtest",
+        "@fmt",
+        "@googletest//:gtest",
     ],
 )
 
@@ -40,7 +41,7 @@ cc_test(
     deps = [
         ":core",
         ":core_test_utils",
-        "@fmtlib",
-        "@gtest",
+        "@fmt",
+        "@googletest//:gtest",
     ],
 )

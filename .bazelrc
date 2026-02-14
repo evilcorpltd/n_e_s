@@ -1,7 +1,7 @@
+common --lockfile_mode=off
+
 build --color=yes
 build --enable_platform_specific_config
-
-build --incompatible_disallow_empty_glob
 
 build --features=layering_check
 
@@ -9,4 +9,5 @@ test --test_output=errors
 test --test_verbose_timeout_warnings=true
 
 build:linux --cxxopt="-std=c++20"
-build:windows --cxxopt="/std:c++20"
+build:windows --cxxopt="/std:c++20" --features="-default_cpp_std"
+build:windows --cxxopt="/utf-8"
