@@ -15,17 +15,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: nestest-clang-10
-            os: ubuntu-20.04
+          - name: nestest-clang-13
+            os: ubuntu-22.04
             compiler: clang
-            version: "10"
+            version: "13"
             nestest: true
             cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON -DCMAKE_BUILD_TYPE=Debug
 
-          - name: romtest-clang-10
-            os: ubuntu-20.04
+          - name: romtest-clang-13
+            os: ubuntu-22.04
             compiler: clang
-            version: "10"
+            version: "13"
             romtest: true
             cmake-args: -DADDRESS_SANITIZER=ON -DUNDEFINED_SANITIZER=ON -DCMAKE_BUILD_TYPE=Release
 
