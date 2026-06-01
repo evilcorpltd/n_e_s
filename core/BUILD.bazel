@@ -1,5 +1,4 @@
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
-load(":defs.bzl", "private_include_copts")
 
 cc_library(
     name = "core",
@@ -9,7 +8,7 @@ cc_library(
     hdrs = glob([
         "include/**/*.h",
     ]),
-    copts = private_include_copts(["src/"]),
+    local_includes = ["src/"],
     strip_include_prefix = "include/",
     visibility = ["//visibility:public"],
     deps = [
